@@ -223,7 +223,10 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
   <div id="view-admin" style="display:none"></div>
 </div>
 <div class="modal-bg" id="modal-bg"><div class="modal"><h3 id="modal-title">Resultado</h3><div id="modal-body"></div><div class="gap-sm" style="margin-top:1rem" id="modal-actions"></div></div></div>
-<script>const SUPA_URL="https://yrywtwmfkfjsuttbtrco.supabase.co";const SUPA_KEY="sb_publishable_aezwIo4VkQNK-Wy7BR4_nA_pbDAS12O";const SUPA_URL="https://yrywtwmfkfjsuttbtrco.supabase.co";const SUPA_KEY="sb_publishable_aezwIo4VkQNK-Wy7BR4_nA_pbDAS12O";// ===== TRADUCCIONES — Liga de Tenis Sohail =====
+<script src="config.js"></script>
+<script>
+// ===== TRADUCCIONES — Liga de Tenis Sohail =====
+let LANG='es';Wy7BR4_nA_pbDAS12O";const SUPA_URL="https://yrywtwmfkfjsuttbtrco.supabase.co";const SUPA_KEY="sb_publishable_aezwIo4VkQNK-Wy7BR4_nA_pbDAS12O";// ===== TRADUCCIONES — Liga de Tenis Sohail =====
 let LANG='es';
 function setLang(l){LANG=l;try{localStorage.setItem('liga_lang',l);}catch(e){}renderAll();}
 function t(k){const v=(TRANSLATIONS[LANG]&&TRANSLATIONS[LANG][k])||TRANSLATIONS['es'][k];return v!==undefined?v:k;}
