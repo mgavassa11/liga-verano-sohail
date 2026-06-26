@@ -315,7 +315,7 @@ po_started_toast:'Play Offs iniciados.',po_confirmed_toast:'¡Play Offs iniciado
 stage_dates:'Fechas de las etapas',stage_dates_hint:'Para cada ronda elegí "Semana de juego" (rango desde–hasta) o "Fecha única".',single_date:'Fecha única',week_play:'Semana de juego',from_date:'Desde',until_date:'Hasta',
 round_final:'Final',round_semi:'Semifinales',round_quarters:'Cuartos',round_16:'Octavos',round_32:'16avos',round_64:'32avos',round_n:'Ronda {n}',
 my_profile:'Mi perfil',full_name:'Nombre completo',email:'Email',phone:'Teléfono',save_data:'Guardar datos',change_password:'Cambiar contraseña',current_pass:'Contraseña actual',new_pass:'Nueva contraseña',repeat_pass:'Repetir nueva contraseña',save_pass:'Guardar contraseña',pass_wrong:'La contraseña actual no es correcta.',pass_short:'La nueva contraseña debe tener al menos 4 caracteres.',pass_no_match:'Las contraseñas nuevas no coinciden.',pass_ok:'✓ Contraseña actualizada.',profile_saved:'✓ Datos actualizados.',name_empty:'El nombre no puede estar vacío.',name_exists:'Ya existe un jugador con ese nombre.',role_admin:'Administrador',role_player:'Jugador',current_group_label:'Grupo actual',
-admin_profile:'Mi perfil — Administrador',player_mgmt:'Gestión de jugadores',player_mgmt_hint:'Ordenados alfabéticamente. Buscá por nombre. Podés editar nombre, email, teléfono y resetear contraseña.',search_player:'Buscar jugador…',refresh_list:'Actualizar lista',no_results:'Sin resultados',save:'Guardar',reset_pass:'Resetear clave',reset_done:'{name}: contraseña reseteada a "tenis".',save_done:'{name}: datos actualizados.',
+admin_profile:'Mi perfil — Administrador',player_mgmt:'Gestión de jugadores',player_mgmt_hint:'Ordenados alfabéticamente. Buscá por nombre. Podés editar nombre, email, teléfono, resetear contraseña, cambiar de grupo o eliminar.',search_player:'Buscar jugador…',refresh_list:'Actualizar lista',no_results:'Sin resultados',save:'Guardar',reset_pass:'Resetear clave',reset_done:'{name}: contraseña reseteada a "tenis".',save_done:'{name}: datos actualizados.',
 toast_confirmed:'¡Resultado confirmado y validado!',toast_disputed:'Resultado disputado. El admin lo revisará.',toast_pending_confirmed:'Pendientes confirmados.',toast_simulated:'Ciclo simulado y validado.',toast_dispute_resolved:'Disputa resuelta.',
 reset_playoffs:'Reiniciar Play Offs',
 reset_cycle:'Reiniciar Ciclo {n}',
@@ -370,7 +370,7 @@ po_started_toast:'Play Offs started.',po_confirmed_toast:'Play Offs started! Now
 stage_dates:'Stage dates',stage_dates_hint:'For each round choose "Match week" (date range) or "Single date".',single_date:'Single date',week_play:'Match week',from_date:'From',until_date:'To',
 round_final:'Final',round_semi:'Semifinals',round_quarters:'Quarterfinals',round_16:'Round of 16',round_32:'Round of 32',round_64:'Round of 64',round_n:'Round {n}',
 my_profile:'My profile',full_name:'Full name',email:'Email',phone:'Phone',save_data:'Save details',change_password:'Change password',current_pass:'Current password',new_pass:'New password',repeat_pass:'Repeat new password',save_pass:'Save password',pass_wrong:'Current password is incorrect.',pass_short:'New password must be at least 4 characters.',pass_no_match:'New passwords do not match.',pass_ok:'✓ Password updated.',profile_saved:'✓ Details updated.',name_empty:'Name cannot be empty.',name_exists:'A player with that name already exists.',role_admin:'Administrator',role_player:'Player',current_group_label:'Current group',
-admin_profile:'My profile — Administrator',player_mgmt:'Player management',player_mgmt_hint:'Sorted alphabetically. Search by name. Edit name, email, phone and reset passwords.',search_player:'Search player…',refresh_list:'Refresh list',no_results:'No results',save:'Save',reset_pass:'Reset password',reset_done:'{name}: password reset to "tenis".',save_done:'{name}: details updated.',
+admin_profile:'My profile — Administrator',player_mgmt:'Player management',player_mgmt_hint:'Sorted alphabetically. Search by name. Edit name, email, phone, reset passwords, switch group or delete.',search_player:'Search player…',refresh_list:'Refresh list',no_results:'No results',save:'Save',reset_pass:'Reset password',reset_done:'{name}: password reset to "tenis".',save_done:'{name}: details updated.',
 toast_confirmed:'Result confirmed and validated!',toast_disputed:'Result disputed. Admin will review it.',toast_pending_confirmed:'Pending results confirmed.',toast_simulated:'Cycle simulated and validated.',toast_dispute_resolved:'Dispute resolved.',
 reset_playoffs:'Reset Play Offs',
 reset_cycle:'Reset Cycle {n}',
@@ -530,7 +530,6 @@ h+='</select></div></div>';
 h+='<div class="form-row"><div class="form-group" style="align-self:end"><button class="btn btn-primary" '+(cyclesDone&&!playoff.started?'':'disabled')+' onclick="previewPlayoffUI()"><i class="ti ti-eye"></i> '+t('preview_po')+'</button></div></div>';
 h+=(playoff.started?'<p class="legend-txt">'+t('po_started')+'</p>':playoff.preview?'<p class="legend-txt">'+t('po_preview_active')+'</p>':'')+'</div>';
 
-
 h+='<div class="card"><div class="section-lbl">Reiniciar datos (¡Cuidado!)</div>';
 h+='<p class="legend-txt" style="margin-top:0">Estas acciones borran datos permanentemente y no se pueden deshacer.</p>';
 h+='<div class="gap-sm">';
@@ -557,6 +556,7 @@ function resolveD(mid){const m=matches.find(x=>x.id===mid);if(m){m.status='confi
 function forceConfirmAll(){matches.forEach(m=>{if(m.status==='pending'){m.status='confirmed';m.locked=true;if(m.po)applyPoPending(m);}});refreshAll();toast(t('toastConfirmedAll'));}
 function demoFillUI(){demoFill();refreshAll();toast(t('toastSimulated'));}
 function startNextCycle(){const c=getActive();const need=pairsNeeded(c);const done=matches.filter(m=>m.cycle===activeN&&!m.po&&m.status==='confirmed').length;const notC=matches.filter(m=>m.cycle===activeN&&!m.po&&m.status!=='confirmed').length;if(done<need||notC>0){toast(t('missing_before_close'));return;}const buckets={};for(let k=1;k<=12;k++)buckets[k]=[];c.groups.forEach((g,gi)=>{const gid=gi+1;const st=computeStats(activeN,gid);ensureDestino(gid,st.length);const dest=DESTINO[gid];st.forEach((s,pos)=>{const d=dest[pos]||('G'+Math.min(gid+1,12));const dn=parseInt(d.replace('G',''));buckets[dn].push({name:s.name,total:ptsForPos(gid,pos)+(pos===0?2:0)});});});const ng=[];for(let k=1;k<=12;k++)ng.push({players:buckets[k].sort((a,b)=>b.total-a.total).map(x=>x.name)});c.status='finished';if(activeN<3){const nx=cycles[activeN];nx.groups=ng;nx.status='active';activeN=nx.n;viewCycle=nx.n;if(currentUser.role==='player'){const loc=findLoc(currentUser.name,activeN);if(loc)selGroup=loc.g;}toast(tf('cycle_closed_next',{n:c.n,nx:nx.n}));}else{toast(t('cycle3_closed'));}renderShell();showSub('grupos');}
+
 function renderPerfil(){const u=currentUser;
 if(u.role==='admin'){
   const players=ALLNAMES.slice().sort((a,b)=>a.localeCompare(b,'es')).map(n=>USERS[n]).filter(Boolean);
@@ -571,7 +571,7 @@ if(u.role==='admin'){
   h+='<div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">';
   h+='<div class="section-lbl" style="margin:0">Gestión de jugadores</div>';
   h+='<button class="btn btn-sm" onclick="renderPerfil()"><i class="ti ti-refresh"></i> Actualizar lista</button></div>';
-  h+='<p class="legend-txt" style="margin-top:0">Ordenados alfabéticamente. Buscá por nombre. Podés editar nombre, email, teléfono y resetear contraseña.</p>';
+  h+='<p class="legend-txt" style="margin-top:0">Ordenados alfabéticamente. Buscá por nombre. Podés editar nombre, email, teléfono, resetear contraseña, cambiar de grupo o eliminar de la liga.</p>';
   h+='<input type="text" id="player-search" placeholder="Buscar jugador…" oninput="filterPlayerList()" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13px;margin-bottom:.75rem">';
   h+='<div id="player-list">'+renderPlayerList(players)+'</div></div>';
   document.getElementById('view-perfil').innerHTML=h;
@@ -591,10 +591,47 @@ if(u.role==='admin'){
   document.getElementById('view-perfil').innerHTML=h;
 }}
 
-function renderPlayerList(players,filter){const f=(filter||'').toLowerCase();const visible=players.filter(p=>p&&p.name&&(!f||p.name.toLowerCase().includes(f)));if(!visible.length)return '<div class="empty">Sin resultados</div>';return visible.map(p=>{const loc=findLoc(p.name,activeN);return '<div class="ge-group" style="margin-bottom:.5rem"><div style="display:flex;justify-content:space-between;align-items:center"><div class="ge-gtitle">'+p.name+(loc?' <span class="badge badge-tag">'+groupName(loc.g)+'</span>':'')+'</div><button class="btn btn-sm" onclick="togglePlayerEdit(\''+esc(p.name)+'\')"><i class="ti ti-edit"></i> Editar</button></div><div id="pe-'+esc(p.name)+'" style="display:none;margin-top:.5rem"><div class="form-row"><div class="form-group"><label>Nombre completo</label><input type="text" id="pe-name-'+esc(p.name)+'" value="'+esc(p.name)+'"></div><div class="form-group"><label>Email</label><input type="email" id="pe-email-'+esc(p.name)+'" value="'+esc(p.email||'')+'"></div></div><div class="form-row"><div class="form-group"><label>Teléfono</label><input type="tel" id="pe-tel-'+esc(p.name)+'" value="'+esc(p.tel||'')+'"></div><div class="form-group" style="align-self:end"><div class="gap-sm"><button class="btn btn-success btn-sm" onclick="savePlayerAdmin(\''+esc(p.name)+'\')"><i class="ti ti-device-floppy"></i> Guardar</button><button class="btn btn-danger btn-sm" onclick="resetPwd(\''+esc(p.name)+'\')"><i class="ti ti-refresh"></i> Resetear clave</button></div></div></div></div></div>';}).join('');}
+function renderPlayerList(players,filter){const f=(filter||'').toLowerCase();const visible=players.filter(p=>p&&p.name&&(!f||p.name.toLowerCase().includes(f)));if(!visible.length)return '<div class="empty">Sin resultados</div>';return visible.map(p=>{const loc=findLoc(p.name,activeN);const curG=loc?loc.g:'';const c=getActive();const gOpts=c.groups?c.groups.map((_,k)=>`<option value="${k+1}" ${curG===k+1?'selected':''}>${groupName(k+1)}</option>`).join(''):'';return `<div class="ge-group" style="margin-bottom:.5rem"><div style="display:flex;justify-content:space-between;align-items:center"><div class="ge-gtitle">${p.name}${loc?' <span class="badge badge-tag">'+groupName(loc.g)+'</span>':''}</div><button class="btn btn-sm" onclick="togglePlayerEdit('${esc(p.name)}')"><i class="ti ti-edit"></i> Editar</button></div><div id="pe-${esc(p.name)}" style="display:none;margin-top:.5rem"><div class="form-row"><div class="form-group"><label>Nombre completo</label><input type="text" id="pe-name-${esc(p.name)}" value="${esc(p.name)}"></div><div class="form-group"><label>Email</label><input type="email" id="pe-email-${esc(p.name)}" value="${esc(p.email||'')}"></div></div><div class="form-row"><div class="form-group"><label>Teléfono</label><input type="tel" id="pe-tel-${esc(p.name)}" value="${esc(p.tel||'')}"></div><div class="form-group"><label>Grupo (Ciclo Activo)</label><select id="pe-grp-${esc(p.name)}"><option value="">Sin grupo</option>${gOpts}</select></div></div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;"><button class="btn btn-danger btn-sm" onclick="deletePlayerAdmin('${esc(p.name)}')"><i class="ti ti-trash"></i> Eliminar</button><div class="gap-sm"><button class="btn btn-success btn-sm" onclick="savePlayerAdmin('${esc(p.name)}')"><i class="ti ti-device-floppy"></i> Guardar</button><button class="btn btn-danger btn-sm" onclick="resetPwd('${esc(p.name)}')"><i class="ti ti-refresh"></i> Clave</button></div></div></div></div>`;}).join('');}
 function filterPlayerList(){const f=document.getElementById('player-search').value;const players=ALLNAMES.map(n=>USERS[n]).filter(Boolean);document.getElementById('player-list').innerHTML=renderPlayerList(players,f);}
 function togglePlayerEdit(name){const el=document.getElementById('pe-'+name);if(el)el.style.display=el.style.display==='none'?'block':'none';}
-function savePlayerAdmin(oldName){const newName=(document.getElementById('pe-name-'+oldName).value||'').trim();const email=(document.getElementById('pe-email-'+oldName).value||'').trim();const tel=(document.getElementById('pe-tel-'+oldName).value||'').trim();if(!newName){toast('El nombre no puede estar vacío.');return;}const u=USERS[oldName];if(!u)return;u.email=email;u.tel=tel;if(newName!==oldName){USERS[newName]={...u,name:newName};delete USERS[oldName];const idx=ALLNAMES.indexOf(oldName);if(idx>=0)ALLNAMES[idx]=newName;cycles.forEach(c=>{if(!c.groups)return;c.groups.forEach(g=>{const pi=g.players.indexOf(oldName);if(pi>=0)g.players[pi]=newName;});});}persist();renderPerfil();toast(newName+': datos actualizados.');}
+
+function savePlayerAdmin(oldName){
+  const newName=(document.getElementById('pe-name-'+oldName).value||'').trim();
+  const email=(document.getElementById('pe-email-'+oldName).value||'').trim();
+  const tel=(document.getElementById('pe-tel-'+oldName).value||'').trim();
+  const grpEl=document.getElementById('pe-grp-'+oldName);
+  const newGrp=grpEl?parseInt(grpEl.value):NaN;
+  if(!newName){toast('El nombre no puede estar vacío.');return;}
+  const u=USERS[oldName];if(!u)return;
+  const loc=findLoc(oldName,activeN);
+  if(loc&&!isNaN(newGrp)&&loc.g!==newGrp){movePlayer(oldName,loc.g,newGrp);}
+  else if(!loc&&!isNaN(newGrp)){addPlayerToCycle(oldName,newGrp);}
+  u.email=email;u.tel=tel;
+  if(newName!==oldName){
+    USERS[newName]={...u,name:newName};
+    delete USERS[oldName];
+    const idx=ALLNAMES.indexOf(oldName);
+    if(idx>=0)ALLNAMES[idx]=newName;
+    cycles.forEach(c=>{if(!c.groups)return;c.groups.forEach(g=>{const pi=g.players.indexOf(oldName);if(pi>=0)g.players[pi]=newName;});});
+    matches.forEach(m=>{
+      if(m.aName===oldName)m.aName=newName;
+      if(m.bName===oldName)m.bName=newName;
+      if(m.reporter===oldName)m.reporter=newName;
+      if(m.poNames){if(m.poNames[0]===oldName)m.poNames[0]=newName;if(m.poNames[1]===oldName)m.poNames[1]=newName;}
+    });
+  }
+  persist();renderPerfil();toast(newName+': datos actualizados.');
+}
+
+function deletePlayerAdmin(name){
+  if(!confirm('¿Seguro que querés eliminar a '+name+' de la liga? Se borrará de los grupos actuales.'))return;
+  delete USERS[name];
+  const idx=ALLNAMES.indexOf(name);
+  if(idx>=0)ALLNAMES.splice(idx,1);
+  cycles.forEach(c=>{if(!c.groups)return;c.groups.forEach(g=>{const pi=g.players.indexOf(name);if(pi>=0)g.players.splice(pi,1);});});
+  persist();renderPerfil();toast(name+' ha sido eliminado.');
+}
+
 function resetPwd(name){const u=USERS[name];if(!u)return;u.pass='tenis';persist();toast(name+': contraseña reseteada a "tenis".');}
 function saveProfile(){const name=(document.getElementById('pf-name').value||'').trim();const email=(document.getElementById('pf-email').value||'').trim();const tel=(document.getElementById('pf-tel').value||'').trim();const a=document.getElementById('edit-profile-alert');if(!name){a.className='alert alert-err';a.textContent='El nombre no puede estar vacío.';return;}const u=currentUser;const oldName=u.name;u.email=email;u.tel=tel;if(name!==oldName){if(USERS[name]&&name!==oldName){a.className='alert alert-err';a.textContent='Ya existe un jugador con ese nombre.';return;}USERS[name]={...u,name};delete USERS[oldName];const idx=ALLNAMES.indexOf(oldName);if(idx>=0)ALLNAMES[idx]=name;cycles.forEach(c=>{if(!c.groups)return;c.groups.forEach(g=>{const pi=g.players.indexOf(oldName);if(pi>=0)g.players[pi]=name;});});currentUser=USERS[name];}persist();a.className='alert alert-ok';a.textContent='✓ Datos actualizados.';}
 function changePw(){const o=document.getElementById('pw-old').value,n=document.getElementById('pw-new').value,n2=document.getElementById('pw-new2').value,a=document.getElementById('pw-alert');function al(m,t){a.className='alert alert-'+t;a.textContent=m;}if(o!==currentUser.pass){al(t('pwOldWrong'),'err');return;}if(!n||n.length<4){al(t('pwShort'),'err');return;}if(n!==n2){al(t('pwNoMatch'),'err');return;}const key=currentUser.role==='admin'?'admin':currentUser.name;USERS[key].pass=n;currentUser.pass=n;al(t('pwOk'),'ok');['pw-old','pw-new','pw-new2'].forEach(id=>document.getElementById(id).value='');}
