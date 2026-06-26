@@ -22,7 +22,6 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 .user-info{text-align:right}.user-info .name{font-size:13px;color:#fff;font-weight:600}.user-info .role{font-size:11px;color:#F5C518}
 .logout-btn{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:8px;padding:6px 9px;font-size:12px;cursor:pointer}.logout-btn:hover{background:rgba(255,255,255,.28)}
 
-/* ESTILOS NUEVOS PARA LOS BOTONES DE IDIOMA */
 .lang-btn { background: rgba(255,255,255,.15); color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer; font-weight: 600; }
 .lang-btn:hover { background: rgba(255,255,255,.28); }
 .lang-btn.active { background: var(--priD); border-color: #F5C518; color: #F5C518; }
@@ -37,6 +36,11 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 .tab{flex:1;min-width:78px;padding:8px;border:none;background:transparent;border-radius:9px;cursor:pointer;font-size:13px;color:var(--text2);white-space:nowrap}
 .tab.active{background:var(--pri);color:#fff;font-weight:600}.tab:hover:not(.active){background:var(--surface)}
 .tab-n{background:#F5C518;color:#0E3470;border-radius:20px;padding:1px 6px;font-size:10px;margin-left:3px;font-weight:600}
+
+/* Ocultar barra de scroll en menús deslizables */
+.tabs, .cycle-bar { -ms-overflow-style: none; scrollbar-width: none; }
+.tabs::-webkit-scrollbar, .cycle-bar::-webkit-scrollbar { display: none; }
+
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.875rem 1rem;margin-bottom:.625rem}
 .grp-sep{height:0;border-top:3px solid #111;margin:0 0 .625rem;border-radius:2px}
 .grp-pick{display:flex;gap:6px;flex-wrap:wrap}
@@ -148,11 +152,15 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
   .hdr h1{font-size:13px;font-weight:600}.hdr p{font-size:10px}
   .user-info .name{font-size:12px}.user-info .role{font-size:10px}
   .logout-btn{padding:5px 7px;font-size:11px}
-  .cycle-bar{gap:4px}
-  .cycle-tab{min-width:0;flex:1;padding:7px 4px;font-size:12px;border-radius:8px}
+  
+  /* MEJORAS UX/UI MOBILE PARA MENÚS DESLIZABLES (SWIPE) */
+  .cycle-bar { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+  .cycle-tab { flex: 0 0 auto; padding: 8px 12px; border-radius:8px; }
   .cycle-tab .st{font-size:10px}
-  .tabs{gap:2px;padding:2px;border-radius:9px}
-  .tab{min-width:0;padding:6px 4px;font-size:11px}
+  
+  .tabs { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding-bottom: 2px; border-radius:9px; gap:4px; -webkit-overflow-scrolling: touch; }
+  .tab { flex: 0 0 auto; min-width: max-content; padding: 8px 12px; font-size: 12px; border-radius:7px; }
+
   .card{padding:.6rem .6rem;margin-bottom:.45rem;border-radius:10px}
   .grp-pick{gap:4px}
   .grp-btn{padding:6px 8px;font-size:12px;border-radius:7px}
@@ -285,7 +293,7 @@ app_title:'Liga de Tenis Sohail',app_subtitle:'Verano 2026',select_user:'Selecci
 exit:'Salir',cycle:'Ciclo',playoffs:'Play Offs',playoffs_prev:'Play Offs (previa)',
 tab_grupos:'Grupos',tab_general:'Clasificación',tab_cargar:'Cargar',tab_cargar_admin:'Cargar/Disputas',tab_pendientes:'Pendientes',tab_perfil:'Perfil',tab_admin:'Admin',
 choose_group:'Elegí el grupo',group:'Grupo',destination:'Destino',player:'Jugador',won:'G',lost:'P',not_played:'NJ',sets_won:'SG',sets_lost:'SP',balance:'Bal',pts_pos:'P.puesto',extra:'Extra',total:'Total',pts_classif:'Puntos para la Clasificación General',players_col:'Jugadores',
-legend_pts:'* Pts: puntos del grupo (3 victoria, 1 derrota, 0 no jugado). G: ganados. P: perdidos. NJ: no jugados. SG: sets ganados. SP: sets perdidos. Bal: balance de sets (SG−SP), desempata. Destino: grupo al que sube (↑), baja (↓) o se mantiene (=). P.puesto+Extra (+2 al ganador del grupo) = Total a la Clasificación General.',
+legend_pts:'* Pts: puntos del grupo (3 victoria, 1 derrota, 0 no jugado). G: ganados. P: perdidos. NJ: no jugados. SG: sets ganados. SP: sets perdidos. Bal: balance de sets (SG−SP). Desempates: Puntos > Balance Sets > Sets ganados > Games ganados > Games perdidos. Destino: grupo al que sube (↑), baja (↓) o se mantiene (=). P.puesto+Extra (+2 al ganador del grupo) = Total a la Clasificación General.',
 legend_matrix:'El marcador se lee en la fila del jugador (sus juegos primero). Celeste = jugado en Sohail · naranja = jugado en Haza.',
 legend_sohail:'Sohail',legend_haza:'Haza',legend_pending:'Pendiente',legend_disputed:'Disputado',legend_load:'+ cargar',legend_noedit:'· no editable',
 general_title:'Clasificación general acumulada (todos los ciclos)',
@@ -293,7 +301,7 @@ current_group:'Grupo actual',you:'Vos',
 report_result:'Reportar resultado',reporter:'Jugador (quien reporta)',rival:'Rival',club_label:'Club',date_label:'Fecha',
 reqmark_label:'OBLIGATORIO',set:'Set',
 sets_section:'Resultado por sets',supertiebreak:'S.Tiebreak',stb_hint:'solo 1-0 o 0-1',add_stb:'Supertiebreak (1-1)',send:'Enviar',clear:'Limpiar',set_hint:'6-0 a 6-4, 7-5 o 7-6',
-not_in_cycle:'No estás en el ciclo activo.',load_note_player:'Cargás partidos tuyos del {g}. Tu rival debe confirmarlo. Una vez validado no se reedita.',load_note_admin:'Admin: cargás/editás cualquier partido. Lo que cargás queda validado.',
+not_in_cycle:'No estás en el ciclo activo.',load_note_player:'Cargás partidos tuyos del {g}. Solo aparecen los rivales con los que aún no tenés partido cargado. Tu rival debe confirmarlo.',load_note_admin:'Admin: cargás/editás cualquier partido. Lo que cargás queda validado.',
 select_two:'Seleccioná los dos jugadores.',same_group:'Ambos deben ser del mismo grupo.',validated_admin_only:'Ese resultado ya fue validado. Solo el admin puede editarlo.',result_sent_admin:'✓ Resultado válido y validado (admin).',result_sent_player:'✓ Resultado válido enviado. El rival debe confirmarlo.',select_club:'Elegí el club (Sohail o Haza).',select_date:'Completá la fecha del partido.',
 disputes_title:'Disputas activas (resuelve el admin)',no_disputes:'No hay disputas',validate:'Validar',edit:'Editar',
 pending_title:'Pendientes de confirmación',no_pending:'No hay pendientes',waiting_rival:'Esperando al rival',review:'Revisar',
@@ -340,7 +348,7 @@ app_title:'Sohail Tennis League',app_subtitle:'Summer 2026',select_user:'Select 
 exit:'Log out',cycle:'Cycle',playoffs:'Play Offs',playoffs_prev:'Play Offs (preview)',
 tab_grupos:'Groups',tab_general:'Standings',tab_cargar:'Upload',tab_cargar_admin:'Upload/Disputes',tab_pendientes:'Pending',tab_perfil:'Profile',tab_admin:'Admin',
 choose_group:'Choose group',group:'Group',destination:'Dest.',player:'Player',won:'W',lost:'L',not_played:'NP',sets_won:'SW',sets_lost:'SL',balance:'Bal',pts_pos:'Pos.pts',extra:'Extra',total:'Total',pts_classif:'Points for the General Standings',players_col:'Players',
-legend_pts:'* Pts: group points (3 win, 1 loss, 0 not played). W: wins. L: losses. NP: not played. SW: sets won. SL: sets lost. Bal: set balance (SW−SL), tiebreaker. Dest.: group player moves to: up (↑), down (↓) or stays (=). Pos.pts+Extra (+2 to group winner) = Total for General Standings.',
+legend_pts:'* Pts: group points (3 win, 1 loss, 0 not played). W: wins. L: losses. NP: not played. SW: sets won. SL: sets lost. Bal: set balance (SW−SL). Tiebreakers: Points > Set Balance > Sets Won > Games Won > Games Lost. Dest.: group player moves to: up (↑), down (↓) or stays (=). Pos.pts+Extra (+2 to group winner) = Total for General Standings.',
 legend_matrix:"Score is read in the player's row (their games first). Blue = played at Sohail · orange = played at Haza.",
 legend_sohail:'Sohail',legend_haza:'Haza',legend_pending:'Pending',legend_disputed:'Disputed',legend_load:'+ upload',legend_noedit:'· locked',
 general_title:'Cumulative general standings (all cycles)',
@@ -348,7 +356,7 @@ current_group:'Current group',you:'You',
 report_result:'Report Result',reporter:'Player (Who Reports)',rival:'Opponent',club_label:'Club',date_label:'Date',
 reqmark_label:'MANDATORY',set:'Set',
 sets_section:'Results by set',supertiebreak:'S.Tiebreak',stb_hint:'only 1-0 or 0-1',add_stb:'Super tiebreak (1-1)',send:'Send',clear:'Clear',set_hint:'6-0 to 6-4, 7-5 or 7-6',
-not_in_cycle:'You are not in the active cycle.',load_note_player:'Upload your matches in {g}. Opponent must confirm. Once validated it cannot be edited.',load_note_admin:'Admin: upload/edit any match. Immediately validated.',
+not_in_cycle:'You are not in the active cycle.',load_note_player:'Upload your matches in {g}. Only opponents you haven\'t played yet are shown. Opponent must confirm.',load_note_admin:'Admin: upload/edit any match. Immediately validated.',
 select_two:'Please select two players.',same_group:'Both players must be in the same group.',validated_admin_only:'That result is already validated. Only the admin can edit it.',result_sent_admin:'✓ Valid result — validated (admin).',result_sent_player:'✓ Valid result submitted. Opponent must confirm.',select_club:'Please choose a club (Sohail or Haza).',select_date:'Please fill in the match date.',
 disputes_title:'Active disputes (resolved by admin)',no_disputes:'No disputes',validate:'Validate',edit:'Edit',
 pending_title:'Pending Confirmation',no_pending:'No pending items',waiting_rival:'Waiting for opponent',review:'Review',
@@ -410,7 +418,7 @@ function validMatch(s){if(s.length<2)return{ok:false,msg:'Un partido necesita al
 function findLoc(name,cycN){const c=cycles[cycN-1];if(!c.groups)return null;for(let gi=0;gi<c.groups.length;gi++){if(c.groups[gi].players.indexOf(name)>=0)return{g:gi+1};}return null;}
 function getActive(){return cycles[activeN-1];}
 function getInitials(n){if(!n)return'?';return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();}
-function computeStats(cycN,gid){const g=cycles[cycN-1].groups[gid-1];const players=g.players;const st=players.map((name,i)=>({idx:i,name,pts:0,g:0,p:0,nj:0,sg:0,sp:0}));const byName={};st.forEach(s=>byName[s.name]=s);matches.filter(m=>!m.po&&m.cycle===cycN&&m.g===gid&&m.status==='confirmed').forEach(m=>{const a=byName[m.aName],b=byName[m.bName];if(!a||!b)return;let w1=0,w2=0;m.sets.forEach(([x,y])=>{if(x>y)w1++;else w2++;});a.sg+=w1;a.sp+=w2;b.sg+=w2;b.sp+=w1;if(w1>w2){a.g++;b.p++;a.pts+=3;b.pts+=1;}else{b.g++;a.p++;b.pts+=3;a.pts+=1;}});st.sort((x,y)=>y.pts-x.pts||y.g-x.g||(y.sg-y.sp)-(x.sg-x.sp));return st;}
+function computeStats(cycN,gid){const g=cycles[cycN-1].groups[gid-1];const players=g.players;const st=players.map((name,i)=>({idx:i,name,pts:0,g:0,p:0,nj:0,sg:0,sp:0,gw:0,gl:0}));const byName={};st.forEach(s=>byName[s.name]=s);matches.filter(m=>!m.po&&m.cycle===cycN&&m.g===gid&&m.status==='confirmed').forEach(m=>{const a=byName[m.aName],b=byName[m.bName];if(!a||!b)return;let w1=0,w2=0;let a_gw=0,a_gl=0;m.sets.forEach(([x,y])=>{if(x>y)w1++;else w2++;a_gw+=x;a_gl+=y;});a.sg+=w1;a.sp+=w2;b.sg+=w2;b.sp+=w1;a.gw+=a_gw;a.gl+=a_gl;b.gw+=a_gl;b.gl+=a_gw;if(w1>w2){a.g++;b.p++;a.pts+=3;b.pts+=1;}else{b.g++;a.p++;b.pts+=3;a.pts+=1;}});st.sort((x,y)=>{if(y.pts!==x.pts)return y.pts-x.pts;const diffS=(y.sg-y.sp)-(x.sg-x.sp);if(diffS!==0)return diffS;if(y.sg!==x.sg)return y.sg-x.sg;if(y.gw!==x.gw)return y.gw-x.gw;return x.gl-y.gl;});return st;}
 function findMatch(cycN,gid,n1,n2){return matches.find(m=>!m.po&&m.cycle===cycN&&m.g===gid&&((m.aName===n1&&m.bName===n2)||(m.aName===n2&&m.bName===n1)));}
 function pairsNeeded(c){let t=0;c.groups.forEach(g=>{const n=g.players.length;t+=n*(n-1)/2;});return t;}
 function computeGeneral(){const tot={};cycles.forEach(c=>{if(!c.groups)return;c.groups.forEach((g,gi)=>{const st=computeStats(c.n,gi+1);st.forEach((s,pos)=>{const v=ptsForPos(gi+1,pos)+(pos===0?2:0);tot[s.name]=(tot[s.name]||0)+v;});});});return Object.entries(tot).map(([name,total])=>({name,total})).sort((a,b)=>b.total-a.total);}
