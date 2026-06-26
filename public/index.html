@@ -428,7 +428,15 @@ h+=`<div class="card"><div class="section-lbl">Editar grupos (Ciclo ${activeN})<
 h+=`<div class="card"><div class="section-lbl">Fechas de los ciclos</div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr">${[0,1,2].map(i=>`<div class="form-group"><label>Ciclo ${i+1}</label><input type="text" value="${FECHAS[i].replace(/"/g,'&quot;')}" onchange="setFecha(${i},this.value)"></div>`).join('')}</div><p class="legend-txt" style="margin-top:0">Editá el período de cada ciclo (texto libre, ej. "15/06/26 – 19/07/26").</p></div>`;
 h+=destinoCard();h+='<div class="card"><div class="section-lbl">'+t('playoffs_title')+'</div>'+(cyclesDone?'<div class="alert alert-ok">'+t('playoffs_ready')+'</div>':'<div class="alert alert-info">'+t('playoffs_not_ready')+'</div>')+'<div class="form-row"><div class="form-group"><label>'+t('how_many_playoffs')+'</label><select id="po-num" onchange="setPoNum(this.value)">'+[1,2,3,4,5,6].map(k=>'<option value="'+k+'" '+(playoff.numTramos===k?'selected':'')+'>'+k+' '+(k>1?t('bracket_plural'):t('bracket_singular'))+'</option>').join('')+'</select></div><div class="form-group" style="align-self:end"><button class="btn btn-primary" '+(cyclesDone&&!playoff.started?'':'disabled')+' onclick="previewPlayoffUI()"><i class="ti ti-eye"></i> '+t('preview_po')+'</button></div></div>'+(playoff.started?'<p class="legend-txt">'+t('po_started')+'</p>':playoff.preview?'<p class="legend-txt">'+t('po_preview_active')+'</p>':'')+'</div>';
 const disp=[];
-document.getElementById('view-admin').innerHTML=h;}
+h+='<div class="card"><div class="section-lbl">Reiniciar datos (¡Cuidado!)</div>';
+
+h+='<p class="legend-txt" style="margin-top:0">Estas acciones borran datos permanentemente y no se pueden deshacer.</p>';
+
+h+='<div class="gap-sm">';
+
+h+=[1,2,3].map(n=>'<button class="btn btn-danger" onclick="resetCycleUI('+n+')"><i class="ti ti-trash"></i> Reiniciar Ciclo '+n+'</button>').join('');
+
+h+='<button class="btn btn-danger" onclick="resetPlayoffUI()"><i class="ti ti-trash"></i> Reiniciar Play Offs</button></div></div>';const disp=[];document.getElementById('view-admin').innerHTML=h;}
 function movePlayerUI(name,fromG,toG){if(!toG)return;movePlayer(name,fromG,+toG);renderAdmin();toast(name+' movido a '+groupName(+toG));}
 function removePlayerUI(name,fromG){removePlayerCycle(name,fromG);renderAdmin();toast(name+' quitado del ciclo.');}
 
