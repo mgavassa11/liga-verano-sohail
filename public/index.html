@@ -164,7 +164,7 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
     scrollbar-width: none; 
     padding-bottom: 4px;
   }
-  .cycle-bar::-webkit-scrollbar, .tabs::-webkit-scrollbar, .grp-pick::-webkit-scrollbar { display: none; }
+  .cycle-bar::-webkit-scrollbar, .tabs::-webkit-scrollbar, .grp-pick::-webkit-scrollbar, .overflow-x::-webkit-scrollbar { display: none; }
   
   .overflow-x { 
     overflow-x: auto !important; 
@@ -172,8 +172,10 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
     margin-bottom: 5px; 
     padding-bottom: 5px; 
   }
-  .cls-table, .gen-table, .res-table { min-width: max-content !important; }
-  .cls-table th, .gen-table th, .cls-table td, .gen-table td { white-space: nowrap; }
+  
+  /* REPARACIÓN PARA TABLA DE RESULTADOS CRUZADOS EN MOBILE */
+  .cls-table, .gen-table, .res-table { min-width: max-content !important; width: 100% !important; table-layout: auto !important; }
+  .cls-table th, .gen-table th, .cls-table td, .gen-table td, .res-table th, .res-table td { white-space: nowrap !important; }
 
   .cycle-tab, .tab, .grp-btn { flex: 0 0 auto !important; min-width: max-content !important; white-space: nowrap !important; }
   .cycle-tab { padding: 8px 14px; font-size: 13px; border-radius: 9px; }
@@ -188,7 +190,7 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
   .cls-table th,.gen-table th{font-size:9px;padding:4px 6px}
   .cls-table td,.gen-table td{padding:5px 6px;font-size:11px}
   .res-table{font-size:10px}
-  .res-table th,.res-table td{padding:4px 6px; white-space: nowrap;}
+  .res-table th,.res-table td{padding:4px 6px;}
   .res-table th:first-child,.res-table td:first-child{min-width:90px;}
 
   .section-lbl{font-size:10px;margin:.6rem 0 .3rem}
