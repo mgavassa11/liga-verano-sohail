@@ -38,8 +38,8 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 .tab-n{background:#F5C518;color:#0E3470;border-radius:20px;padding:1px 6px;font-size:10px;margin-left:3px;font-weight:600}
 
 /* Ocultar barra de scroll en menús deslizables */
-.tabs, .cycle-bar { -ms-overflow-style: none; scrollbar-width: none; }
-.tabs::-webkit-scrollbar, .cycle-bar::-webkit-scrollbar { display: none; }
+.tabs::-webkit-scrollbar, .cycle-bar::-webkit-scrollbar, .grp-pick::-webkit-scrollbar { display: none; }
+.tabs, .cycle-bar, .grp-pick { -ms-overflow-style: none; scrollbar-width: none; }
 
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.875rem 1rem;margin-bottom:.625rem}
 .grp-sep{height:0;border-top:3px solid #111;margin:0 0 .625rem;border-radius:2px}
@@ -144,6 +144,8 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 .toast{position:fixed;bottom:16px;right:16px;background:var(--pri);color:#fff;padding:10px 14px;border-radius:8px;font-size:13px;z-index:999;transition:.3s;max-width:300px;border-bottom:3px solid #F5C518;box-shadow:0 6px 20px rgba(0,0,0,.25)}
 .bracket-main .match-box{background:#EAF3FC}.bracket-cons .match-box{background:#FDF1E6}
 .bracket-main .slot,.bracket-cons .slot{background:transparent}.bracket-main .slot.winner,.bracket-cons .slot.winner{background:var(--winrow)}.bracket-main .slot-foot,.bracket-cons .slot-foot{background:rgba(0,0,0,.04)}
+
+/* CSS ESPECÍFICO PARA MOBILE */
 @media(max-width:640px){
   body{font-size:13px}
   .app{padding:.4rem .35rem}
@@ -154,16 +156,28 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
   .logout-btn{padding:5px 7px;font-size:11px}
   
   /* MEJORAS UX/UI MOBILE PARA MENÚS DESLIZABLES (SWIPE) */
-  .cycle-bar { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
-  .cycle-tab { flex: 0 0 auto; padding: 8px 12px; border-radius:8px; }
+  .cycle-bar, .tabs, .grp-pick {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    justify-content: flex-start !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; 
+    padding-bottom: 4px;
+  }
+  .cycle-bar::-webkit-scrollbar, .tabs::-webkit-scrollbar, .grp-pick::-webkit-scrollbar {
+    display: none; 
+  }
+  .cycle-tab, .tab, .grp-btn {
+    flex: 0 0 auto !important; 
+    min-width: max-content !important;
+    white-space: nowrap !important;
+  }
+  .cycle-tab { padding: 8px 14px; font-size: 13px; border-radius: 9px; }
+  .tab { padding: 8px 12px; font-size: 12px; border-radius: 8px; }
+  .grp-btn { padding: 8px 12px; font-size: 12px; border-radius: 8px; }
   .cycle-tab .st{font-size:10px}
-  
-  .tabs { flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start; padding-bottom: 2px; border-radius:9px; gap:4px; -webkit-overflow-scrolling: touch; }
-  .tab { flex: 0 0 auto; min-width: max-content; padding: 8px 12px; font-size: 12px; border-radius:7px; }
 
   .card{padding:.6rem .6rem;margin-bottom:.45rem;border-radius:10px}
-  .grp-pick{gap:4px}
-  .grp-btn{padding:6px 8px;font-size:12px;border-radius:7px}
   .form-row{grid-template-columns:1fr}
   .cls-table,.gen-table{font-size:11px}
   .cls-table th,.gen-table th{font-size:9px;padding:4px 2px}
