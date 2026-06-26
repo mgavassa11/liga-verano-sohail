@@ -21,6 +21,12 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 .user-chip{margin-left:auto;display:flex;align-items:center;gap:8px}
 .user-info{text-align:right}.user-info .name{font-size:13px;color:#fff;font-weight:600}.user-info .role{font-size:11px;color:#F5C518}
 .logout-btn{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:8px;padding:6px 9px;font-size:12px;cursor:pointer}.logout-btn:hover{background:rgba(255,255,255,.28)}
+
+/* ESTILOS NUEVOS PARA LOS BOTONES DE IDIOMA */
+.lang-btn { background: rgba(255,255,255,.15); color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer; font-weight: 600; }
+.lang-btn:hover { background: rgba(255,255,255,.28); }
+.lang-btn.active { background: var(--priD); border-color: #F5C518; color: #F5C518; }
+
 .role-badge{background:#F5C518;color:var(--priD);font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;text-transform:uppercase}
 .cycle-bar{display:flex;gap:6px;margin-bottom:.6rem;flex-wrap:wrap}
 .cycle-tab{flex:1;min-width:90px;padding:10px 8px;border:1px solid var(--border);background:var(--surface);border-radius:11px;cursor:pointer;font-size:14px;font-weight:600;text-align:center;color:var(--text);display:flex;align-items:center;justify-content:center;gap:5px}
@@ -189,7 +195,13 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 </style></head><body>
 <div id="login-screen">
   <div class="login-wrap">
-    <div class="login-head" style="position:relative"><div style="position:absolute;top:10px;right:12px"><button id="lang-btn-login" onclick="setLang(LANG==='es'?'en':'es')" style="background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:13px;cursor:pointer">🇬🇧 EN</button></div><div class="ball"><i class="ti ti-ball-tennis"></i></div><h1 id="login-title">Liga de Tenis Sohail</h1><p id="login-sub">Verano 2026</p></div>
+    <div class="login-head" style="position:relative">
+      <div style="position:absolute;top:10px;right:12px;display:flex;gap:6px">
+        <button id="btn-lang-es-login" onclick="setLang('es')" class="lang-btn active">ES</button>
+        <button id="btn-lang-en-login" onclick="setLang('en')" class="lang-btn">EN</button>
+      </div>
+      <div class="ball"><i class="ti ti-ball-tennis"></i></div><h1 id="login-title">Liga de Tenis Sohail</h1><p id="login-sub">Verano 2026</p>
+    </div>
     <div class="login-body"><div class="login-err" id="login-err"></div>
       <label id="lbl-user">Seleccioná tu usuario</label><select id="login-user"><option value=""></option></select>
       <label id="lbl-pass">Contraseña</label><input type="password" id="login-pass" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
@@ -199,7 +211,14 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 </div>
 <div class="app" id="main-app" style="display:none">
   <div class="hdr"><div class="hdr-logo"><i class="ti ti-trophy"></i></div><div><h1 id="hdr-title">Liga de Tenis Sohail</h1><p id="hdr-sub">Verano 2026</p></div>
-    <div class="user-chip"><div class="user-info"><div class="name" id="cur-name">—</div><div class="role" id="cur-role">—</div></div><button id="lang-btn" class="logout-btn" onclick="setLang(LANG==='es'?'en':'es')" style="margin-right:4px">🇬🇧 EN</button><button class="logout-btn" onclick="doLogout()" id="exit-btn">Salir</button></div>
+    <div class="user-chip">
+      <div class="user-info"><div class="name" id="cur-name">—</div><div class="role" id="cur-role">—</div></div>
+      <div style="display:flex;gap:4px;margin-right:8px;border-right:1px solid rgba(255,255,255,0.2);padding-right:8px;">
+        <button id="btn-lang-es" class="lang-btn active" onclick="setLang('es')">ES</button>
+        <button id="btn-lang-en" class="lang-btn" onclick="setLang('en')">EN</button>
+      </div>
+      <button class="logout-btn" onclick="doLogout()" id="exit-btn">Salir</button>
+    </div>
   </div>
   <div class="cycle-bar" id="cycle-bar"></div>
   <div class="tabs" id="tabs"></div>
@@ -209,12 +228,18 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
     <div id="cargar-disputes"></div>
     <div class="card"><div class="section-lbl" id="report-result-lbl">Reportar resultado</div><div id="form-alert"></div><p class="lock-note" id="cargar-note" style="margin-bottom:.75rem"></p>
       <div class="form-row"><div class="form-group"><label id="f-reporter-lbl">Jugador (quien reporta)</label><select id="f-reporter"><option value="">—</option></select></div><div class="form-group"><label id="f-rival-lbl">Rival</label><select id="f-rival"><option value="">—</option></select></div></div>
-      <div class="req-wrap" style="margin-bottom:.75rem"><div class="form-row" style="margin-bottom:0"><div class="form-group"><label>Club <span class="reqmark">obligatorio</span></label><div class="club-pick" id="club-pick"><div class="club-opt" id="club-sohail" onclick="pickClub('Sohail')">Sohail</div><div class="club-opt" id="club-haza" onclick="pickClub('Haza')">Haza</div></div></div><div class="form-group"><label>Fecha <span class="reqmark">obligatorio</span></label><input type="date" id="f-fecha" class="req"></div></div></div>
+      <div class="req-wrap" style="margin-bottom:.75rem"><div class="form-row" style="margin-bottom:0"><div class="form-group"><label id="lbl-club">Club <span class="reqmark">obligatorio</span></label><div class="club-pick" id="club-pick"><div class="club-opt" id="club-sohail" onclick="pickClub('Sohail')">Sohail</div><div class="club-opt" id="club-haza" onclick="pickClub('Haza')">Haza</div></div></div><div class="form-group"><label id="lbl-fecha-field">Fecha <span class="reqmark">obligatorio</span></label><input type="date" id="f-fecha" class="req"></div></div></div>
       <div class="section-lbl" id="sets-section-lbl">Resultado por sets</div>
       <div class="set-row"><label id="lbl-set1-field">Set 1</label><input type="number" id="s1a" min="0" max="7" placeholder="0"><span class="sep">–</span><input type="number" id="s1b" min="0" max="7" placeholder="0"><span class="set-hint">6-0 a 6-4, 7-5 o 7-6</span></div>
       <div class="set-row"><label>Set 2</label><input type="number" id="s2a" min="0" max="7" placeholder="0"><span class="sep">–</span><input type="number" id="s2b" min="0" max="7" placeholder="0"></div>
       <div class="set-row" id="s3-row" style="display:none"><label>S.Tiebreak</label><input type="number" id="s3a" min="0" max="1" placeholder="0"><span class="sep">–</span><input type="number" id="s3b" min="0" max="1" placeholder="0"><span class="set-hint">solo 1-0 o 0-1</span></div>
-      <div class="gap-sm mt-sm"><button class="btn" onclick="document.getElementById('s3-row').style.display='flex'"><i class="ti ti-plus"></i> Supertiebreak (1-1)</button><button class="btn btn-accent" onclick="submitResult()"><i class="ti ti-send"></i> Enviar</button><button class="btn" onclick="clearForm()">Limpiar</button></div>
+      
+      <div class="gap-sm mt-sm">
+        <button class="btn" onclick="document.getElementById('s3-row').style.display='flex'"><i class="ti ti-plus"></i> Supertiebreak (1-1)</button>
+        <button class="btn btn-accent" onclick="submitResult()" id="btn-enviar"><i class="ti ti-send"></i> Enviar</button>
+        <button class="btn" onclick="clearForm()" id="btn-limpiar">Limpiar</button>
+      </div>
+      
     </div>
   </div>
   <div id="view-pendientes" style="display:none"><div class="card"><div class="section-lbl" id="pend-title">Pendientes de confirmación</div><div id="pend-list"></div></div></div>
@@ -231,7 +256,31 @@ function setLang(l){LANG=l;try{localStorage.setItem('liga_lang',l);}catch(e){}re
 function t(k){const v=(TRANSLATIONS[LANG]&&TRANSLATIONS[LANG][k])||TRANSLATIONS['es'][k];return v!==undefined?v:k;}
 function tf(k,vars){let s=t(k);Object.keys(vars||{}).forEach(v=>{s=s.replace(new RegExp('{'+v+'}','g'),vars[v]);});return s;}
 function renderAll(){if(typeof currentUser!=='undefined'&&currentUser){renderShell();if(typeof subView!=='undefined'){try{if(viewCycle==='po')showPlayoffView();else showSub(subView);}catch(e){}}}updateLangUI();}
-function updateLangUI(){const b=document.getElementById('lang-btn');if(b)b.innerHTML=LANG==='es'?'🇬🇧 EN':'🇦🇷 ES';}
+
+// NUEVA FUNCIÓN PARA GESTIONAR LOS IDIOMAS Y BOTONES
+function updateLangUI(){
+  // Toggling visual style for ES/EN buttons
+  ['btn-lang-es', 'btn-lang-es-login'].forEach(id => {
+    let el = document.getElementById(id);
+    if(el) { el.classList.toggle('active', LANG==='es'); }
+  });
+  ['btn-lang-en', 'btn-lang-en-login'].forEach(id => {
+    let el = document.getElementById(id);
+    if(el) { el.classList.toggle('active', LANG==='en'); }
+  });
+
+  const lu=document.getElementById('lbl-user');if(lu)lu.textContent=t('select_user');
+  const lp=document.getElementById('lbl-pass');if(lp)lp.textContent=t('password');
+  const lbtn=document.getElementById('login-btn');if(lbtn)lbtn.textContent=t('enter');
+  const lt=document.getElementById('login-title');if(lt)lt.textContent=t('app_title');
+  const ls=document.getElementById('login-sub');if(ls)ls.textContent=t('app_subtitle');
+  
+  // Updating text for "Enviar" and "Limpiar" based on Language
+  const bEnv=document.getElementById('btn-enviar');if(bEnv)bEnv.innerHTML='<i class="ti ti-send"></i> ' + t('send');
+  const bLim=document.getElementById('btn-limpiar');if(bLim)bLim.textContent=t('clear');
+  
+  initLogin();
+}
 
 const TRANSLATIONS={
 es:{
@@ -244,7 +293,7 @@ legend_matrix:'El marcador se lee en la fila del jugador (sus juegos primero). C
 legend_sohail:'Sohail',legend_haza:'Haza',legend_pending:'Pendiente',legend_disputed:'Disputado',legend_load:'+ cargar',legend_noedit:'· no editable',
 general_title:'Clasificación general acumulada (todos los ciclos)',
 current_group:'Grupo actual',you:'Vos',
-report_result:'Reportar resultado',reporter:'Jugador (quien reporta)',rival:'Rival',club_label:'Club (obligatorio)',date_label:'Fecha (obligatorio)',
+report_result:'Reportar resultado',reporter:'Jugador (quien reporta)',rival:'Rival',club_label:'Club',date_label:'Fecha',
 reqmark_label:'OBLIGATORIO',set:'Set',
 sets_section:'Resultado por sets',supertiebreak:'S.Tiebreak',stb_hint:'solo 1-0 o 0-1',add_stb:'Supertiebreak (1-1)',send:'Enviar',clear:'Limpiar',set_hint:'6-0 a 6-4, 7-5 o 7-6',
 not_in_cycle:'No estás en el ciclo activo.',load_note_player:'Cargás partidos tuyos del {g}. Tu rival debe confirmarlo. Una vez validado no se reedita.',load_note_admin:'Admin: cargás/editás cualquier partido. Lo que cargás queda validado.',
@@ -291,9 +340,9 @@ legend_matrix:"Score is read in the player's row (their games first). Blue = pla
 legend_sohail:'Sohail',legend_haza:'Haza',legend_pending:'Pending',legend_disputed:'Disputed',legend_load:'+ upload',legend_noedit:'· locked',
 general_title:'Cumulative general standings (all cycles)',
 current_group:'Current group',you:'You',
-report_result:'Report Result',reporter:'Player (Who Reports)',rival:'Opponent',club_label:'Club (Required)',date_label:'Date (Required)',
+report_result:'Report Result',reporter:'Player (Who Reports)',rival:'Opponent',club_label:'Club',date_label:'Date',
 reqmark_label:'MANDATORY',set:'Set',
-sets_section:'Results by set',supertiebreak:'S.Tiebreak',stb_hint:'only 1-0 or 0-1',add_stb:'Super tiebreak (1-1)',send:'Submit',clear:'Clear',set_hint:'6-0 to 6-4, 7-5 or 7-6',
+sets_section:'Results by set',supertiebreak:'S.Tiebreak',stb_hint:'only 1-0 or 0-1',add_stb:'Super tiebreak (1-1)',send:'Send',clear:'Clear',set_hint:'6-0 to 6-4, 7-5 or 7-6',
 not_in_cycle:'You are not in the active cycle.',load_note_player:'Upload your matches in {g}. Opponent must confirm. Once validated it cannot be edited.',load_note_admin:'Admin: upload/edit any match. Immediately validated.',
 select_two:'Please select two players.',same_group:'Both players must be in the same group.',validated_admin_only:'That result is already validated. Only the admin can edit it.',result_sent_admin:'✓ Valid result — validated (admin).',result_sent_player:'✓ Valid result submitted. Opponent must confirm.',select_club:'Please choose a club (Sohail or Haza).',select_date:'Please fill in the match date.',
 disputes_title:'Active disputes (resolved by admin)',no_disputes:'No disputes',validate:'Validate',edit:'Edit',
@@ -385,7 +434,7 @@ function renderSubTabs(){const tabs=document.getElementById('tabs');if(viewCycle
 function viewCyc(n){viewCycle=n;if(n==='po'){renderShell();showPlayoffView();}else{renderShell();showSub('grupos');}}
 function showSub(name){if(viewCycle==='po')viewCycle=activeN;subView=name;['grupos','general','cargar','pendientes','admin','playoff','perfil'].forEach(v=>{const el=document.getElementById('view-'+v);if(el)el.style.display='none';});document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));var tb=document.getElementById('tab-'+name);if(tb)tb.classList.add('active');document.getElementById('view-'+name).style.display='block';if(name==='grupos')renderGrupos();if(name==='general')renderGeneral();if(name==='cargar'){populateForm();renderCargarDisputas();}if(name==='pendientes')renderPend();if(name==='admin')renderAdmin();if(name==='perfil')renderPerfil();updateHdr();}
 function updateHdr(){const hs=viewCycle==='po'?t('playoffs'):t('cycle')+' '+viewCycle+' · '+FECHAS[viewCycle-1]+' · '+cycles[viewCycle-1].status;const sub=document.getElementById('hdr-sub');if(sub)sub.textContent=hs;const tit=document.getElementById('hdr-title');if(tit)tit.textContent=t('app_title');const eb=document.getElementById('exit-btn');if(eb)eb.textContent=t('exit');}
-function updateLangUI(){const lb=document.getElementById('lang-btn');if(lb)lb.innerHTML=LANG==='es'?'\ud83c\uddec\ud83c\udde7 EN':'\ud83c\uddea\ud83c\uddf8 ES';const lb2=document.getElementById('lang-btn-login');if(lb2)lb2.innerHTML=LANG==='es'?'\ud83c\uddec\ud83c\udde7 EN':'\ud83c\uddea\ud83c\uddf8 ES';const lu=document.getElementById('lbl-user');if(lu)lu.textContent=t('select_user');const lp=document.getElementById('lbl-pass');if(lp)lp.textContent=t('password');const lbtn=document.getElementById('login-btn');if(lbtn)lbtn.textContent=t('enter');const lt=document.getElementById('login-title');if(lt)lt.textContent=t('app_title');const ls=document.getElementById('login-sub');if(ls)ls.textContent=t('app_subtitle');initLogin();}
+
 function groupCardHTML(gid){const c=cycles[viewCycle-1];const isActive=c.status==='active';const grp=c.groups[gid-1];const st=computeStats(viewCycle,gid);const dest=DESTINO[gid];const players=grp.players;const fc={};players.forEach(p=>{const f=p.split(' ')[0];fc[f]=(fc[f]||0)+1;});const lbl=p=>{const f=p.split(' ')[0];return fc[f]>1?p:f;};let cls=st.map((s,i)=>{const d=dest[i]||'',dn=parseInt((d||'G99').replace('G',''));const ar=dn<gid?'dest-up':dn>gid?'dest-down':'dest-same';const ic=dn<gid?'↑':dn>gid?'↓':'=';const ex=i===0?2:0;const base=ptsForPos(gid,i);return '<tr class="'+(i===0?'winner-row':'')+'"><td>'+(d?'<span class="dest '+ar+'">'+ic+groupName(dn)+'</span>':'')+'</td><td><span class="avatar">'+getInitials(s.name)+'</span>'+s.name+'</td><td><strong>'+s.pts+'</strong></td><td>'+s.g+'</td><td>'+s.p+'</td><td>'+s.nj+'</td><td>'+s.sg+'</td><td>'+s.sp+'</td><td>'+(s.sg-s.sp)+'</td><td>'+base+'</td><td>'+(ex>0?ex:'')+'</td><td><strong>'+(base+ex)+'</strong></td></tr>';}).join('');const head=players.map(p=>'<th>'+lbl(p)+'</th>').join('');let mrows=players.map((p,i)=>{const cols=players.map((q,j)=>{if(i===j)return'<td class="res-black"></td>';const m=findMatch(viewCycle,gid,p,q);if(m&&m.status==='confirmed'){const sc=m.aName===p?m.sets.map(([a,b])=>a+'-'+b).join(' '):m.sets.map(([a,b])=>b+'-'+a).join(' ');return'<td class="'+(m.club==='Haza'?'cell-haza':'cell-sohail')+'" onclick="openModal('+m.id+')">'+sc+'</td>';}if(m&&m.status==='pending'){const sc=m.aName===p?m.sets.map(([a,b])=>a+'-'+b).join(' '):m.sets.map(([a,b])=>b+'-'+a).join(' ');return'<td class="cell-pending" onclick="openModal('+m.id+')">'+sc+'⏳</td>';}if(m&&m.status==='disputed')return'<td class="cell-disputed" onclick="openModal('+m.id+')">disp.</td>';if(isActive&&canCreate(gid,p,q))return'<td class="cell-empty" onclick="prefill('+gid+',\''+esc(p)+'\',\''+esc(q)+'\')">+</td>';return'<td class="cell-locked">·</td>';}).join('');return'<tr><td>'+lbl(p)+'</td>'+cols+'</tr>';}).join('');
 const thr='<tr><th>'+t('destination')+'</th><th>'+t('player')+'</th><th>Pts</th><th>'+t('won')+'</th><th>'+t('lost')+'</th><th>'+t('not_played')+'</th><th>'+t('sets_won')+'</th><th>'+t('sets_lost')+'</th><th>'+t('balance')+'</th><th>'+t('pts_pos')+'</th><th>'+t('extra')+'</th><th>'+t('total')+'</th></tr>';
 return '<div class="card grp-card"><div class="grp-title">'+t('group')+' '+gid+'</div><div class="overflow-x"><table class="cls-table"><thead><tr class="clg-head"><th colspan="9"></th><th colspan="3">'+t('pts_classif')+'</th></tr>'+thr+'</thead><tbody>'+cls+'</tbody></table></div><p class="legend-txt">'+t('legend_pts')+'</p><div class="section-lbl">'+t('players_col')+' '+groupName(gid)+'</div><div class="overflow-x"><table class="res-table"><thead><tr><th>'+t('players_col')+'</th>'+head+'</tr></thead><tbody>'+mrows+'</tbody></table></div><p class="legend-txt">'+t('legend_matrix')+'</p></div>';}
@@ -424,9 +473,19 @@ function confirmM(){const m=matches.find(x=>x.id===currentModal);if(m){m.status=
 function disputeM(){const m=matches.find(x=>x.id===currentModal);if(m)m.status='disputed';closeM();refreshAll();toast(t('toastDisputed'));}
 function adminEdit(mid){const m=matches.find(x=>x.id===mid);closeM();showSub('cargar');document.getElementById('f-reporter').value=`${m.g}|${m.aName}`;document.getElementById('f-rival').value=`${m.g}|${m.bName}`;pickClub(m.club);['s1a','s1b','s2a','s2b','s3a','s3b'].forEach(id=>document.getElementById(id).value='');document.getElementById('s3-row').style.display='none';m.sets.forEach((s,i)=>{const a=document.getElementById(`s${i+1}a`),b=document.getElementById(`s${i+1}b`);if(a)a.value=s[0];if(b)b.value=s[1];if(i===2)document.getElementById('s3-row').style.display='flex';});document.getElementById('f-fecha').value=m.date;}
 function renderAdmin(){const c=getActive();const need=pairsNeeded(c);const done=matches.filter(m=>m.cycle===activeN&&!m.po&&m.status==='confirmed').length;const notC=matches.filter(m=>m.cycle===activeN&&!m.po&&m.status!=='confirmed').length;const ready=done>=need&&notC===0;const cyclesDone=allCyclesDone();let h=`<div class="card"><div class="section-lbl">Estado del ciclo</div><div class="alert ${ready?'alert-ok':'alert-info'}">Ciclo ${activeN}: ${done}/${need} partidos validados${notC>0?` · ${notC} sin validar`:''}. ${ready?'✓ Listo para cerrar el ciclo.':'Faltan validar resultados.'}</div><div class="gap-sm mt-sm">${activeN<3?`<button class="btn btn-accent" ${(!ready)?'disabled':''} onclick="startNextCycle()"><i class="ti ti-arrow-right-circle"></i> Cerrar ciclo e iniciar siguiente</button>`:`<button class="btn btn-accent" ${(!ready||getActive().status==='finished')?'disabled':''} onclick="finishLastCycle()"><i class="ti ti-flag-check"></i> Finalizar último ciclo (habilita Play Offs)</button>`}<button class="btn" onclick="demoFillUI()"><i class="ti ti-wand"></i> Simular y validar todos</button><button class="btn" onclick="forceConfirmAll()"><i class="ti ti-checks"></i> Confirmar pendientes</button></div></div>`;
-h+=`<div class="card"><div class="section-lbl">Editar grupos (Ciclo ${activeN})</div><p class="legend-txt" style="margin-top:0">Reasigná, quitá o agregá jugadores. Podés dejar grupos de distinto tamaño si hace falta. Cuando se agrega gente a un grupo, después manejás cómo suben/bajan con los menús de cada jugador.</p><div class="req-wrap" style="margin-bottom:.7rem"><div class="section-lbl" style="margin-top:0">Agregar jugador</div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr auto;align-items:end"><div class="form-group"><label>Nombre</label><input id="ap-nom" placeholder="Nombre"></div><div class="form-group"><label>Apellido</label><input id="ap-ape" placeholder="Apellido"></div><div class="form-group"><label>Grupo</label><select id="ap-grp">${c.groups.map((_,k)=>`<option value="${k+1}">${groupName(k+1)}</option>`).join('')}</select></div><div class="form-group"><button class="btn btn-primary" onclick="addPlayerUI()"><i class="ti ti-user-plus"></i> Agregar</button></div></div></div><div class="grpedit">`+c.groups.map((g,gi)=>{const gid=gi+1;return `<div class="ge-group"><div class="ge-gtitle">${groupName(gid)} (${g.players.length})</div>`+g.players.map(n=>`<div class="ge-row"><span class="ge-nm">${n}</span><select class="ge-sel" onchange="movePlayerUI('${esc(n)}',${gid},this.value)"><option value="">' + t('move_to') + '</option>${c.groups.map((_,k)=>k+1!==gid?`<option value="${k+1}">${groupName(k+1)}</option>`:'').join('')}</select><button class="btn btn-danger btn-sm" onclick="removePlayerUI('${esc(n)}',${gid})">Quitar</button></div>`).join('')+`</div>`;}).join('')+`</div></div>`;
+h+=`<div class="card"><div class="section-lbl">Editar grupos (Ciclo ${activeN})</div><p class="legend-txt" style="margin-top:0">Reasigná, quitá o agregá jugadores. Podés dejar grupos de distinto tamaño si hace falta. Cuando se agrega gente a un grupo, después manejás cómo suben/bajan con los menús de cada jugador.</p><div class="req-wrap" style="margin-bottom:.7rem"><div class="section-lbl" style="margin-top:0">Agregar jugador</div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr auto;align-items:end"><div class="form-group"><label>Nombre</label><input id="ap-nom" placeholder="Nombre"></div><div class="form-group"><label>Apellido</label><input id="ap-ape" placeholder="Apellido"></div><div class="form-group"><label>Grupo</label><select id="ap-grp">${c.groups.map((_,k)=>`<option value="${k+1}">${groupName(k+1)}</option>`).join('')}</select></div><div class="form-group"><button class="btn btn-primary" onclick="addPlayerUI()"><i class="ti ti-user-plus"></i> Agregar</button></div></div></div>`;
+
+h+=`<div class="grpedit">`+c.groups.map((g,gi)=>{const gid=gi+1;return `<div class="ge-group"><div class="ge-gtitle">${groupName(gid)} (${g.players.length})</div>`+g.players.map(n=>`<div class="ge-row"><span class="ge-nm">${n}</span><select class="ge-sel" onchange="movePlayerUI('${esc(n)}',${gid},this.value)"><option value="">${t('move_to')}</option>${c.groups.map((_,k)=>k+1!==gid?`<option value="${k+1}">${groupName(k+1)}</option>`:'').join('')}</select><button class="btn btn-danger btn-sm" onclick="removePlayerUI('${esc(n)}',${gid})">${t('remove')}</button></div>`).join('')+`</div>`;}).join('')+`</div></div>`;
+
 h+=`<div class="card"><div class="section-lbl">Fechas de los ciclos</div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr">${[0,1,2].map(i=>`<div class="form-group"><label>Ciclo ${i+1}</label><input type="text" value="${FECHAS[i].replace(/"/g,'&quot;')}" onchange="setFecha(${i},this.value)"></div>`).join('')}</div><p class="legend-txt" style="margin-top:0">Editá el período de cada ciclo (texto libre, ej. "15/06/26 – 19/07/26").</p></div>`;
 h+=destinoCard();h+='<div class="card"><div class="section-lbl">'+t('playoffs_title')+'</div>'+(cyclesDone?'<div class="alert alert-ok">'+t('playoffs_ready')+'</div>':'<div class="alert alert-info">'+t('playoffs_not_ready')+'</div>')+'<div class="form-row"><div class="form-group"><label>'+t('how_many_playoffs')+'</label><select id="po-num" onchange="setPoNum(this.value)">'+[1,2,3,4,5,6].map(k=>'<option value="'+k+'" '+(playoff.numTramos===k?'selected':'')+'>'+k+' '+(k>1?t('bracket_plural'):t('bracket_singular'))+'</option>').join('')+'</select></div><div class="form-group" style="align-self:end"><button class="btn btn-primary" '+(cyclesDone&&!playoff.started?'':'disabled')+' onclick="previewPlayoffUI()"><i class="ti ti-eye"></i> '+t('preview_po')+'</button></div></div>'+(playoff.started?'<p class="legend-txt">'+t('po_started')+'</p>':playoff.preview?'<p class="legend-txt">'+t('po_preview_active')+'</p>':'')+'</div>';
+
+h+='<div class="card"><div class="section-lbl">Reiniciar datos (¡Cuidado!)</div>';
+h+='<p class="legend-txt" style="margin-top:0">Estas acciones borran datos permanentemente y no se pueden deshacer.</p>';
+h+='<div class="gap-sm">';
+h+=[1,2,3].map(n=>'<button class="btn btn-danger" onclick="resetCycleUI('+n+')"><i class="ti ti-trash"></i> Reiniciar Ciclo '+n+'</button>').join('');
+h+='<button class="btn btn-danger" onclick="resetPlayoffUI()"><i class="ti ti-trash"></i> Reiniciar Play Offs</button></div></div>';
+
 const disp=[];
 document.getElementById('view-admin').innerHTML=h;}
 function movePlayerUI(name,fromG,toG){if(!toG)return;movePlayer(name,fromG,+toG);renderAdmin();toast(name+' movido a '+groupName(+toG));}
@@ -464,11 +523,6 @@ if(u.role==='admin'){
   h+='<p class="legend-txt" style="margin-top:0">Ordenados alfabéticamente. Buscá por nombre. Podés editar nombre, email, teléfono y resetear contraseña.</p>';
   h+='<input type="text" id="player-search" placeholder="Buscar jugador…" oninput="filterPlayerList()" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13px;margin-bottom:.75rem">';
   h+='<div id="player-list">'+renderPlayerList(players)+'</div></div>';
-  h+='<div class="card"><div class="section-lbl">Reiniciar datos</div>';
-  h+='<p class="legend-txt" style="margin-top:0">Estas acciones borran datos permanentemente. Vas a tener que confirmar antes de ejecutar.</p>';
-  h+='<div class="gap-sm">';
-  h+=[1,2,3].map(n=>'<button class="btn btn-danger" onclick="resetCycleUI('+n+')"><i class="ti ti-trash"></i> Reiniciar Ciclo '+n+'</button>').join('');
-  h+='<button class="btn btn-danger" onclick="resetPlayoffUI()"><i class="ti ti-trash"></i> Reiniciar Play Offs</button></div></div>';
   document.getElementById('view-perfil').innerHTML=h;
 }else{
   const loc=findLoc(u.name,activeN);
@@ -495,16 +549,14 @@ function saveProfile(){const name=(document.getElementById('pf-name').value||'')
 function changePw(){const o=document.getElementById('pw-old').value,n=document.getElementById('pw-new').value,n2=document.getElementById('pw-new2').value,a=document.getElementById('pw-alert');function al(m,t){a.className='alert alert-'+t;a.textContent=m;}if(o!==currentUser.pass){al(t('pwOldWrong'),'err');return;}if(!n||n.length<4){al(t('pwShort'),'err');return;}if(n!==n2){al(t('pwNoMatch'),'err');return;}const key=currentUser.role==='admin'?'admin':currentUser.name;USERS[key].pass=n;currentUser.pass=n;al(t('pwOk'),'ok');['pw-old','pw-new','pw-new2'].forEach(id=>document.getElementById(id).value='');}
 function roundName(ri,total){const fe=total-1-ri;if(fe===0)return t('round_final');if(fe===1)return t('round_semi');if(fe===2)return t('round_quarters');if(fe===3)return t('round_16');if(fe===4)return t('round_32');return tf('round_n',{n:ri+1});}
 function matchBox(m,ti,which,ri,mi,isFirstRound){const aw=m.w&&m.w===m.a,bw=m.w&&m.w===m.b;const sc=m.sets?m.sets.map(([a,b])=>a+'-'+b).join(' '):'';const canLoad=m.a&&m.b&&!m.w&&(currentUser.role==='admin'||m.a===currentUser.name||m.b===currentUser.name);
-// Slot labels: BYE only in first round; TBD in later rounds
 const emptyLblA=isFirstRound?'BYE':t('tbd');const emptyLblB=isFirstRound?'BYE':t('tbd');
 const nmA=m.a||emptyLblA;const nmB=m.b||emptyLblB;
-// Always show both slots
 const slotA='<div class="slot '+(aw?'winner ':'')+(!m.a?'empty-slot':'')+'">'+'<span class="seed">'+(m.sid[0]||'')+'</span><span class="nm">'+nmA+'</span></div>';
 const slotB='<div class="slot '+(bw?'winner ':'')+(!m.b?'empty-slot':'')+'">'+'<span class="seed">'+(m.sid[1]||'')+'</span><span class="nm">'+nmB+'</span></div>';
 let f='';
 if(m.w&&m.a&&m.b)f='<div class="slot slot-foot"><span class="slot-score">'+sc+'</span><span class="slot-win">\u2713 '+m.w+'</span></div>';
-else if(m.a&&!m.b&&isFirstRound)f='';// BYE — no action needed, auto-advance
-else if(!m.a&&!m.b)f='';// both empty
+else if(m.a&&!m.b&&isFirstRound)f='';
+else if(!m.a&&!m.b)f='';
 else if(canLoad)f='<div class="slot slot-center"><button class="po-load" onclick="poReport('+ti+',\''+which+'\','+ri+','+mi+')"><i class="ti ti-upload"></i> '+t('po_load_result')+'</button></div>';
 else f='<div class="slot slot-center"><span class="lock-note">'+t('pending_match')+'</span></div>';
 return'<div class="match-wrap"><div class="match-box">'+slotA+slotB+f+'</div></div>';}
@@ -516,7 +568,7 @@ function setStageMode(nm,mode){if(!playoff.stageDates)playoff.stageDates={};cons
 function setStageD(nm,which,val){if(!playoff.stageDates)playoff.stageDates={};const sd=playoff.stageDates[nm]||{mode:'single',d1:'',d2:''};sd[which]=val;playoff.stageDates[nm]=sd;showPlayoffView();}
 function stageDatesCard(tr){if(!playoff.stageDates)playoff.stageDates={};const names=tr.main.map((_,ri)=>roundName(ri,tr.main.length));const rows=names.map(nm=>{const sd=playoff.stageDates[nm]||{mode:'single',d1:'',d2:''};return `<div class="form-row" style="grid-template-columns:1fr 1fr 1fr;align-items:end;margin-bottom:.4rem"><div class="form-group"><label>${nm}</label><select onchange="setStageMode('${esc(nm)}',this.value)"><option value="single" ${sd.mode!=='range'?'selected':''}>Fecha única</option><option value="range" ${sd.mode==='range'?'selected':''}>Semana de juego</option></select></div><div class="form-group"><label>${sd.mode==='range'?'Desde':'Fecha'}</label><input type="date" value="${sd.d1||''}" onchange="setStageD('${esc(nm)}','d1',this.value)"></div><div class="form-group" style="${sd.mode==='range'?'':'visibility:hidden'}"><label>Hasta</label><input type="date" value="${sd.d2||''}" onchange="setStageD('${esc(nm)}','d2',this.value)"></div></div>`;}).join('');return `<div class="card"><div class="section-lbl">Fechas de las etapas</div>${rows}<p class="legend-txt" style="margin-top:0">Para cada ronda elegí "Semana de juego" (rango desde–hasta) o "Fecha única". Aparece debajo del nombre de la ronda en el cuadro.</p></div>`;}
 function showPlayoffView(){['grupos','general','cargar','pendientes','admin','perfil'].forEach(v=>{var el=document.getElementById('view-'+v);if(el)el.style.display='none';});const pv=document.getElementById('view-playoff');pv.style.display='block';const isPrev=playoff.preview&&!playoff.started;if(!playoff.started&&!isPrev){pv.innerHTML='<div class="card"><div class="empty">El admin todavía no inició los Play Offs.</div></div>';return;}if(isPrev&&currentUser.role!=='admin'){pv.innerHTML='<div class="card"><div class="empty">Los Play Offs todavía no están disponibles.</div></div>';return;}let html='';if(isPrev){html+=`<div class="card" style="border:2px solid var(--pri)"><div class="po-section-title" style="margin-bottom:.5rem"><i class="ti ti-eye"></i> Previsualización — los Play Offs todavía NO están iniciados</div><p class="legend-txt" style="margin-top:0">Así quedarían los cuadros según la clasificación general. Quitá o agregá jugadores (los que no juegan) y ajustá la cantidad de cuadros. Cuando esté todo listo, confirmá el inicio. Hasta entonces los jugadores no ven nada.</p><button class="btn btn-accent" onclick="confirmPlayoffUI()"><i class="ti ti-player-play"></i> Iniciar Play Offs definitivamente</button></div>`;}if(currentUser.role==='admin'){html+=`<div class="card"><div class="section-lbl">Configuración de Play Offs</div><div class="form-row"><div class="form-group"><label>Cantidad de cuadros</label><select onchange="setPoNum(this.value)">${[1,2,3,4,5,6].map(k=>`<option value="${k}" ${playoff.numTramos===k?'selected':''}>${k} cuadro${k>1?'s':''}</option>`).join('')}</select></div></div><p class="legend-txt" style="margin-top:0">Al cambiar la cantidad, los cuadros se rearman repartiendo la clasificación general en partes iguales.</p></div>`;}
-html+='<div class="po-tramos">'+playoff.tramos.map(function(tr,i){return '<button class="po-tab '+(playoff.viewT===i?'active':'')+' onclick="setViewT('+i+')">'+ tf('po_match',{l:tr.label})+'<br><span class="po-rng">'+tr.seeds.length+' '+t('po_tab_players')+'</span></button>';}).join('')+'</div>';
+html+='<div class="po-tramos">'+playoff.tramos.map(function(tr,i){return '<button class="po-tab '+(playoff.viewT===i?'active':'')+'" onclick="setViewT('+i+')">'+ tf('po_match',{l:tr.label})+'<br><span class="po-rng">'+tr.seeds.length+' '+t('po_tab_players')+'</span></button>';}).join('')+'</div>';
 const ti=playoff.viewT;const tr=playoff.tramos[ti];if(!tr){pv.innerHTML=html+'<div class="card"><div class="empty">Sin cuadro.</div></div>';updateHdr();return;}
 if(currentUser.role==='admin'){const inPo={};playoff.tramos.forEach(tr2=>tr2.seeds.forEach(n=>inPo[n]=1));const avail=ALLNAMES.filter(n=>!inPo[n]);html+='<div class="card"><div class="section-lbl">'+tf('po_seeds_title',{l:tr.label})+'</div><div class="seed-list">'+tr.seeds.map(n=>'<span class="seed-chip">'+n+' <button class="rm" onclick="removeSeedUI('+ti+',\''+esc(n)+'\')" aria-label="Quitar"><i class="ti ti-x"></i></button></span>').join('')+'</div><div class="form-row" style="margin-top:.6rem"><div class="form-group"><label>'+t('po_add_label')+'</label><select id="po-add"><option value="">'+t('po_add_choose')+'</option>'+avail.map(n=>'<option value="'+n+'">'+n+'</option>').join('')+'</select></div><div class="form-group" style="align-self:end"><button class="btn btn-primary btn-sm" onclick="addSeedUI('+ti+')"><i class="ti ti-plus"></i> '+t('po_add_btn')+'</button></div></div><p class="legend-txt">'+t('po_bye_note')+'</p></div>';html+=stageDatesCard(tr);}
 const finalM=tr.main[tr.main.length-1][0];html+='<div class="card"><div class="po-section-title"><i class="ti ti-trophy"></i> '+tf('po_main_title',{l:tr.label})+'</div>'+bracketHTML(tr.main,ti,'main')+(finalM.w?'<div class="champ-card"><div class="lbl">'+tf('po_champ',{l:tr.label})+'</div><div class="who"><i class="ti ti-crown"></i> '+finalM.w+'</div></div>':'')+'</div>';
@@ -527,15 +579,14 @@ function setViewT(i){playoff.viewT=i;showPlayoffView();}
 function removeSeedUI(t,n){removeSeed(t,n);showPlayoffView();toast(n+' quitado del cuadro (pasa uno por bye).');}
 function addSeedUI(t){const v=document.getElementById('po-add').value;if(!v){toast(t('po_choose_add'));return;}addSeed(t,v);showPlayoffView();toast(v+' agregado al cuadro.');}
 function poReport(ti,which,ri,mi){const tr=playoff.tramos[ti];const m=(which==='main'?tr.main:tr.cons)[ri][mi];if(!m.a||!m.b){toast(t('toastNoPlayers2'));return;}if(m.locked&&currentUser.role!=='admin'){toast(t('toastValidatedOnly'));return;}if(currentUser.role==='player'&&m.a!==currentUser.name&&m.b!==currentUser.name){toast(t('toastOnlyYours'));return;}poContext={ti,which,ri,mi};openPoForm(m,ti);}
-function openPoForm(m,ti){document.getElementById('modal-title').textContent=t('poLoadResult')+' · '+t('cuadro')+' '+playoff.tramos[ti].label;document.getElementById('modal-body').innerHTML=`<p class="modal-rep">${m.a} <span class="vs">vs</span> ${m.b}</p><div class="set-row"><label>Set 1</label><input type="number" id="po-s1a" min="0" max="7" class="po-in"><span class="sep">–</span><input type="number" id="po-s1b" min="0" max="7" class="po-in"></div><div class="set-row"><label>Set 2</label><input type="number" id="po-s2a" min="0" max="7" class="po-in"><span class="sep">–</span><input type="number" id="po-s2b" min="0" max="7" class="po-in"></div><div class="set-row" id="po-s3-row" style="display:none"><label>S.Tiebreak</label><input type="number" id="po-s3a" min="0" max="1" class="po-in"><span class="sep">–</span><input type="number" id="po-s3b" min="0" max="1" class="po-in"><span class="set-hint">1-0 o 0-1</span></div><button class="btn btn-sm" onclick="document.getElementById('po-s3-row').style.display='flex'" style="margin-top:4px"><i class="ti ti-plus"></i> Supertiebreak</button><p class="lock-note" id="po-alert" style="margin-top:.5rem"></p>`;document.getElementById('modal-actions').innerHTML=`<button class="btn btn-accent" onclick="submitPo()"><i class="ti ti-send"></i> ${currentUser.role==='admin'?'Guardar y validar':'Enviar (rival confirma)'}</button><button class="btn" onclick="closeM()">Cancelar</button>`;document.getElementById('modal-bg').classList.add('open');}
-function submitPo(){const s=[[+document.getElementById('po-s1a').value,+document.getElementById('po-s1b').value],[+document.getElementById('po-s2a').value,+document.getElementById('po-s2b').value]];if(document.getElementById('po-s3-row').style.display!=='none')s.push([+document.getElementById('po-s3a').value,+document.getElementById('po-s3b').value]);const v=validMatch(s);if(!v.ok){const a=document.getElementById('po-alert');a.textContent='✕ '+v.msg;a.classList.add('err-txt');return;}const ti=poContext.ti,which=poContext.which,ri=poContext.ri,mi=poContext.mi;const m=(which==='main'?playoff.tramos[ti].main:playoff.tramos[ti].cons)[ri][mi];let w1=0,w2=0;s.forEach(([a,b])=>{if(a>b)w1++;else w2++;});const winner=w1>w2?m.a:m.b;if(currentUser.role==='admin'){storePo(ti,which,m.a,m.b,s,winner);rebuildTramo(ti);closeM();showPlayoffView();toast(t('toastPOvalidated'));}else{matches.push({id:matchId++,po:true,ti,which,tLabel:playoff.tramos[ti].label,poNames:[m.a,m.b],sets:s,status:'pending',reporter:currentUser.name,winner,date:'2026'});closeM();renderPend();renderCycleBar();showPlayoffView();toast(t('toastPOsent'));}}
+function openPoForm(m,ti){document.getElementById('modal-title').textContent=t('po_load_result')+' · '+t('po_match').replace('{l}',playoff.tramos[ti].label);document.getElementById('modal-body').innerHTML=`<p class="modal-rep">${m.a} <span class="vs">vs</span> ${m.b}</p><div class="set-row"><label>Set 1</label><input type="number" id="po-s1a" min="0" max="7" class="po-in"><span class="sep">–</span><input type="number" id="po-s1b" min="0" max="7" class="po-in"></div><div class="set-row"><label>Set 2</label><input type="number" id="po-s2a" min="0" max="7" class="po-in"><span class="sep">–</span><input type="number" id="po-s2b" min="0" max="7" class="po-in"></div><div class="set-row" id="po-s3-row" style="display:none"><label>S.Tiebreak</label><input type="number" id="po-s3a" min="0" max="1" class="po-in"><span class="sep">–</span><input type="number" id="po-s3b" min="0" max="1" class="po-in"><span class="set-hint">1-0 o 0-1</span></div><button class="btn btn-sm" onclick="document.getElementById('po-s3-row').style.display='flex'" style="margin-top:4px"><i class="ti ti-plus"></i> Supertiebreak</button><p class="lock-note" id="po-alert" style="margin-top:.5rem"></p>`;document.getElementById('modal-actions').innerHTML=`<button class="btn btn-accent" onclick="submitPo()"><i class="ti ti-send"></i> ${currentUser.role==='admin'?'Guardar y validar':t('send')}</button><button class="btn" onclick="closeM()">${t('close')}</button>`;document.getElementById('modal-bg').classList.add('open');}
+function submitPo(){const s=[[+document.getElementById('po-s1a').value,+document.getElementById('po-s1b').value],[+document.getElementById('po-s2a').value,+document.getElementById('po-s2b').value]];if(document.getElementById('po-s3-row').style.display!=='none')s.push([+document.getElementById('po-s3a').value,+document.getElementById('po-s3b').value]);const v=validMatch(s);if(!v.ok){const a=document.getElementById('po-alert');a.textContent='✕ '+v.msg;a.classList.add('err-txt');return;}const ti=poContext.ti,which=poContext.which,ri=poContext.ri,mi=poContext.mi;const m=(which==='main'?playoff.tramos[ti].main:playoff.tramos[ti].cons)[ri][mi];let w1=0,w2=0;s.forEach(([a,b])=>{if(a>b)w1++;else w2++;});const winner=w1>w2?m.a:m.b;if(currentUser.role==='admin'){storePo(ti,which,m.a,m.b,s,winner);rebuildTramo(ti);closeM();showPlayoffView();toast(t('po_validated'));}else{matches.push({id:matchId++,po:true,ti,which,tLabel:playoff.tramos[ti].label,poNames:[m.a,m.b],sets:s,status:'pending',reporter:currentUser.name,winner,date:'2026'});closeM();renderPend();renderCycleBar();showPlayoffView();toast(t('po_sent'));}}
 function storePo(ti,which,a,b,sets,w){const k=(which==='main'?ti:ti+'c')+'#'+[a,b].sort().join('|');playoff.results[k]={sets,w};}
 function applyPoPending(rec){storePo(rec.ti,rec.which,rec.poNames[0],rec.poNames[1],rec.sets,rec.winner);rebuildTramo(rec.ti);}
 function refreshAll(){try{if(typeof persist==='function')persist();}catch(e){}if(viewCycle==='po'){showPlayoffView();renderPend();renderCycleBar();return;}if(subView==='grupos')renderGrupos();if(subView==='general')renderGeneral();if(subView==='pendientes')renderPend();if(subView==='admin')renderAdmin();if(subView==='cargar')renderCargarDisputas();renderPend();renderCycleBar();}
 function toast(m){let t=document.getElementById('_toast');if(!t){t=document.createElement('div');t.id='_toast';t.className='toast';document.body.appendChild(t);}t.textContent=m;t.style.opacity='1';setTimeout(()=>t.style.opacity='0',3800);}
 // initLogin() is called by persist.js after Supabase state loads
 // ===== Conexión con Supabase (guarda y comparte los datos) =====
-// Si no pegás tus claves, la app funciona igual pero en modo local (sin guardar).
 let _sb=null,_lastSaved=null,_saving=false;
 function _serialize(){return JSON.stringify({cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,ALLNAMES,users:USERS});}
 function _hydrate(d){try{
@@ -555,4 +606,4 @@ async function persist(force){if(!_sb||_saving)return;const json=_serialize();if
 if(typeof setInterval!=='undefined')setInterval(function(){persist();},3000);
 if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('beforeunload',function(){try{persist(true);}catch(e){}});
 initSupabase();
-(async function(){try{await loadState();}catch(e){console.warn('Supabase load',e);}initLogin();})();</script></body></html>
+(async function(){try{await loadState();}catch(e){console.warn('Supabase load',e);}initLogin();updateLangUI();})();</script></body></html>
