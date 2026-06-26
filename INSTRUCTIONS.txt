@@ -1,0 +1,83 @@
+==========================================================
+  SOHAIL TENNIS LEAGUE — HOW TO DEPLOY
+  (Your Supabase project is already configured)
+==========================================================
+
+Your project details (already in config.js):
+  Supabase URL: https://yrywtwmfkfjsuttbtrco.supabase.co
+  Supabase Key: sb_publishable_aezwIo4VkQNK-Wy7BR4_nA_pbDAS12O
+
+Folder structure (upload everything as-is to GitHub):
+
+  tenis-app/
+  ├── vercel.json          ← tells Vercel where to find the files
+  ├── supabase_setup.sql   ← run this once in Supabase
+  ├── INSTRUCTIONS.txt     ← this file
+  └── public/
+      ├── index.html       ← the app
+      ├── config.js        ← your Supabase keys (edit here if they change)
+      └── app.js           ← all the app logic
+
+----------------------------------------------------------
+STEP 1 — SUPABASE (create the table, one time only)
+----------------------------------------------------------
+1. Go to https://supabase.com → open your project
+   (yrywtwmfkfjsuttbtrco)
+2. Left menu → SQL Editor → New query
+3. Open "supabase_setup.sql", copy ALL the content, paste it, click RUN
+4. It must say "Success". Done.
+
+----------------------------------------------------------
+STEP 2 — GITHUB (upload the folder)
+----------------------------------------------------------
+1. Go to https://github.com → "+" → "New repository"
+2. Name: tenis-app  |  Public  |  check "Add a README file"
+3. Click "Create repository"
+4. Inside the repo: "Add file" → "Upload files"
+5. Drag the ENTIRE "tenis-app" folder contents:
+     vercel.json
+     supabase_setup.sql
+     INSTRUCTIONS.txt
+     public/ (folder with index.html, config.js, app.js)
+6. Click "Commit changes"
+
+----------------------------------------------------------
+STEP 3 — VERCEL (publish, get the link)
+----------------------------------------------------------
+1. Go to https://vercel.com → "Add New..." → "Project"
+2. Find "tenis-app" in the list → click "Import"
+3. Don't change anything → click "Deploy"
+4. Wait ~1 min → "Congratulations"
+5. Your link: https://tenis-app.vercel.app
+   (or similar — share this with players and the manager)
+
+----------------------------------------------------------
+STEP 4 — TEST
+----------------------------------------------------------
+1. Open the link → log in as admin / admin123
+2. Open the same link on your phone (or incognito window)
+3. Make a change on one device → it should appear on the other
+   → If yes: everything is working! 🎾
+   → If no: make sure Step 1 (SQL) returned "Success"
+
+----------------------------------------------------------
+FUTURE UPDATES
+----------------------------------------------------------
+When I send you a new version of the app:
+1. In GitHub → open "tenis-app" repo
+2. Click "public" folder → click "app.js" → pencil icon (Edit)
+   → delete all → paste new content → "Commit changes"
+   (same for index.html if it changes)
+3. Vercel updates automatically in ~1 minute. Link stays the same.
+
+----------------------------------------------------------
+LOGINS
+----------------------------------------------------------
+Admin:    admin / admin123  ← CHANGE THIS immediately in Perfil!
+Players:  their full name / tenis  (they change it in Perfil)
+
+----------------------------------------------------------
+IF YOU NEED TO UPDATE SUPABASE KEYS
+----------------------------------------------------------
+Just edit "public/config.js" — change the two values there
+and upload it again to GitHub. That's it.
