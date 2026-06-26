@@ -38,8 +38,8 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 .tab-n{background:#F5C518;color:#0E3470;border-radius:20px;padding:1px 6px;font-size:10px;margin-left:3px;font-weight:600}
 
 /* Ocultar barra de scroll en menús deslizables */
-.tabs::-webkit-scrollbar, .cycle-bar::-webkit-scrollbar, .grp-pick::-webkit-scrollbar { display: none; }
-.tabs, .cycle-bar, .grp-pick { -ms-overflow-style: none; scrollbar-width: none; }
+.tabs::-webkit-scrollbar, .cycle-bar::-webkit-scrollbar, .grp-pick::-webkit-scrollbar, .overflow-x::-webkit-scrollbar { display: none; }
+.tabs, .cycle-bar, .grp-pick, .overflow-x { -ms-overflow-style: none; scrollbar-width: none; }
 
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.875rem 1rem;margin-bottom:.625rem}
 .grp-sep{height:0;border-top:3px solid #111;margin:0 0 .625rem;border-radius:2px}
@@ -155,7 +155,7 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
   .user-info .name{font-size:12px}.user-info .role{font-size:10px}
   .logout-btn{padding:5px 7px;font-size:11px}
   
-  /* MEJORAS UX/UI MOBILE PARA MENÚS DESLIZABLES (SWIPE) */
+  /* MEJORAS UX/UI MOBILE PARA MENÚS DESLIZABLES Y TABLAS (SWIPE) */
   .cycle-bar, .tabs, .grp-pick {
     flex-wrap: nowrap !important;
     overflow-x: auto !important;
@@ -164,14 +164,18 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
     scrollbar-width: none; 
     padding-bottom: 4px;
   }
-  .cycle-bar::-webkit-scrollbar, .tabs::-webkit-scrollbar, .grp-pick::-webkit-scrollbar {
-    display: none; 
+  .cycle-bar::-webkit-scrollbar, .tabs::-webkit-scrollbar, .grp-pick::-webkit-scrollbar { display: none; }
+  
+  .overflow-x { 
+    overflow-x: auto !important; 
+    -webkit-overflow-scrolling: touch; 
+    margin-bottom: 5px; 
+    padding-bottom: 5px; 
   }
-  .cycle-tab, .tab, .grp-btn {
-    flex: 0 0 auto !important; 
-    min-width: max-content !important;
-    white-space: nowrap !important;
-  }
+  .cls-table, .gen-table, .res-table { min-width: max-content !important; }
+  .cls-table th, .gen-table th, .cls-table td, .gen-table td { white-space: nowrap; }
+
+  .cycle-tab, .tab, .grp-btn { flex: 0 0 auto !important; min-width: max-content !important; white-space: nowrap !important; }
   .cycle-tab { padding: 8px 14px; font-size: 13px; border-radius: 9px; }
   .tab { padding: 8px 12px; font-size: 12px; border-radius: 8px; }
   .grp-btn { padding: 8px 12px; font-size: 12px; border-radius: 8px; }
@@ -179,12 +183,14 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 
   .card{padding:.6rem .6rem;margin-bottom:.45rem;border-radius:10px}
   .form-row{grid-template-columns:1fr}
+  
   .cls-table,.gen-table{font-size:11px}
-  .cls-table th,.gen-table th{font-size:9px;padding:4px 2px}
-  .cls-table td,.gen-table td{padding:5px 2px;font-size:11px}
+  .cls-table th,.gen-table th{font-size:9px;padding:4px 6px}
+  .cls-table td,.gen-table td{padding:5px 6px;font-size:11px}
   .res-table{font-size:10px}
-  .res-table th,.res-table td{padding:4px 2px}
-  .res-table th:first-child,.res-table td:first-child{width:80px}
+  .res-table th,.res-table td{padding:4px 6px; white-space: nowrap;}
+  .res-table th:first-child,.res-table td:first-child{min-width:90px;}
+
   .section-lbl{font-size:10px;margin:.6rem 0 .3rem}
   .btn{padding:7px 10px;font-size:12px}
   .btn-sm{padding:4px 8px;font-size:11px}
@@ -538,197 +544,4 @@ h+=`<div class="card"><div class="section-lbl">Fechas de los ciclos</div><div cl
 h+=destinoCard();
 
 // PLAY OFFS CONFIG en Admin
-h+='<div class="card"><div class="section-lbl">'+t('playoffs_title')+'</div>'+(cyclesDone?'<div class="alert alert-ok">'+t('playoffs_ready')+'</div>':'<div class="alert alert-info">'+t('playoffs_not_ready')+'</div>');
-h+='<div class="form-row"><div class="form-group"><label>'+t('how_many_playoffs')+'</label><select onchange="setPoNum(this.value)">'+[1,2,3,4,5,6].map(k=>'<option value="'+k+'" '+(playoff.numTramos===k?'selected':'')+'>'+k+' '+(k>1?t('bracket_plural'):t('bracket_singular'))+'</option>').join('')+'</select></div>';
-h+='<div class="form-group"><label>'+t('po_size_label')+'</label><select onchange="setPoSize(this.value)">';
-h+='<option value="0" '+(!playoff.forcedSize?'selected':'')+'>'+t('po_size_auto')+'</option>';
-h+='<option value="64" '+(playoff.forcedSize===64?'selected':'')+'>'+t('r_64')+'</option>';
-h+='<option value="32" '+(playoff.forcedSize===32?'selected':'')+'>'+t('r_32')+'</option>';
-h+='<option value="16" '+(playoff.forcedSize===16?'selected':'')+'>'+t('r_16')+'</option>';
-h+='<option value="8" '+(playoff.forcedSize===8?'selected':'')+'>'+t('r_8')+'</option>';
-h+='<option value="4" '+(playoff.forcedSize===4?'selected':'')+'>'+t('r_4')+'</option>';
-h+='<option value="2" '+(playoff.forcedSize===2?'selected':'')+'>'+t('r_2')+'</option>';
-h+='</select></div></div>';
-h+='<div class="form-row"><div class="form-group" style="align-self:end"><button class="btn btn-primary" '+(cyclesDone&&!playoff.started?'':'disabled')+' onclick="previewPlayoffUI()"><i class="ti ti-eye"></i> '+t('preview_po')+'</button></div></div>';
-h+=(playoff.started?'<p class="legend-txt">'+t('po_started')+'</p>':playoff.preview?'<p class="legend-txt">'+t('po_preview_active')+'</p>':'')+'</div>';
-
-h+='<div class="card"><div class="section-lbl">Reiniciar datos (¡Cuidado!)</div>';
-h+='<p class="legend-txt" style="margin-top:0">Estas acciones borran datos permanentemente y no se pueden deshacer.</p>';
-h+='<div class="gap-sm">';
-h+=[1,2,3].map(n=>'<button class="btn btn-danger" onclick="resetCycleUI('+n+')"><i class="ti ti-trash"></i> Reiniciar Ciclo '+n+'</button>').join('');
-h+='<button class="btn btn-danger" onclick="resetPlayoffUI()"><i class="ti ti-trash"></i> Reiniciar Play Offs</button></div></div>';
-
-const disp=[];
-document.getElementById('view-admin').innerHTML=h;}
-function movePlayerUI(name,fromG,toG){if(!toG)return;movePlayer(name,fromG,+toG);renderAdmin();toast(name+' movido a '+groupName(+toG));}
-function removePlayerUI(name,fromG){removePlayerCycle(name,fromG);renderAdmin();toast(name+' quitado del ciclo.');}
-
-function resetCycleUI(n){if(!confirm('¿Seguro que querés borrar el Ciclo '+n+'? Se perderán todos los resultados de ese ciclo.'))return;matches=matches.filter(m=>m.cycle!==n);if(n===1){cycles[0].groups=C1.map(p=>({players:[...p]}));cycles[0].status='active';}else{cycles[n-1].groups=null;cycles[n-1].status='locked';}if(activeN>=n)activeN=n;viewCycle=activeN;persist();renderShell();showSub('admin');toast('Ciclo '+n+' reiniciado.');}
-function resetPlayoffUI(){if(!confirm('¿Seguro que querés borrar todos los Play Offs? Esta acción no se puede deshacer.'))return;playoff={started:false,numTramos:4,tramos:[],results:{},viewT:0,qualified:[],preview:false,forcedSize:0};matches=matches.filter(m=>!m.po);if(viewCycle==='po')viewCycle=activeN;persist();renderShell();showSub('admin');toast('Play Offs reiniciados.');}
-function setPoNum(v){playoff.numTramos=+v;if(playoff.started||playoff.preview){setNumTramos(+v);}}
-function finishLastCycle(){const c=getActive();const need=pairsNeeded(c);const done=matches.filter(m=>m.cycle===activeN&&!m.po&&m.status==='confirmed').length;const notC=matches.filter(m=>m.cycle===activeN&&!m.po&&m.status!=='confirmed').length;if(done<need||notC>0){toast(t('last_cycle_missing'));return;}c.status='finished';renderShell();renderAdmin();toast(t('toastLastDone'));}
-function addPlayerUI(){const nom=(document.getElementById('ap-nom').value||'').trim();const ape=(document.getElementById('ap-ape').value||'').trim();const gid=+document.getElementById('ap-grp').value;const full=(nom+' '+ape).trim();if(!nom||!ape){toast(t('add_fill_both'));return;}if(!gid){toast(t('add_choose_group'));return;}if(USERS[full]){toast(t('add_exists'));return;}addPlayerToCycle(full,gid);initLogin();renderAdmin();toast(full+' '+t('add_done').replace('{name}','').replace('{g}',''+groupName(gid)));}
-function setDestino(gid,pos,val){ensureDestino(gid,pos+1);DESTINO[gid][pos]='G'+val;if(subView==='admin')renderAdmin();toast(groupName(gid)+' · '+(pos+1)+'º → '+groupName(+val));}
-function destinoCard(){const grps=cycles[activeN-1].groups;let html='<div class="card"><div class="section-lbl">'+t('promotions_title')+'</div><p class="legend-txt" style="margin-top:0">'+t('promotions_hint')+'</p><div class="grpedit">';grps.forEach(function(g,gi){const gid=gi+1;const len=Math.max(1,g.players.length);ensureDestino(gid,len);html+='<div class="ge-group"><div class="ge-gtitle">'+groupName(gid)+' ('+g.players.length+')</div>';for(let pos=0;pos<len;pos++){const cur=parseInt((DESTINO[gid][pos]||('G'+Math.min(gid+1,12))).replace('G',''));html+='<div class="ge-row"><span class="ge-nm">'+tf('pos_goes_to',{pos:pos+1})+'</span><select class="ge-sel" onchange="setDestino('+gid+','+pos+',this.value)">';for(let k=0;k<12;k++){html+='<option value="'+(k+1)+'"'+(cur===k+1?' selected':'')+'>'+groupName(k+1)+'</option>';}html+='</select></div>';}html+='</div>';});return html+'</div></div>';}
-function setFecha(i,v){FECHAS[i]=v;updateHdr();renderCycleBar();toast('Fecha del Ciclo '+(i+1)+' actualizada.');}
-function previewPlayoffUI(){if(!previewPlayoff()){toast(t('toastPOnotReady'));return;}viewCycle='po';renderShell();showPlayoffView();toast(t('poPreviewBanner'));}
-function confirmPlayoffUI(){if(!confirmPlayoff())return;renderShell();showPlayoffView();toast(t('po_confirmed_toast'));}
-function renderCargarDisputas(){const cont=document.getElementById('cargar-disputes');if(!cont)return;if(currentUser.role!=='admin'){cont.innerHTML='';return;}const disp=matches.filter(m=>m.status==='disputed');cont.innerHTML=`<div class="card"><div class="section-lbl">Disputas activas (resuelve el admin)</div>${disp.length?disp.map(m=>{let p1,p2;if(m.po){p1=m.poNames[0];p2=m.poNames[1];}else{p1=m.aName;p2=m.bName;}const sc=m.sets.map(([a,b])=>`${a}-${b}`).join(' / ');return`<div class="disp-item"><span class="badge badge-disp">${m.po?'PO '+m.tLabel:'C'+m.cycle+' '+groupName(m.g)}</span><span>${p1} ${sc} ${p2}</span><div class="disp-act"><button class="btn btn-success btn-sm" onclick="resolveD(${m.id})">Validar</button>${!m.po?`<button class="btn btn-primary btn-sm" onclick="adminEdit(${m.id})">Editar</button>`:''}</div></div>`;}).join(''):'<div class="empty">No hay disputas</div>'}</div>`;}
-function resolveD(mid){const m=matches.find(x=>x.id===mid);if(m){m.status='confirmed';m.locked=true;if(m.po)applyPoPending(m);}refreshAll();toast(t('toastDispResolve'));}
-function forceConfirmAll(){matches.forEach(m=>{if(m.status==='pending'){m.status='confirmed';m.locked=true;if(m.po)applyPoPending(m);}});refreshAll();toast(t('toastConfirmedAll'));}
-function demoFillUI(){demoFill();refreshAll();toast(t('toastSimulated'));}
-function startNextCycle(){const c=getActive();const need=pairsNeeded(c);const done=matches.filter(m=>m.cycle===activeN&&!m.po&&m.status==='confirmed').length;const notC=matches.filter(m=>m.cycle===activeN&&!m.po&&m.status!=='confirmed').length;if(done<need||notC>0){toast(t('missing_before_close'));return;}const buckets={};for(let k=1;k<=12;k++)buckets[k]=[];c.groups.forEach((g,gi)=>{const gid=gi+1;const st=computeStats(activeN,gid);ensureDestino(gid,st.length);const dest=DESTINO[gid];st.forEach((s,pos)=>{const d=dest[pos]||('G'+Math.min(gid+1,12));const dn=parseInt(d.replace('G',''));buckets[dn].push({name:s.name,total:ptsForPos(gid,pos)+(pos===0?2:0)});});});const ng=[];for(let k=1;k<=12;k++)ng.push({players:buckets[k].sort((a,b)=>b.total-a.total).map(x=>x.name)});c.status='finished';if(activeN<3){const nx=cycles[activeN];nx.groups=ng;nx.status='active';activeN=nx.n;viewCycle=nx.n;if(currentUser.role==='player'){const loc=findLoc(currentUser.name,activeN);if(loc)selGroup=loc.g;}toast(tf('cycle_closed_next',{n:c.n,nx:nx.n}));}else{toast(t('cycle3_closed'));}renderShell();showSub('grupos');}
-
-function renderPerfil(){const u=currentUser;
-if(u.role==='admin'){
-  const players=ALLNAMES.slice().sort((a,b)=>a.localeCompare(b,'es')).map(n=>USERS[n]).filter(Boolean);
-  let h='<div class="card"><div class="section-lbl">Mi perfil — Administrador</div>';
-  h+='<div class="prof-row"><span>Nombre</span><span>'+u.name+'</span></div>';
-  h+='<div class="prof-row"><span>Rol</span><span>Administrador</span></div></div>';
-  h+='<div class="card"><div class="section-lbl">Cambiar mi contraseña</div><div id="pw-alert"></div>';
-  h+='<div class="form-row"><div class="form-group"><label>Contraseña actual</label><input type="password" id="pw-old"></div>';
-  h+='<div class="form-group"><label>Nueva contraseña</label><input type="password" id="pw-new"></div></div>';
-  h+='<div class="form-row"><div class="form-group"><label>Repetir nueva contraseña</label><input type="password" id="pw-new2"></div>';
-  h+='<div class="form-group" style="align-self:end"><button class="btn btn-accent" onclick="changePw()"><i class="ti ti-lock"></i> Guardar</button></div></div></div>';
-  h+='<div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">';
-  h+='<div class="section-lbl" style="margin:0">Gestión de jugadores</div>';
-  h+='<button class="btn btn-sm" onclick="renderPerfil()"><i class="ti ti-refresh"></i> Actualizar lista</button></div>';
-  h+='<p class="legend-txt" style="margin-top:0">Ordenados alfabéticamente. Buscá por nombre. Podés editar nombre, email, teléfono, resetear contraseña, cambiar de grupo o eliminar de la liga.</p>';
-  h+='<input type="text" id="player-search" placeholder="Buscar jugador…" oninput="filterPlayerList()" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13px;margin-bottom:.75rem">';
-  h+='<div id="player-list">'+renderPlayerList(players)+'</div></div>';
-  document.getElementById('view-perfil').innerHTML=h;
-}else{
-  const loc=findLoc(u.name,activeN);
-  let h='<div class="card"><div class="section-lbl">'+t('my_profile')+'</div>';
-  h+='<div class="prof-row"><span>'+t('full_name')+'</span><span>'+u.name+'</span></div>';
-  h+='<div class="prof-row"><span>'+t('email')+'</span><span>'+(u.email||'—')+'</span></div>';
-  h+='<div class="prof-row"><span>'+t('phone')+'</span><span>'+(u.tel||'—')+'</span></div>';
-  if(loc)h+='<div class="prof-row"><span>'+t('current_group_label')+'</span><span>'+groupName(loc.g)+'</span></div>';
-  h+='</div>';
-  h+='<div class="card"><div class="section-lbl">'+t('change_password')+'</div><div id="pw-alert"></div>';
-  h+='<div class="form-row"><div class="form-group"><label>'+t('current_pass')+'</label><input type="password" id="pw-old"></div>';
-  h+='<div class="form-group"><label>'+t('new_pass')+'</label><input type="password" id="pw-new"></div></div>';
-  h+='<div class="form-row"><div class="form-group"><label>'+t('repeat_pass')+'</label><input type="password" id="pw-new2"></div>';
-  h+='<div class="form-group" style="align-self:end"><button class="btn btn-accent" onclick="changePw()"><i class="ti ti-lock"></i> '+t('save_pass')+'</button></div></div></div>';
-  document.getElementById('view-perfil').innerHTML=h;
-}}
-
-function renderPlayerList(players,filter){const f=(filter||'').toLowerCase();const visible=players.filter(p=>p&&p.name&&(!f||p.name.toLowerCase().includes(f)));if(!visible.length)return '<div class="empty">Sin resultados</div>';return visible.map(p=>{const loc=findLoc(p.name,activeN);const curG=loc?loc.g:'';const c=getActive();const gOpts=c.groups?c.groups.map((_,k)=>`<option value="${k+1}" ${curG===k+1?'selected':''}>${groupName(k+1)}</option>`).join(''):'';return `<div class="ge-group" style="margin-bottom:.5rem"><div style="display:flex;justify-content:space-between;align-items:center"><div class="ge-gtitle">${p.name}${loc?' <span class="badge badge-tag">'+groupName(loc.g)+'</span>':''}</div><button class="btn btn-sm" onclick="togglePlayerEdit('${esc(p.name)}')"><i class="ti ti-edit"></i> Editar</button></div><div id="pe-${esc(p.name)}" style="display:none;margin-top:.5rem"><div class="form-row"><div class="form-group"><label>Nombre completo</label><input type="text" id="pe-name-${esc(p.name)}" value="${esc(p.name)}"></div><div class="form-group"><label>Email</label><input type="email" id="pe-email-${esc(p.name)}" value="${esc(p.email||'')}"></div></div><div class="form-row"><div class="form-group"><label>Teléfono</label><input type="tel" id="pe-tel-${esc(p.name)}" value="${esc(p.tel||'')}"></div><div class="form-group"><label>Grupo (Ciclo Activo)</label><select id="pe-grp-${esc(p.name)}"><option value="">Sin grupo</option>${gOpts}</select></div></div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;"><button class="btn btn-danger btn-sm" onclick="deletePlayerAdmin('${esc(p.name)}')"><i class="ti ti-trash"></i> Eliminar</button><div class="gap-sm"><button class="btn btn-success btn-sm" onclick="savePlayerAdmin('${esc(p.name)}')"><i class="ti ti-device-floppy"></i> Guardar</button><button class="btn btn-danger btn-sm" onclick="resetPwd('${esc(p.name)}')"><i class="ti ti-refresh"></i> Clave</button></div></div></div></div>`;}).join('');}
-function filterPlayerList(){const f=document.getElementById('player-search').value;const players=ALLNAMES.map(n=>USERS[n]).filter(Boolean);document.getElementById('player-list').innerHTML=renderPlayerList(players,f);}
-function togglePlayerEdit(name){const el=document.getElementById('pe-'+name);if(el)el.style.display=el.style.display==='none'?'block':'none';}
-
-function savePlayerAdmin(oldName){
-  const newName=(document.getElementById('pe-name-'+oldName).value||'').trim();
-  const email=(document.getElementById('pe-email-'+oldName).value||'').trim();
-  const tel=(document.getElementById('pe-tel-'+oldName).value||'').trim();
-  const grpEl=document.getElementById('pe-grp-'+oldName);
-  const newGrp=grpEl?parseInt(grpEl.value):NaN;
-  if(!newName){toast('El nombre no puede estar vacío.');return;}
-  const u=USERS[oldName];if(!u)return;
-  const loc=findLoc(oldName,activeN);
-  if(loc&&!isNaN(newGrp)&&loc.g!==newGrp){movePlayer(oldName,loc.g,newGrp);}
-  else if(!loc&&!isNaN(newGrp)){addPlayerToCycle(oldName,newGrp);}
-  u.email=email;u.tel=tel;
-  if(newName!==oldName){
-    USERS[newName]={...u,name:newName};
-    delete USERS[oldName];
-    const idx=ALLNAMES.indexOf(oldName);
-    if(idx>=0)ALLNAMES[idx]=newName;
-    cycles.forEach(c=>{if(!c.groups)return;c.groups.forEach(g=>{const pi=g.players.indexOf(oldName);if(pi>=0)g.players[pi]=newName;});});
-    matches.forEach(m=>{
-      if(m.aName===oldName)m.aName=newName;
-      if(m.bName===oldName)m.bName=newName;
-      if(m.reporter===oldName)m.reporter=newName;
-      if(m.poNames){if(m.poNames[0]===oldName)m.poNames[0]=newName;if(m.poNames[1]===oldName)m.poNames[1]=newName;}
-    });
-  }
-  persist();renderPerfil();toast(newName+': datos actualizados.');
-}
-
-function deletePlayerAdmin(name){
-  if(!confirm('¿Seguro que querés eliminar a '+name+' de la liga? Se borrará de los grupos actuales.'))return;
-  delete USERS[name];
-  const idx=ALLNAMES.indexOf(name);
-  if(idx>=0)ALLNAMES.splice(idx,1);
-  cycles.forEach(c=>{if(!c.groups)return;c.groups.forEach(g=>{const pi=g.players.indexOf(name);if(pi>=0)g.players.splice(pi,1);});});
-  persist();renderPerfil();toast(name+' ha sido eliminado.');
-}
-
-function resetPwd(name){const u=USERS[name];if(!u)return;u.pass='tenis';persist();toast(name+': contraseña reseteada a "tenis".');}
-function saveProfile(){const name=(document.getElementById('pf-name').value||'').trim();const email=(document.getElementById('pf-email').value||'').trim();const tel=(document.getElementById('pf-tel').value||'').trim();const a=document.getElementById('edit-profile-alert');if(!name){a.className='alert alert-err';a.textContent='El nombre no puede estar vacío.';return;}const u=currentUser;const oldName=u.name;u.email=email;u.tel=tel;if(name!==oldName){if(USERS[name]&&name!==oldName){a.className='alert alert-err';a.textContent='Ya existe un jugador con ese nombre.';return;}USERS[name]={...u,name};delete USERS[oldName];const idx=ALLNAMES.indexOf(oldName);if(idx>=0)ALLNAMES[idx]=name;cycles.forEach(c=>{if(!c.groups)return;c.groups.forEach(g=>{const pi=g.players.indexOf(oldName);if(pi>=0)g.players[pi]=name;});});currentUser=USERS[name];}persist();a.className='alert alert-ok';a.textContent='✓ Datos actualizados.';}
-function changePw(){const o=document.getElementById('pw-old').value,n=document.getElementById('pw-new').value,n2=document.getElementById('pw-new2').value,a=document.getElementById('pw-alert');function al(m,t){a.className='alert alert-'+t;a.textContent=m;}if(o!==currentUser.pass){al(t('pwOldWrong'),'err');return;}if(!n||n.length<4){al(t('pwShort'),'err');return;}if(n!==n2){al(t('pwNoMatch'),'err');return;}const key=currentUser.role==='admin'?'admin':currentUser.name;USERS[key].pass=n;currentUser.pass=n;al(t('pwOk'),'ok');['pw-old','pw-new','pw-new2'].forEach(id=>document.getElementById(id).value='');}
-function roundName(ri,total){const fe=total-1-ri;if(fe===0)return t('round_final');if(fe===1)return t('round_semi');if(fe===2)return t('round_quarters');if(fe===3)return t('round_16');if(fe===4)return t('round_32');if(fe===5)return t('round_64');return tf('round_n',{n:ri+1});}
-function matchBox(m,ti,which,ri,mi,isFirstRound){const aw=m.w&&m.w===m.a,bw=m.w&&m.w===m.b;const sc=m.sets?m.sets.map(([a,b])=>a+'-'+b).join(' '):'';const canLoad=m.a&&m.b&&!m.w&&(currentUser.role==='admin'||m.a===currentUser.name||m.b===currentUser.name);
-const emptyLblA=isFirstRound?'BYE':t('tbd');const emptyLblB=isFirstRound?'BYE':t('tbd');
-const nmA=m.a||emptyLblA;const nmB=m.b||emptyLblB;
-const slotA='<div class="slot '+(aw?'winner ':'')+(!m.a?'empty-slot':'')+'">'+'<span class="seed">'+(m.sid[0]||'')+'</span><span class="nm">'+nmA+'</span></div>';
-const slotB='<div class="slot '+(bw?'winner ':'')+(!m.b?'empty-slot':'')+'">'+'<span class="seed">'+(m.sid[1]||'')+'</span><span class="nm">'+nmB+'</span></div>';
-let f='';
-if(m.w&&m.a&&m.b)f='<div class="slot slot-foot"><span class="slot-score">'+sc+'</span><span class="slot-win">\u2713 '+m.w+'</span></div>';
-else if(m.a&&!m.b&&isFirstRound)f='';
-else if(!m.a&&!m.b)f='';
-else if(canLoad)f='<div class="slot slot-center"><button class="po-load" onclick="poReport('+ti+',\''+which+'\','+ri+','+mi+')"><i class="ti ti-upload"></i> '+t('po_load_result')+'</button></div>';
-else f='<div class="slot slot-center"><span class="lock-note">'+t('pending_match')+'</span></div>';
-return'<div class="match-wrap"><div class="match-box">'+slotA+slotB+f+'</div></div>';}
-
-function bracketHTML(rounds,ti,which){const total=rounds.length;return `<div class="bracket ${which==='cons'?'bracket-cons':'bracket-main'}">${rounds.map((rd,ri)=>{const rn=roundName(ri,total);const fd=which==='main'?fmtStageDate(rn):'';return `<div class="round"><div class="round-lbl">${rn}${fd?`<div class="round-date">${fd}</div>`:''}</div><div class="round-body">${rd.map((m,mi)=>matchBox(m,ti,which,ri,mi,ri===0)).join('')}</div></div>`;}).join('')}</div>`;}
-function fmtD(iso){if(!iso)return'';const p=iso.split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0].slice(2)}`:iso;}
-function fmtStageDate(nm){const sd=playoff.stageDates&&playoff.stageDates[nm];if(!sd||!sd.d1)return'';const f=fmtD(sd.d1);return (sd.mode==='range'&&sd.d2)?f+' – '+fmtD(sd.d2):f;}
-function setStageMode(nm,mode){if(!playoff.stageDates)playoff.stageDates={};const sd=playoff.stageDates[nm]||{d1:'',d2:''};sd.mode=mode;playoff.stageDates[nm]=sd;showPlayoffView();}
-function setStageD(nm,which,val){if(!playoff.stageDates)playoff.stageDates={};const sd=playoff.stageDates[nm]||{mode:'single',d1:'',d2:''};sd[which]=val;playoff.stageDates[nm]=sd;showPlayoffView();}
-function stageDatesCard(tr){if(!playoff.stageDates)playoff.stageDates={};const names=tr.main.map((_,ri)=>roundName(ri,tr.main.length));const rows=names.map(nm=>{const sd=playoff.stageDates[nm]||{mode:'single',d1:'',d2:''};return `<div class="form-row" style="grid-template-columns:1fr 1fr 1fr;align-items:end;margin-bottom:.4rem"><div class="form-group"><label>${nm}</label><select onchange="setStageMode('${esc(nm)}',this.value)"><option value="single" ${sd.mode!=='range'?'selected':''}>Fecha única</option><option value="range" ${sd.mode==='range'?'selected':''}>Semana de juego</option></select></div><div class="form-group"><label>${sd.mode==='range'?'Desde':'Fecha'}</label><input type="date" value="${sd.d1||''}" onchange="setStageD('${esc(nm)}','d1',this.value)"></div><div class="form-group" style="${sd.mode==='range'?'':'visibility:hidden'}"><label>Hasta</label><input type="date" value="${sd.d2||''}" onchange="setStageD('${esc(nm)}','d2',this.value)"></div></div>`;}).join('');return `<div class="card"><div class="section-lbl">Fechas de las etapas</div>${rows}<p class="legend-txt" style="margin-top:0">Para cada ronda elegí "Semana de juego" (rango desde–hasta) o "Fecha única". Aparece debajo del nombre de la ronda en el cuadro.</p></div>`;}
-function showPlayoffView(){['grupos','general','cargar','pendientes','admin','perfil'].forEach(v=>{var el=document.getElementById('view-'+v);if(el)el.style.display='none';});const pv=document.getElementById('view-playoff');pv.style.display='block';const isPrev=playoff.preview&&!playoff.started;if(!playoff.started&&!isPrev){pv.innerHTML='<div class="card"><div class="empty">El admin todavía no inició los Play Offs.</div></div>';return;}if(isPrev&&currentUser.role!=='admin'){pv.innerHTML='<div class="card"><div class="empty">Los Play Offs todavía no están disponibles.</div></div>';return;}let html='';if(isPrev){html+=`<div class="card" style="border:2px solid var(--pri)"><div class="po-section-title" style="margin-bottom:.5rem"><i class="ti ti-eye"></i> Previsualización — los Play Offs todavía NO están iniciados</div><p class="legend-txt" style="margin-top:0">Así quedarían los cuadros según la clasificación general. Quitá o agregá jugadores (los que no juegan) y ajustá la cantidad de cuadros. Cuando esté todo listo, confirmá el inicio. Hasta entonces los jugadores no ven nada.</p><button class="btn btn-accent" onclick="confirmPlayoffUI()"><i class="ti ti-player-play"></i> Iniciar Play Offs definitivamente</button></div>`;}if(currentUser.role==='admin'){
-  
-html+=`<div class="card"><div class="section-lbl">${t('po_config')}</div><div class="form-row">
-<div class="form-group"><label>${t('how_many_playoffs')}</label><select onchange="setPoNum(this.value)">${[1,2,3,4,5,6].map(k=>`<option value="${k}" ${playoff.numTramos===k?'selected':''}>${k} ${k>1?t('bracket_plural'):t('bracket_singular')}</option>`).join('')}</select></div>
-<div class="form-group"><label>${t('po_size_label')}</label><select onchange="setPoSize(this.value)">
-  <option value="0" ${!playoff.forcedSize?'selected':''}>${t('po_size_auto')}</option>
-  <option value="64" ${playoff.forcedSize===64?'selected':''}>${t('r_64')}</option>
-  <option value="32" ${playoff.forcedSize===32?'selected':''}>${t('r_32')}</option>
-  <option value="16" ${playoff.forcedSize===16?'selected':''}>${t('r_16')}</option>
-  <option value="8" ${playoff.forcedSize===8?'selected':''}>${t('r_8')}</option>
-  <option value="4" ${playoff.forcedSize===4?'selected':''}>${t('r_4')}</option>
-  <option value="2" ${playoff.forcedSize===2?'selected':''}>${t('r_2')}</option>
-</select></div>
-</div><p class="legend-txt" style="margin-top:0">${t('po_config_hint')}</p></div>`;
-  
-}
-html+='<div class="po-tramos">'+playoff.tramos.map(function(tr,i){return '<button class="po-tab '+(playoff.viewT===i?'active':'')+'" onclick="setViewT('+i+')">'+ tf('po_match',{l:tr.label})+'<br><span class="po-rng">'+tr.seeds.length+' '+t('po_tab_players')+'</span></button>';}).join('')+'</div>';
-const ti=playoff.viewT;const tr=playoff.tramos[ti];if(!tr){pv.innerHTML=html+'<div class="card"><div class="empty">Sin cuadro.</div></div>';updateHdr();return;}
-if(currentUser.role==='admin'){const inPo={};playoff.tramos.forEach(tr2=>tr2.seeds.forEach(n=>inPo[n]=1));const avail=ALLNAMES.filter(n=>!inPo[n]);html+='<div class="card"><div class="section-lbl">'+tf('po_seeds_title',{l:tr.label})+'</div><div class="seed-list">'+tr.seeds.map(n=>'<span class="seed-chip">'+n+' <button class="rm" onclick="removeSeedUI('+ti+',\''+esc(n)+'\')" aria-label="Quitar"><i class="ti ti-x"></i></button></span>').join('')+'</div><div class="form-row" style="margin-top:.6rem"><div class="form-group"><label>'+t('po_add_label')+'</label><select id="po-add"><option value="">'+t('po_add_choose')+'</option>'+avail.map(n=>'<option value="'+n+'">'+n+'</option>').join('')+'</select></div><div class="form-group" style="align-self:end"><button class="btn btn-primary btn-sm" onclick="addSeedUI('+ti+')"><i class="ti ti-plus"></i> '+t('po_add_btn')+'</button></div></div><p class="legend-txt">'+t('po_bye_note')+'</p></div>';html+=stageDatesCard(tr);}
-const finalM=tr.main[tr.main.length-1][0];html+='<div class="card"><div class="po-section-title"><i class="ti ti-trophy"></i> '+tf('po_main_title',{l:tr.label})+'</div>'+bracketHTML(tr.main,ti,'main')+(finalM.w?'<div class="champ-card"><div class="lbl">'+tf('po_champ',{l:tr.label})+'</div><div class="who"><i class="ti ti-crown"></i> '+finalM.w+'</div></div>':'')+'</div>';
-if(tr.cons){const cf=tr.cons[tr.cons.length-1][0];html+='<div class="card"><div class="po-section-title po-cons-title"><i class="ti ti-shield"></i> '+tf('po_cons_title',{l:tr.label})+'</div>'+bracketHTML(tr.cons,ti,'cons')+(cf.w?'<div class="champ-card champ-cons"><div class="lbl">'+tf('po_champ_cons',{l:tr.label})+'</div><div class="who">'+cf.w+'</div></div>':'')+'</div>';}
-html+='<div class="card legend-card"><p class="legend-txt">'+t('po_legend')+'</p></div>';
-pv.innerHTML=html;updateHdr();}
-function setViewT(i){playoff.viewT=i;showPlayoffView();}
-function removeSeedUI(t,n){removeSeed(t,n);showPlayoffView();toast(n+' quitado del cuadro (pasa uno por bye).');}
-function addSeedUI(t){const v=document.getElementById('po-add').value;if(!v){toast(t('po_choose_add'));return;}addSeed(t,v);showPlayoffView();toast(v+' agregado al cuadro.');}
-function poReport(ti,which,ri,mi){const tr=playoff.tramos[ti];const m=(which==='main'?tr.main:tr.cons)[ri][mi];if(!m.a||!m.b){toast(t('toastNoPlayers2'));return;}if(m.locked&&currentUser.role!=='admin'){toast(t('toastValidatedOnly'));return;}if(currentUser.role==='player'&&m.a!==currentUser.name&&m.b!==currentUser.name){toast(t('toastOnlyYours'));return;}poContext={ti,which,ri,mi};openPoForm(m,ti);}
-function openPoForm(m,ti){document.getElementById('modal-title').textContent=t('po_load_result')+' · '+t('po_match').replace('{l}',playoff.tramos[ti].label);document.getElementById('modal-body').innerHTML=`<p class="modal-rep">${m.a} <span class="vs">vs</span> ${m.b}</p><div class="set-row"><label>Set 1</label><input type="number" id="po-s1a" min="0" max="7" class="po-in"><span class="sep">–</span><input type="number" id="po-s1b" min="0" max="7" class="po-in"></div><div class="set-row"><label>Set 2</label><input type="number" id="po-s2a" min="0" max="7" class="po-in"><span class="sep">–</span><input type="number" id="po-s2b" min="0" max="7" class="po-in"></div><div class="set-row" id="po-s3-row" style="display:none"><label>S.Tiebreak</label><input type="number" id="po-s3a" min="0" max="1" class="po-in"><span class="sep">–</span><input type="number" id="po-s3b" min="0" max="1" class="po-in"><span class="set-hint">1-0 o 0-1</span></div><button class="btn btn-sm" onclick="document.getElementById('po-s3-row').style.display='flex'" style="margin-top:4px"><i class="ti ti-plus"></i> Supertiebreak</button><p class="lock-note" id="po-alert" style="margin-top:.5rem"></p>`;document.getElementById('modal-actions').innerHTML=`<button class="btn btn-accent" onclick="submitPo()"><i class="ti ti-send"></i> ${currentUser.role==='admin'?'Guardar y validar':t('send')}</button><button class="btn" onclick="closeM()">${t('close')}</button>`;document.getElementById('modal-bg').classList.add('open');}
-function submitPo(){const s=[[+document.getElementById('po-s1a').value,+document.getElementById('po-s1b').value],[+document.getElementById('po-s2a').value,+document.getElementById('po-s2b').value]];if(document.getElementById('po-s3-row').style.display!=='none')s.push([+document.getElementById('po-s3a').value,+document.getElementById('po-s3b').value]);const v=validMatch(s);if(!v.ok){const a=document.getElementById('po-alert');a.textContent='✕ '+v.msg;a.classList.add('err-txt');return;}const ti=poContext.ti,which=poContext.which,ri=poContext.ri,mi=poContext.mi;const m=(which==='main'?playoff.tramos[ti].main:playoff.tramos[ti].cons)[ri][mi];let w1=0,w2=0;s.forEach(([a,b])=>{if(a>b)w1++;else w2++;});const winner=w1>w2?m.a:m.b;if(currentUser.role==='admin'){storePo(ti,which,m.a,m.b,s,winner);rebuildTramo(ti);closeM();showPlayoffView();toast(t('po_validated'));}else{matches.push({id:matchId++,po:true,ti,which,tLabel:playoff.tramos[ti].label,poNames:[m.a,m.b],sets:s,status:'pending',reporter:currentUser.name,winner,date:'2026'});closeM();renderPend();renderCycleBar();showPlayoffView();toast(t('po_sent'));}}
-function storePo(ti,which,a,b,sets,w){const k=(which==='main'?ti:ti+'c')+'#'+[a,b].sort().join('|');playoff.results[k]={sets,w};}
-function applyPoPending(rec){storePo(rec.ti,rec.which,rec.poNames[0],rec.poNames[1],rec.sets,rec.winner);rebuildTramo(rec.ti);}
-function refreshAll(){try{if(typeof persist==='function')persist();}catch(e){}if(viewCycle==='po'){showPlayoffView();renderPend();renderCycleBar();return;}if(subView==='grupos')renderGrupos();if(subView==='general')renderGeneral();if(subView==='pendientes')renderPend();if(subView==='admin')renderAdmin();if(subView==='cargar')renderCargarDisputas();renderPend();renderCycleBar();}
-function toast(m){let t=document.getElementById('_toast');if(!t){t=document.createElement('div');t.id='_toast';t.className='toast';document.body.appendChild(t);}t.textContent=m;t.style.opacity='1';setTimeout(()=>t.style.opacity='0',3800);}
-// initLogin() is called by persist.js after Supabase state loads
-// ===== Conexión con Supabase (guarda y comparte los datos) =====
-let _sb=null,_lastSaved=null,_saving=false;
-function _serialize(){return JSON.stringify({cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,ALLNAMES,users:USERS});}
-function _hydrate(d){try{
-  if(d.cycles)cycles=d.cycles;
-  if(Array.isArray(d.matches))matches=d.matches;
-  if(typeof d.matchId==='number')matchId=d.matchId;
-  if(typeof d.activeN==='number')activeN=d.activeN;
-  if(d.playoff)playoff=d.playoff;
-  if(d.DESTINO)DESTINO=d.DESTINO;
-  if(d.FECHAS)FECHAS=d.FECHAS;
-  if(Array.isArray(d.ALLNAMES))ALLNAMES=d.ALLNAMES;
-  if(d.users){Object.keys(USERS).forEach(k=>delete USERS[k]);Object.assign(USERS,d.users);}
-}catch(e){console.warn('hydrate',e);}}try{const sl=localStorage.getItem('liga_lang');if(sl&&(sl==='es'||sl==='en'))LANG=sl;}catch(e){}
-function initSupabase(){try{if(typeof window!=='undefined'&&window.supabase&&typeof SUPA_URL==='string'&&SUPA_URL&&SUPA_URL.indexOf('PEGA_')<0){_sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);}}catch(e){_sb=null;}}
-async function loadState(){if(!_sb)return;const r=await _sb.from('liga_state').select('data').eq('id',1).maybeSingle();if(r.error)throw r.error;if(r.data&&r.data.data){_hydrate(typeof r.data.data==='string'?JSON.parse(r.data.data):r.data.data);_lastSaved=_serialize();}else{await persist(true);}}
-async function persist(force){if(!_sb||_saving)return;const json=_serialize();if(!force&&json===_lastSaved)return;_saving=true;try{const r=await _sb.from('liga_state').upsert({id:1,data:json});if(!r.error)_lastSaved=json;else console.warn('persist',r.error);}catch(e){console.warn('persist',e);}_saving=false;}
-if(typeof setInterval!=='undefined')setInterval(function(){persist();},3000);
-if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('beforeunload',function(){try{persist(true);}catch(e){}});
-initSupabase();
-(async function(){try{await loadState();}catch(e){console.warn('Supabase load',e);}initLogin();updateLangUI();})();</script></body></html>
+h+='<div class="card"><div class="section-lbl">'+t('playoffs_title')+'</div>'+(cyclesDone?'<div class="alert
