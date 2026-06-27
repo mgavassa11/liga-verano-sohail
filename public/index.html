@@ -37,8 +37,26 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 .tab.active{background:var(--pri);color:#fff;font-weight:600}.tab:hover:not(.active){background:var(--surface)}
 .tab-n{background:var(--surface2);color:var(--text2);border-radius:20px;padding:1px 6px;font-size:10px;margin-left:3px;font-weight:600;transition:.3s;}
 
-.tabs::-webkit-scrollbar, .cycle-bar::-webkit-scrollbar, .grp-pick::-webkit-scrollbar, .overflow-x::-webkit-scrollbar { display: none; }
-.tabs, .cycle-bar, .grp-pick, .overflow-x { -ms-overflow-style: none; scrollbar-width: none; }
+/* ====== MEJORA GLOBAL UX/UI: MENÚS Y TABLAS DESLIZABLES EN TODAS LAS PANTALLAS ====== */
+.cycle-bar, .tabs, .grp-pick {
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  justify-content: flex-start !important;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; 
+  padding-bottom: 4px;
+}
+.cycle-bar::-webkit-scrollbar, .tabs::-webkit-scrollbar, .grp-pick::-webkit-scrollbar, .overflow-x::-webkit-scrollbar { display: none; }
+.overflow-x { 
+  overflow-x: auto !important; 
+  -webkit-overflow-scrolling: touch; 
+  margin-bottom: 5px; 
+  padding-bottom: 5px; 
+}
+.cls-table, .gen-table, .res-table { min-width: max-content !important; width: 100% !important; table-layout: auto !important; }
+.cls-table th, .gen-table th, .cls-table td, .gen-table td, .res-table th, .res-table td { white-space: nowrap !important; }
+.cycle-tab, .tab, .grp-btn { flex: 0 0 auto !important; min-width: max-content !important; white-space: nowrap !important; }
+/* ==================================================================================== */
 
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.875rem 1rem;margin-bottom:.625rem}
 .grp-sep{height:0;border-top:3px solid #111;margin:0 0 .625rem;border-radius:2px}
@@ -99,7 +117,7 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 .badge-tag{background:var(--soft);color:var(--pri)}.badge-sohail{background:var(--sohail);color:var(--sohailT)}.badge-haza{background:var(--haza);color:var(--hazaT)}
 .alert{padding:.6rem .875rem;border-radius:8px;font-size:13px;margin-bottom:.625rem}.alert-ok{background:#E1F5EE;color:#085041}.alert-err{background:#FCEBEB;color:#791F1F}.alert-info{background:var(--soft);color:var(--pri)}
 .empty{text-align:center;padding:1.25rem;color:var(--text2);font-size:13px}
-.overflow-x{overflow-x:auto}.mt-sm{margin-top:.5rem}.gap-sm{display:flex;gap:6px;flex-wrap:wrap}
+.mt-sm{margin-top:.5rem}.gap-sm{display:flex;gap:6px;flex-wrap:wrap}
 .lock-note{font-size:11px;color:var(--text2);font-style:italic}.err-txt{color:#c0392b!important;font-style:normal}
 .avatar{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;margin-right:5px;background:var(--soft);color:var(--pri)}
 .pend-item{padding:.6rem 0;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -153,27 +171,6 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
   .user-info .name{font-size:12px}.user-info .role{font-size:10px}
   .logout-btn{padding:5px 7px;font-size:11px}
   
-  .cycle-bar, .tabs, .grp-pick {
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    justify-content: flex-start !important;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; 
-    padding-bottom: 4px;
-  }
-  .cycle-bar::-webkit-scrollbar, .tabs::-webkit-scrollbar, .grp-pick::-webkit-scrollbar, .overflow-x::-webkit-scrollbar { display: none; }
-  
-  .overflow-x { 
-    overflow-x: auto !important; 
-    -webkit-overflow-scrolling: touch; 
-    margin-bottom: 5px; 
-    padding-bottom: 5px; 
-  }
-  
-  .cls-table, .gen-table, .res-table { min-width: max-content !important; width: 100% !important; table-layout: auto !important; }
-  .cls-table th, .gen-table th, .cls-table td, .gen-table td, .res-table th, .res-table td { white-space: nowrap !important; }
-
-  .cycle-tab, .tab, .grp-btn { flex: 0 0 auto !important; min-width: max-content !important; white-space: nowrap !important; }
   .cycle-tab { padding: 8px 14px; font-size: 13px; border-radius: 9px; }
   .tab { padding: 8px 12px; font-size: 12px; border-radius: 8px; }
   .grp-btn { padding: 8px 12px; font-size: 12px; border-radius: 8px; }
@@ -521,7 +518,7 @@ function renderShell(){renderCycleBar();renderSubTabs();updateBadge();}
 function renderCycleBar(){const bar=document.getElementById('cycle-bar');let html='';cycles.forEach(c=>{const playable=!!c.groups;const isView=viewCycle===c.n;const icon=c.status==='finished'?'<i class="ti ti-circle-check st"></i>':c.status==='active'?'<i class="ti ti-player-play st"></i>':'<i class="ti ti-lock st"></i>';html+='<button class="cycle-tab '+(playable?'':'locked')+' '+(isView?'active':'')+'"'+(playable?' onclick="viewCyc('+c.n+')"':'')+'>'+icon+' '+t('cycle')+' '+c.n+'</button>';});const showPO=playoff.started||(playoff.preview&&currentUser.role==='admin');const poLabel=showPO?(playoff.preview&&!playoff.started?'<i class="ti ti-eye st"></i> '+t('playoffs_prev'):'<i class="ti ti-tournament st"></i> '+t('playoffs')):'<i class="ti ti-lock st"></i> '+t('playoffs');html+='<button class="cycle-tab '+(showPO?'':'locked')+' '+(viewCycle==='po'?'active':'')+'"'+(showPO?' onclick="viewCyc(\'po\')"':'')+'>'+poLabel+'</button>';bar.innerHTML=html;}
 function renderSubTabs(){const tabs=document.getElementById('tabs');if(viewCycle==='po'){if(currentUser.role==='admin'){tabs.style.display='flex';let tabs_def=[{id:'pendientes',i:'ti-bell',l:t('tab_pendientes_admin'),b:true},{id:'perfil',i:'ti-user',l:t('tab_perfil')},{id:'admin',i:'ti-settings',l:t('tab_admin')}];tabs.innerHTML=tabs_def.map(x=>'<button class="tab'+(subView===x.id?' active':'')+'" id="tab-'+x.id+'" onclick="showSub(\''+x.id+'\')"><i class="ti '+x.i+'" aria-hidden="true"></i> '+x.l+(x.b?' <span class="tab-n" id="pend-n" style="display:none">0</span>':'')+'</button>').join('');}else{tabs.style.display='none';}return;}tabs.style.display='flex';let tabs_def=[{id:'grupos',i:'ti-layout-grid',l:t('tab_grupos')},{id:'general',i:'ti-chart-bar',l:t('tab_general')},{id:'cargar',i:'ti-upload',l:currentUser.role==='admin'?t('tab_cargar_admin'):t('tab_cargar')},{id:'pendientes',i:'ti-bell',l:currentUser.role==='admin'?t('tab_pendientes_admin'):t('tab_pendientes'),b:true},{id:'perfil',i:'ti-user',l:t('tab_perfil')}];if(currentUser.role==='admin')tabs_def.push({id:'admin',i:'ti-settings',l:t('tab_admin')});tabs.innerHTML=tabs_def.map(x=>'<button class="tab'+(subView===x.id?' active':'')+'" id="tab-'+x.id+'" onclick="showSub(\''+x.id+'\')"><i class="ti '+x.i+'" aria-hidden="true"></i> '+x.l+(x.b?' <span class="tab-n" id="pend-n" style="display:none">0</span>':'')+'</button>').join('');}
 function viewCyc(n){viewCycle=n;if(n==='po'){renderShell();showPlayoffView();}else{renderShell();showSub('grupos');}}
-function showSub(name){if(viewCycle==='po')viewCycle=activeN;subView=name;['grupos','general','cargar','pendientes','admin','playoff','perfil'].forEach(v=>{const el=document.getElementById('view-'+v);if(el)el.style.display='none';});document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));var tb=document.getElementById('tab-'+name);if(tb)tb.classList.add('active');document.getElementById('view-'+name).style.display='block';if(name==='grupos')renderGrupos();if(name==='general')renderGeneral();if(name==='cargar'){populateForm();}if(name==='pendientes')renderPend();if(name==='admin')renderAdmin();if(name==='perfil')renderPerfil();updateHdr();if(name!=='pendientes')renderPend();updateBadge();}
+function showSub(name){if(viewCycle==='po')viewCycle=activeN;subView=name;['grupos','general','cargar','pendientes','admin','playoff','perfil'].forEach(v=>{const el=document.getElementById('view-'+v);if(el)el.style.display='none';});document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));var tb=document.getElementById('tab-'+name);if(tb)tb.classList.add('active');document.getElementById('view-'+name).style.display='block';if(name==='grupos')renderGrupos();if(name==='general')renderGeneral();if(name==='cargar'){populateForm();renderCargarDisputas();}if(name==='pendientes')renderPend();if(name==='admin')renderAdmin();if(name==='perfil')renderPerfil();updateHdr();if(name!=='pendientes')renderPend();updateBadge();}
 function updateHdr(){const hs=viewCycle==='po'?t('playoffs'):t('cycle')+' '+viewCycle+' · '+FECHAS[viewCycle-1]+' · '+cycles[viewCycle-1].status;const sub=document.getElementById('hdr-sub');if(sub)sub.textContent=hs;const tit=document.getElementById('hdr-title');if(tit)tit.textContent=t('app_title');const eb=document.getElementById('exit-btn');if(eb)eb.textContent=t('exit');}
 
 function groupCardHTML(gid){const c=cycles[viewCycle-1];const isActive=c.status==='active';const grp=c.groups[gid-1];const st=computeStats(viewCycle,gid);const dest=DESTINO[gid];const players=grp.players;const fc={};players.forEach(p=>{const f=p.split(' ')[0];fc[f]=(fc[f]||0)+1;});const lbl=p=>{const f=p.split(' ')[0];return fc[f]>1?p:f;};let cls=st.map((s,i)=>{const d=dest[i]||'',dn=parseInt((d||'G99').replace('G',''));const ar=dn<gid?'dest-up':dn>gid?'dest-down':'dest-same';const ic=dn<gid?'↑':dn>gid?'↓':'=';const ex=i===0?2:0;const base=ptsForPos(gid,i);return '<tr class="'+(i===0?'winner-row':'')+'"><td>'+(d?'<span class="dest '+ar+'">'+ic+groupName(dn)+'</span>':'')+'</td><td><span class="avatar">'+getInitials(s.name)+'</span>'+s.name+'</td><td><strong>'+s.pts+'</strong></td><td>'+s.g+'</td><td>'+s.p+'</td><td>'+s.nj+'</td><td>'+s.sg+'</td><td>'+s.sp+'</td><td>'+(s.sg-s.sp)+'</td><td>'+base+'</td><td>'+(ex>0?ex:'')+'</td><td><strong>'+(base+ex)+'</strong></td></tr>';}).join('');const head=players.map(p=>'<th>'+lbl(p)+'</th>').join('');let mrows=players.map((p,i)=>{const cols=players.map((q,j)=>{if(i===j)return'<td class="res-black"></td>';const m=findMatch(viewCycle,gid,p,q);if(m&&m.status==='confirmed'){const sc=m.aName===p?m.sets.map(([a,b])=>a+'-'+b).join(' '):m.sets.map(([a,b])=>b+'-'+a).join(' ');return'<td class="'+(m.club==='Haza'?'cell-haza':'cell-sohail')+'" onclick="openModal('+m.id+')">'+sc+'</td>';}if(m&&m.status==='pending'){const sc=m.aName===p?m.sets.map(([a,b])=>a+'-'+b).join(' '):m.sets.map(([a,b])=>b+'-'+a).join(' ');return'<td class="cell-pending" onclick="openModal('+m.id+')">'+sc+'⏳</td>';}if(m&&m.status==='disputed')return'<td class="cell-disputed" onclick="openModal('+m.id+')">disp.</td>';if(isActive&&canCreate(gid,p,q))return'<td class="cell-empty" onclick="prefill('+gid+',\''+esc(p)+'\',\''+esc(q)+'\')">+</td>';return'<td class="cell-locked">·</td>';}).join('');return'<tr><td>'+lbl(p)+'</td>'+cols+'</tr>';}).join('');
@@ -613,11 +610,14 @@ function confirmM(){const m=matches.find(x=>x.id===currentModal);if(m){m.status=
 function disputeM(){const m=matches.find(x=>x.id===currentModal);if(m)m.status='disputed';closeM();refreshAll();toast(t('toast_disputed'));}
 function deleteMatch(mid){if(confirm(t('confirm_delete'))){matches=matches.filter(x=>x.id!==mid);closeM();refreshAll();toast(t('match_deleted'));}}
 function adminEdit(mid){const m=matches.find(x=>x.id===mid);closeM();showSub('cargar');populateForm(m.g,m.aName,m.bName);pickClub(m.club);['s1a','s1b','s2a','s2b','s3a','s3b'].forEach(id=>document.getElementById(id).value='');document.getElementById('s3-row').style.display='none';m.sets.forEach((s,i)=>{const a=document.getElementById(`s${i+1}a`),b=document.getElementById(`s${i+1}b`);if(a)a.value=s[0];if(b)b.value=s[1];if(i===2)document.getElementById('s3-row').style.display='flex';});document.getElementById('f-fecha').value=m.date;}
-function renderAdmin(){const c=getActive();const need=pairsNeeded(c);const done=matches.filter(m=>m.cycle===activeN&&!m.po&&m.status==='confirmed').length;const notC=matches.filter(m=>m.cycle===activeN&&!m.po&&m.status!=='confirmed').length;const ready=done>=need&&notC===0;const cyclesDone=allCyclesDone();let h=`<div class="card"><div class="section-lbl">${t('admin_cycle_status')}</div><div class="alert ${ready?'alert-ok':'alert-info'}">Ciclo ${activeN}: ${tf('validated_count',{done,need})}${notC>0?` · ${notC} sin validar`:''}. ${ready?t('ready_close'):t('missing_results')}</div><div class="gap-sm mt-sm">${activeN<3?`<button class="btn btn-accent" ${(!ready)?'disabled':''} onclick="startNextCycle()"><i class="ti ti-arrow-right-circle"></i> ${t('close_cycle')}</button>`:`<button class="btn btn-accent" ${(!ready||getActive().status==='finished')?'disabled':''} onclick="finishLastCycle()"><i class="ti ti-flag-check"></i> ${t('finish_last_cycle')}</button>`}<button class="btn" onclick="demoFillUI()"><i class="ti ti-wand"></i> ${t('simulate')}</button><button class="btn" onclick="forceConfirmAll()"><i class="ti ti-checks"></i> ${t('confirm_pending')}</button></div></div>`;
+function renderAdmin(){const c=getActive();const need=pairsNeeded(c);const done=matches.filter(m=>m.cycle===activeN&&!m.po&&m.status==='confirmed').length;const notC=matches.filter(m=>m.cycle===activeN&&!m.po&&m.status!=='confirmed').length;const ready=done>=need&&notC===0;const cyclesDone=allCyclesDone();let h=`<div class="card"><div class="section-lbl">Estado del ciclo</div><div class="alert ${ready?'alert-ok':'alert-info'}">Ciclo ${activeN}: ${tf('validated_count',{done,need})}${notC>0?` · ${notC} sin validar`:''}. ${ready?t('ready_close'):t('missing_results')}</div><div class="gap-sm mt-sm">${activeN<3?`<button class="btn btn-accent" ${(!ready)?'disabled':''} onclick="startNextCycle()"><i class="ti ti-arrow-right-circle"></i> ${t('close_cycle')}</button>`:`<button class="btn btn-accent" ${(!ready||getActive().status==='finished')?'disabled':''} onclick="finishLastCycle()"><i class="ti ti-flag-check"></i> ${t('finish_last_cycle')}</button>`}<button class="btn" onclick="demoFillUI()"><i class="ti ti-wand"></i> ${t('simulate')}</button><button class="btn" onclick="forceConfirmAll()"><i class="ti ti-checks"></i> ${t('confirm_pending')}</button></div></div>`;
 h+=`<div class="card"><div class="section-lbl">${tf('edit_groups',{n:activeN})}</div><p class="legend-txt" style="margin-top:0">${t('edit_groups_hint')}</p><div class="req-wrap" style="margin-bottom:.7rem"><div class="section-lbl" style="margin-top:0">${t('add_player')}</div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr auto;align-items:end"><div class="form-group"><label>${t('first_name')}</label><input id="ap-nom" placeholder="${t('first_name')}"></div><div class="form-group"><label>${t('last_name')}</label><input id="ap-ape" placeholder="${t('last_name')}"></div><div class="form-group"><label>${t('group')}</label><select id="ap-grp">${c.groups.map((_,k)=>`<option value="${k+1}">${groupName(k+1)}</option>`).join('')}</select></div><div class="form-group"><button class="btn btn-primary" onclick="addPlayerUI()"><i class="ti ti-user-plus"></i> ${t('add_btn')}</button></div></div></div>`;
+
 h+=`<div class="grpedit">`+c.groups.map((g,gi)=>{const gid=gi+1;return `<div class="ge-group"><div class="ge-gtitle">${groupName(gid)} (${g.players.length})</div>`+g.players.map(n=>`<div class="ge-row"><span class="ge-nm">${n}</span><select class="ge-sel" onchange="movePlayerUI('${esc(n)}',${gid},this.value)"><option value="">${t('move_to')}</option>${c.groups.map((_,k)=>k+1!==gid?`<option value="${k+1}">${groupName(k+1)}</option>`:'').join('')}</select><button class="btn btn-danger btn-sm" onclick="removePlayerUI('${esc(n)}',${gid})">${t('remove')}</button></div>`).join('')+`</div>`;}).join('')+`</div></div>`;
+
 h+=`<div class="card"><div class="section-lbl">${t('cycle_dates')}</div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr">${[0,1,2].map(i=>`<div class="form-group"><label>${t('cycle')} ${i+1}</label><input type="text" value="${FECHAS[i].replace(/"/g,'&quot;')}" onchange="setFecha(${i},this.value)"></div>`).join('')}</div><p class="legend-txt" style="margin-top:0">${t('cycle_date_hint')}</p></div>`;
 h+=destinoCard();
+
 // PLAY OFFS CONFIG en Admin
 h+='<div class="card"><div class="section-lbl">'+t('playoffs_title')+'</div>'+(cyclesDone?'<div class="alert alert-ok">'+t('playoffs_ready')+'</div>':'<div class="alert alert-info">'+t('playoffs_not_ready')+'</div>');
 h+='<div class="form-row"><div class="form-group"><label>'+t('how_many_playoffs')+'</label><select onchange="setPoNum(this.value)">'+[1,2,3,4,5,6].map(k=>'<option value="'+k+'" '+(playoff.numTramos===k?'selected':'')+'>'+k+' '+(k>1?t('bracket_plural'):t('bracket_singular'))+'</option>').join('')+'</select></div>';
@@ -632,14 +632,18 @@ h+='<option value="2" '+(playoff.forcedSize===2?'selected':'')+'>'+t('r_2')+'</o
 h+='</select></div></div>';
 h+='<div class="form-row"><div class="form-group" style="align-self:end"><button class="btn btn-primary" '+(cyclesDone&&!playoff.started?'':'disabled')+' onclick="previewPlayoffUI()"><i class="ti ti-eye"></i> '+t('preview_po')+'</button></div></div>';
 h+=(playoff.started?'<p class="legend-txt">'+t('po_started')+'</p>':playoff.preview?'<p class="legend-txt">'+t('po_preview_active')+'</p>':'')+'</div>';
+
 h+='<div class="card"><div class="section-lbl">Reiniciar datos (¡Cuidado!)</div>';
 h+='<p class="legend-txt" style="margin-top:0">Estas acciones borran datos permanentemente y no se pueden deshacer.</p>';
 h+='<div class="gap-sm">';
 h+=[1,2,3].map(n=>'<button class="btn btn-danger" onclick="resetCycleUI('+n+')"><i class="ti ti-trash"></i> Reiniciar Ciclo '+n+'</button>').join('');
 h+='<button class="btn btn-danger" onclick="resetPlayoffUI()"><i class="ti ti-trash"></i> Reiniciar Play Offs</button></div></div>';
+
+const disp=[];
 document.getElementById('view-admin').innerHTML=h;}
 function movePlayerUI(name,fromG,toG){if(!toG)return;movePlayer(name,fromG,+toG);renderAdmin();toast(name+' movido a '+groupName(+toG));}
 function removePlayerUI(name,fromG){removePlayerCycle(name,fromG);renderAdmin();toast(name+' quitado del ciclo.');}
+
 function resetCycleUI(n){if(!confirm(tf('reset_confirm_cycle',{n})))return;matches=matches.filter(m=>m.cycle!==n);if(n===1){cycles[0].groups=C1.map(p=>({players:[...p]}));cycles[0].status='active';}else{cycles[n-1].groups=null;cycles[n-1].status='locked';}if(activeN>=n)activeN=n;viewCycle=activeN;persist();renderShell();showSub('admin');toast(t('reset_done'));}
 function resetPlayoffUI(){if(!confirm(t('reset_confirm_po')))return;playoff={started:false,numTramos:4,tramos:[],results:{},viewT:0,qualified:[],preview:false,forcedSize:0};matches=matches.filter(m=>!m.po);if(viewCycle==='po')viewCycle=activeN;persist();renderShell();showSub('admin');toast(t('reset_done'));}
 function setPoNum(v){playoff.numTramos=+v;if(playoff.started||playoff.preview){setNumTramos(+v);}}
