@@ -37,7 +37,6 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 .tab.active{background:var(--pri);color:#fff;font-weight:600}.tab:hover:not(.active){background:var(--surface)}
 .tab-n{background:var(--surface2);color:var(--text2);border-radius:20px;padding:1px 6px;font-size:10px;margin-left:3px;font-weight:600;transition:.3s;}
 
-/* Ocultar barra de scroll en menús deslizables */
 .tabs::-webkit-scrollbar, .cycle-bar::-webkit-scrollbar, .grp-pick::-webkit-scrollbar, .overflow-x::-webkit-scrollbar { display: none; }
 .tabs, .cycle-bar, .grp-pick, .overflow-x { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -145,7 +144,6 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 .bracket-main .match-box{background:#EAF3FC}.bracket-cons .match-box{background:#FDF1E6}
 .bracket-main .slot,.bracket-cons .slot{background:transparent}.bracket-main .slot.winner,.bracket-cons .slot.winner{background:var(--winrow)}.bracket-main .slot-foot,.bracket-cons .slot-foot{background:rgba(0,0,0,.04)}
 
-/* CSS ESPECÍFICO PARA MOBILE */
 @media(max-width:640px){
   body{font-size:13px}
   .app{padding:.4rem .35rem}
@@ -155,7 +153,6 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
   .user-info .name{font-size:12px}.user-info .role{font-size:10px}
   .logout-btn{padding:5px 7px;font-size:11px}
   
-  /* MEJORAS UX/UI MOBILE PARA MENÚS DESLIZABLES Y TABLAS (SWIPE) */
   .cycle-bar, .tabs, .grp-pick {
     flex-wrap: nowrap !important;
     overflow-x: auto !important;
@@ -173,7 +170,6 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
     padding-bottom: 5px; 
   }
   
-  /* REPARACIÓN PARA TABLA DE RESULTADOS CRUZADOS EN MOBILE */
   .cls-table, .gen-table, .res-table { min-width: max-content !important; width: 100% !important; table-layout: auto !important; }
   .cls-table th, .gen-table th, .cls-table td, .gen-table td, .res-table th, .res-table td { white-space: nowrap !important; }
 
@@ -314,7 +310,7 @@ es:{
 app_title:'Liga de Tenis Sohail',app_subtitle:'Verano 2026',select_user:'Seleccione su usuario',admin_org:'admin (Organización)',password:'Contraseña',enter:'Entrar',invalid_user:'Seleccioná un usuario válido.',wrong_pass:'Contraseña incorrecta.',
 exit:'Salir',cycle:'Ciclo',playoffs:'Play Offs',playoffs_prev:'Play Offs (previa)',
 tab_grupos:'Grupos',tab_general:'Clasificación',tab_cargar:'Cargar',tab_cargar_admin:'Cargar',tab_pendientes:'Pendientes',tab_pendientes_admin:'Pendientes / Disputas',tab_perfil:'Perfil',tab_admin:'Admin',
-choose_group:'Elegí el grupo',group:'Grupo',destination:'Destino',player:'Jugador',won:'G',lost:'P',not_played:'NJ',sets_won:'SG',sets_lost:'SP',balance:'Bal',pts_pos:'P.puesto',extra:'Extra',total:'Total',pts_classif:'Puntos para la Clasificación General',players_col:'Jugadores',
+choose_group:'Elegí el grupo',group:'Grupo',destination:'Destino',player:'Jugador',won:'G',lost:'P',not_played:'NJ',sets_won:'SG',sets_lost:'SP',balance:'Bal',pts_pos:'P.puesto',extra:'Extra',total:'Total',pts_classif:'Puntos para la Clasificación General',players_col:'Jugadores',edit:'Editar',
 legend_pts:'* Pts: puntos del grupo (3 victoria, 1 derrota, 0 no jugado). G: ganados. P: perdidos. NJ: no jugados. SG: sets ganados. SP: sets perdidos. Bal: balance de sets (SG−SP). Desempates: Puntos > Balance Sets > Sets ganados > Games ganados > Games perdidos. Destino: grupo al que sube (↑), baja (↓) o se mantiene (=). P.puesto+Extra (+2 al ganador del grupo) = Total a la Clasificación General.',
 legend_matrix:'El marcador se lee en la fila del jugador (sus juegos primero). Celeste = jugado en Sohail · naranja = jugado en Haza.',
 legend_sohail:'Sohail',legend_haza:'Haza',legend_pending:'Pendiente',legend_disputed:'Disputado',legend_load:'+ cargar',legend_noedit:'· no editable',
@@ -325,9 +321,9 @@ reqmark_label:'OBLIGATORIO',set:'Set',
 sets_section:'Resultado por sets',supertiebreak:'S.Tiebreak',stb_hint:'solo 1-0 o 0-1',add_stb:'Supertiebreak (1-1)',send:'Enviar',clear:'Limpiar',set_hint:'6-0 a 6-4, 7-5 o 7-6',
 not_in_cycle:'No estás en el ciclo activo.',load_note_player:'Cargás partidos tuyos del {g}. Solo aparecen los rivales con los que aún no tenés partido cargado. Tu rival debe confirmarlo.',load_note_admin:'Admin: cargás/editás cualquier partido. Lo que cargás queda validado.',
 select_two:'Seleccioná los dos jugadores.',same_group:'Ambos deben ser del mismo grupo.',validated_admin_only:'Ese resultado ya fue validado. Solo el admin puede editarlo.',result_sent_admin:'✓ Resultado válido y validado (admin).',result_sent_player:'✓ Resultado válido enviado. El rival debe confirmarlo.',select_club:'Elegí el club (Sohail o Haza).',select_date:'Completá la fecha del partido.',
-disputes_title:'Disputas activas (resuelve el admin)',no_disputes:'No hay disputas',validate:'Validar',edit:'Editar',
+disputes_title:'Disputas activas (resuelve el admin)',no_disputes:'No hay disputas',validate:'Validar',
 pending_title:'Pendientes de confirmación',no_pending:'No hay pendientes',waiting_rival:'Esperando al rival',review:'Revisar',
-validated_result:'Resultado validado',disputed_result:'Resultado disputado',review_result:'Revisar resultado',reported_by:'Reportado por',date_field:'Fecha',status_field:'Estado',confirmed_label:'confirmado',locked_label:'validado',confirm:'Confirmar',dispute:'Disputar',close:'Cerrar',validated_only_admin:'Validado — solo el admin edita',
+validated_result:'Resultado validado',disputed_result:'Resultado disputado',review_result:'Revisar resultado',reported_by:'Reportado por',date_field:'Fecha',status_field:'Estado',confirmed_label:'Confirmado',locked_label:'Validado',confirm:'Confirmar',dispute:'Disputar',close:'Cerrar',validated_only_admin:'Validado — solo el admin edita',
 admin_cycle_status:'Estado del ciclo',validated_count:'{done}/{need} partidos validados',ready_close:'✓ Listo para cerrar el ciclo.',missing_results:'Faltan validar resultados.',close_cycle:'Cerrar ciclo e iniciar siguiente',finish_last_cycle:'Finalizar último ciclo (habilita Play Offs)',simulate:'Simular y validar todos',confirm_pending:'Confirmar pendientes',
 cycle_dates:'Fechas de los ciclos',cycle_date_hint:'Editá el período de cada ciclo (texto libre, ej. "15/06/26 – 19/07/26").',
 promotions_title:'Ascensos y descensos — a qué grupo pasa cada puesto',promotions_hint:'Para cada grupo, elegí a qué grupo va cada puesto al cerrar el ciclo. Las filas se ajustan solas a la cantidad de jugadores de cada grupo.',pos_goes_to:'{pos}º →',
@@ -372,7 +368,7 @@ en:{
 app_title:'Sohail Tennis League',app_subtitle:'Summer 2026',select_user:'Select User',admin_org:'admin (Organisation)',password:'Password',enter:'Log in',invalid_user:'Please select a valid user.',wrong_pass:'Incorrect password.',
 exit:'Log out',cycle:'Cycle',playoffs:'Play Offs',playoffs_prev:'Play Offs (preview)',
 tab_grupos:'Groups',tab_general:'Standings',tab_cargar:'Upload',tab_cargar_admin:'Upload',tab_pendientes:'Pending',tab_pendientes_admin:'Pending / Disputes',tab_perfil:'Profile',tab_admin:'Admin',
-choose_group:'Choose group',group:'Group',destination:'Dest.',player:'Player',won:'W',lost:'L',not_played:'NP',sets_won:'SW',sets_lost:'SL',balance:'Bal',pts_pos:'Pos.pts',extra:'Extra',total:'Total',pts_classif:'Points for the General Standings',players_col:'Players',
+choose_group:'Choose group',group:'Group',destination:'Dest.',player:'Player',won:'W',lost:'L',not_played:'NP',sets_won:'SW',sets_lost:'SL',balance:'Bal',pts_pos:'Pos.pts',extra:'Extra',total:'Total',pts_classif:'Points for the General Standings',players_col:'Players',edit:'Edit',
 legend_pts:'* Pts: group points (3 win, 1 loss, 0 not played). W: wins. L: losses. NP: not played. SW: sets won. SL: sets lost. Bal: set balance (SW−SL). Tiebreakers: Points > Set Balance > Sets Won > Games Won > Games Lost. Dest.: group player moves to: up (↑), down (↓) or stays (=). Pos.pts+Extra (+2 to group winner) = Total for General Standings.',
 legend_matrix:"Score is read in the player's row (their games first). Blue = played at Sohail · orange = played at Haza.",
 legend_sohail:'Sohail',legend_haza:'Haza',legend_pending:'Pending',legend_disputed:'Disputed',legend_load:'+ upload',legend_noedit:'· locked',
@@ -383,9 +379,9 @@ reqmark_label:'MANDATORY',set:'Set',
 sets_section:'Results by set',supertiebreak:'S.Tiebreak',stb_hint:'only 1-0 or 0-1',add_stb:'Super tiebreak (1-1)',send:'Send',clear:'Clear',set_hint:'6-0 to 6-4, 7-5 or 7-6',
 not_in_cycle:'You are not in the active cycle.',load_note_player:'Upload your matches in {g}. Only opponents you haven\'t played yet are shown. Opponent must confirm.',load_note_admin:'Admin: upload/edit any match. Immediately validated.',
 select_two:'Please select two players.',same_group:'Both players must be in the same group.',validated_admin_only:'That result is already validated. Only the admin can edit it.',result_sent_admin:'✓ Valid result — validated (admin).',result_sent_player:'✓ Valid result submitted. Opponent must confirm.',select_club:'Please choose a club (Sohail or Haza).',select_date:'Please fill in the match date.',
-disputes_title:'Active disputes (resolved by admin)',no_disputes:'No disputes',validate:'Validate',edit:'Edit',
+disputes_title:'Active disputes (resolved by admin)',no_disputes:'No disputes',validate:'Validate',
 pending_title:'Pending Confirmation',no_pending:'No pending items',waiting_rival:'Waiting for opponent',review:'Review',
-validated_result:'Validated result',disputed_result:'Disputed result',review_result:'Review result',reported_by:'Reported by',date_field:'Date',status_field:'Status',confirmed_label:'confirmed',locked_label:'validated',confirm:'Confirm',dispute:'Dispute',close:'Close',validated_only_admin:'Validated — only admin can edit',
+validated_result:'Validated result',disputed_result:'Disputed result',review_result:'Review result',reported_by:'Reported by',date_field:'Date',status_field:'Status',confirmed_label:'Confirmed',locked_label:'Validated',confirm:'Confirm',dispute:'Dispute',close:'Close',validated_only_admin:'Validated — only admin can edit',
 admin_cycle_status:'Cycle status',validated_count:'{done}/{need} matches validated',ready_close:'✓ Ready to close the cycle.',missing_results:'Some results still need validating.',close_cycle:'Close cycle and start next',finish_last_cycle:'Finish last cycle (enables Play Offs)',simulate:'Simulate and validate all',confirm_pending:'Confirm pending',
 cycle_dates:'Cycle dates',cycle_date_hint:"Edit each cycle's period (free text, e.g. \"15/06/26 – 19/07/26\").",
 promotions_title:'Promotions & relegations — where each position goes',promotions_hint:'For each group, choose which group each finishing position goes to when the cycle closes.',pos_goes_to:'{pos} →',
@@ -426,7 +422,7 @@ delete_match:'Delete',
 confirm_delete:'Are you sure you want to permanently delete this result?',
 match_deleted:'Result deleted.',
 },};const LAYOUT='selector';const LOGINMODE='groups';
-const PUNTOS={1:[35,34,33,32,31],2:[32,31,30,29,28],3:[29,28,27,26,25],4:[26,25,24,23,22],5:[23,22,21,20,19],6:[20,19,18,17,16],7:[17,16,15,14,13],8:[14,13,12,11,10],9:[14,13,12,11,10],10:[11,10,9,8,7],11:[8,7,6,5,4],12:[5,4,3,2,1]};
+let PUNTOS={1:[35,34,33,32,31],2:[32,31,30,29,28],3:[29,28,27,26,25],4:[26,25,24,23,22],5:[23,22,21,20,19],6:[20,19,18,17,16],7:[17,16,15,14,13],8:[14,13,12,11,10],9:[14,13,12,11,10],10:[11,10,9,8,7],11:[8,7,6,5,4],12:[5,4,3,2,1]};
 let DESTINO={1:['G1','G1','G2','G2','G3'],2:['G1','G1','G2','G3','G4'],3:['G1','G2','G3','G4','G5'],4:['G2','G3','G4','G5','G6'],5:['G3','G4','G5','G6','G7'],6:['G4','G5','G6','G7','G8'],7:['G5','G6','G7','G8','G9'],8:['G6','G7','G8','G9','G10'],9:['G7','G8','G9','G10','G11'],10:['G8','G9','G10','G11','G12'],11:['G9','G10','G11','G12','G12'],12:['G10','G11','G11','G12','G12']};
 function ptsForPos(gid,pos){const pb=PUNTOS[gid];if(!pb)return 0;return pos<pb.length?pb[pos]:Math.max(0,pb[pb.length-1]-(pos-pb.length+1));}
 let FECHAS=['15/06/26 – 19/07/26','20/07/26 – 23/08/26','24/08/26 – 27/09/26'];
@@ -525,12 +521,13 @@ function renderShell(){renderCycleBar();renderSubTabs();updateBadge();}
 function renderCycleBar(){const bar=document.getElementById('cycle-bar');let html='';cycles.forEach(c=>{const playable=!!c.groups;const isView=viewCycle===c.n;const icon=c.status==='finished'?'<i class="ti ti-circle-check st"></i>':c.status==='active'?'<i class="ti ti-player-play st"></i>':'<i class="ti ti-lock st"></i>';html+='<button class="cycle-tab '+(playable?'':'locked')+' '+(isView?'active':'')+'"'+(playable?' onclick="viewCyc('+c.n+')"':'')+'>'+icon+' '+t('cycle')+' '+c.n+'</button>';});const showPO=playoff.started||(playoff.preview&&currentUser.role==='admin');const poLabel=showPO?(playoff.preview&&!playoff.started?'<i class="ti ti-eye st"></i> '+t('playoffs_prev'):'<i class="ti ti-tournament st"></i> '+t('playoffs')):'<i class="ti ti-lock st"></i> '+t('playoffs');html+='<button class="cycle-tab '+(showPO?'':'locked')+' '+(viewCycle==='po'?'active':'')+'"'+(showPO?' onclick="viewCyc(\'po\')"':'')+'>'+poLabel+'</button>';bar.innerHTML=html;}
 function renderSubTabs(){const tabs=document.getElementById('tabs');if(viewCycle==='po'){if(currentUser.role==='admin'){tabs.style.display='flex';let tabs_def=[{id:'pendientes',i:'ti-bell',l:t('tab_pendientes_admin'),b:true},{id:'perfil',i:'ti-user',l:t('tab_perfil')},{id:'admin',i:'ti-settings',l:t('tab_admin')}];tabs.innerHTML=tabs_def.map(x=>'<button class="tab'+(subView===x.id?' active':'')+'" id="tab-'+x.id+'" onclick="showSub(\''+x.id+'\')"><i class="ti '+x.i+'" aria-hidden="true"></i> '+x.l+(x.b?' <span class="tab-n" id="pend-n" style="display:none">0</span>':'')+'</button>').join('');}else{tabs.style.display='none';}return;}tabs.style.display='flex';let tabs_def=[{id:'grupos',i:'ti-layout-grid',l:t('tab_grupos')},{id:'general',i:'ti-chart-bar',l:t('tab_general')},{id:'cargar',i:'ti-upload',l:currentUser.role==='admin'?t('tab_cargar_admin'):t('tab_cargar')},{id:'pendientes',i:'ti-bell',l:currentUser.role==='admin'?t('tab_pendientes_admin'):t('tab_pendientes'),b:true},{id:'perfil',i:'ti-user',l:t('tab_perfil')}];if(currentUser.role==='admin')tabs_def.push({id:'admin',i:'ti-settings',l:t('tab_admin')});tabs.innerHTML=tabs_def.map(x=>'<button class="tab'+(subView===x.id?' active':'')+'" id="tab-'+x.id+'" onclick="showSub(\''+x.id+'\')"><i class="ti '+x.i+'" aria-hidden="true"></i> '+x.l+(x.b?' <span class="tab-n" id="pend-n" style="display:none">0</span>':'')+'</button>').join('');}
 function viewCyc(n){viewCycle=n;if(n==='po'){renderShell();showPlayoffView();}else{renderShell();showSub('grupos');}}
-function showSub(name){if(viewCycle==='po')viewCycle=activeN;subView=name;['grupos','general','cargar','pendientes','admin','playoff','perfil'].forEach(v=>{const el=document.getElementById('view-'+v);if(el)el.style.display='none';});document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));var tb=document.getElementById('tab-'+name);if(tb)tb.classList.add('active');document.getElementById('view-'+name).style.display='block';if(name==='grupos')renderGrupos();if(name==='general')renderGeneral();if(name==='cargar'){populateForm();renderCargarDisputas();}if(name==='pendientes')renderPend();if(name==='admin')renderAdmin();if(name==='perfil')renderPerfil();updateHdr();if(name!=='pendientes')renderPend();updateBadge();}
+function showSub(name){if(viewCycle==='po')viewCycle=activeN;subView=name;['grupos','general','cargar','pendientes','admin','playoff','perfil'].forEach(v=>{const el=document.getElementById('view-'+v);if(el)el.style.display='none';});document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));var tb=document.getElementById('tab-'+name);if(tb)tb.classList.add('active');document.getElementById('view-'+name).style.display='block';if(name==='grupos')renderGrupos();if(name==='general')renderGeneral();if(name==='cargar'){populateForm();}if(name==='pendientes')renderPend();if(name==='admin')renderAdmin();if(name==='perfil')renderPerfil();updateHdr();if(name!=='pendientes')renderPend();updateBadge();}
 function updateHdr(){const hs=viewCycle==='po'?t('playoffs'):t('cycle')+' '+viewCycle+' · '+FECHAS[viewCycle-1]+' · '+cycles[viewCycle-1].status;const sub=document.getElementById('hdr-sub');if(sub)sub.textContent=hs;const tit=document.getElementById('hdr-title');if(tit)tit.textContent=t('app_title');const eb=document.getElementById('exit-btn');if(eb)eb.textContent=t('exit');}
 
 function groupCardHTML(gid){const c=cycles[viewCycle-1];const isActive=c.status==='active';const grp=c.groups[gid-1];const st=computeStats(viewCycle,gid);const dest=DESTINO[gid];const players=grp.players;const fc={};players.forEach(p=>{const f=p.split(' ')[0];fc[f]=(fc[f]||0)+1;});const lbl=p=>{const f=p.split(' ')[0];return fc[f]>1?p:f;};let cls=st.map((s,i)=>{const d=dest[i]||'',dn=parseInt((d||'G99').replace('G',''));const ar=dn<gid?'dest-up':dn>gid?'dest-down':'dest-same';const ic=dn<gid?'↑':dn>gid?'↓':'=';const ex=i===0?2:0;const base=ptsForPos(gid,i);return '<tr class="'+(i===0?'winner-row':'')+'"><td>'+(d?'<span class="dest '+ar+'">'+ic+groupName(dn)+'</span>':'')+'</td><td><span class="avatar">'+getInitials(s.name)+'</span>'+s.name+'</td><td><strong>'+s.pts+'</strong></td><td>'+s.g+'</td><td>'+s.p+'</td><td>'+s.nj+'</td><td>'+s.sg+'</td><td>'+s.sp+'</td><td>'+(s.sg-s.sp)+'</td><td>'+base+'</td><td>'+(ex>0?ex:'')+'</td><td><strong>'+(base+ex)+'</strong></td></tr>';}).join('');const head=players.map(p=>'<th>'+lbl(p)+'</th>').join('');let mrows=players.map((p,i)=>{const cols=players.map((q,j)=>{if(i===j)return'<td class="res-black"></td>';const m=findMatch(viewCycle,gid,p,q);if(m&&m.status==='confirmed'){const sc=m.aName===p?m.sets.map(([a,b])=>a+'-'+b).join(' '):m.sets.map(([a,b])=>b+'-'+a).join(' ');return'<td class="'+(m.club==='Haza'?'cell-haza':'cell-sohail')+'" onclick="openModal('+m.id+')">'+sc+'</td>';}if(m&&m.status==='pending'){const sc=m.aName===p?m.sets.map(([a,b])=>a+'-'+b).join(' '):m.sets.map(([a,b])=>b+'-'+a).join(' ');return'<td class="cell-pending" onclick="openModal('+m.id+')">'+sc+'⏳</td>';}if(m&&m.status==='disputed')return'<td class="cell-disputed" onclick="openModal('+m.id+')">disp.</td>';if(isActive&&canCreate(gid,p,q))return'<td class="cell-empty" onclick="prefill('+gid+',\''+esc(p)+'\',\''+esc(q)+'\')">+</td>';return'<td class="cell-locked">·</td>';}).join('');return'<tr><td>'+lbl(p)+'</td>'+cols+'</tr>';}).join('');
+const thPtsText = t('pts_classif') + (currentUser.role==='admin' ? ' <button class="btn btn-sm" style="padding:2px 6px;font-size:10px;margin-left:5px" onclick="editPuntosUI('+gid+')"><i class="ti ti-edit"></i> '+t('edit')+'</button>' : '');
 const thr='<tr><th>'+t('destination')+'</th><th>'+t('player')+'</th><th>Pts</th><th>'+t('won')+'</th><th>'+t('lost')+'</th><th>'+t('not_played')+'</th><th>'+t('sets_won')+'</th><th>'+t('sets_lost')+'</th><th>'+t('balance')+'</th><th>'+t('pts_pos')+'</th><th>'+t('extra')+'</th><th>'+t('total')+'</th></tr>';
-return '<div class="card grp-card"><div class="grp-title">'+t('group')+' '+gid+'</div><div class="overflow-x"><table class="cls-table"><thead><tr class="clg-head"><th colspan="9"></th><th colspan="3">'+t('pts_classif')+'</th></tr>'+thr+'</thead><tbody>'+cls+'</tbody></table></div><p class="legend-txt">'+t('legend_pts')+'</p><div class="section-lbl">'+t('players_col')+' '+groupName(gid)+'</div><div class="overflow-x"><table class="res-table"><thead><tr><th>'+t('players_col')+'</th>'+head+'</tr></thead><tbody>'+mrows+'</tbody></table></div><p class="legend-txt">'+t('legend_matrix')+'</p></div>';}
+return '<div class="card grp-card"><div class="grp-title">'+t('group')+' '+gid+'</div><div class="overflow-x"><table class="cls-table"><thead><tr class="clg-head"><th colspan="9"></th><th colspan="3">'+thPtsText+'</th></tr>'+thr+'</thead><tbody>'+cls+'</tbody></table></div><p class="legend-txt">'+t('legend_pts')+'</p><div class="section-lbl">'+t('players_col')+' '+groupName(gid)+'</div><div class="overflow-x"><table class="res-table"><thead><tr><th>'+t('players_col')+'</th>'+head+'</tr></thead><tbody>'+mrows+'</tbody></table></div><p class="legend-txt">'+t('legend_matrix')+'</p></div>';}
 function esc(s){return String(s).replace(/'/g,"\\'");}
 function renderGrupos(){const c=cycles[viewCycle-1];let html='';if(LAYOUT==='selector'){html+='<div class="card"><div class="section-lbl">'+t('choose_group')+'</div><div class="grp-pick">'+c.groups.map((g,i)=>{const gid=i+1;const mine=currentUser.role==='player'&&findLoc(currentUser.name,viewCycle)&&findLoc(currentUser.name,viewCycle).g===gid;return '<button class="grp-btn '+(selGroup===gid?'active':'')+'" onclick="setSelGroup('+gid+')">'+ groupName(gid)+(mine?'<span class="mine">'+t('mine_label')+'</span>':'')+'</button>';}).join('')+'</div></div>';if(selGroup>c.groups.length)selGroup=1;html+=groupCardHTML(selGroup);}else{c.groups.forEach((g,gi)=>{html+=groupCardHTML(gi+1);if(gi<c.groups.length-1)html+='<div class="grp-sep"></div>';});}html+='<div class="card legend-card"><div class="legend"><span><span class="dot" style="background:var(--sohail)"></span> '+t('legend_sohail')+'</span><span><span class="dot" style="background:var(--haza)"></span> '+t('legend_haza')+'</span><span><span class="dot dot-pend"></span> '+t('legend_pending')+'</span><span><span class="dot" style="background:#FCEBEB"></span> '+t('legend_disputed')+'</span><span>'+t('legend_load')+' · '+t('legend_noedit')+'</span></div></div>';document.getElementById('view-grupos').innerHTML=html;}
 function setSelGroup(g){selGroup=g;renderGrupos();}
@@ -658,6 +655,38 @@ function resolveD(mid){const m=matches.find(x=>x.id===mid);if(m){m.status='confi
 function forceConfirmAll(){matches.forEach(m=>{if(m.status==='pending'){m.status='confirmed';m.locked=true;if(m.po)applyPoPending(m);}});refreshAll();toast(t('toast_pending_confirmed'));}
 function demoFillUI(){demoFill();refreshAll();toast(t('toast_simulated'));}
 function startNextCycle(){const c=getActive();const need=pairsNeeded(c);const done=matches.filter(m=>m.cycle===activeN&&!m.po&&m.status==='confirmed').length;const notC=matches.filter(m=>m.cycle===activeN&&!m.po&&m.status!=='confirmed').length;if(done<need||notC>0){toast(t('missing_before_close'));return;}const buckets={};for(let k=1;k<=12;k++)buckets[k]=[];c.groups.forEach((g,gi)=>{const gid=gi+1;const st=computeStats(activeN,gid);ensureDestino(gid,st.length);const dest=DESTINO[gid];st.forEach((s,pos)=>{const d=dest[pos]||('G'+Math.min(gid+1,12));const dn=parseInt(d.replace('G',''));buckets[dn].push({name:s.name,total:ptsForPos(gid,pos)+(pos===0?2:0)});});});const ng=[];for(let k=1;k<=12;k++)ng.push({players:buckets[k].sort((a,b)=>b.total-a.total).map(x=>x.name)});c.status='finished';if(activeN<3){const nx=cycles[activeN];nx.groups=ng;nx.status='active';activeN=nx.n;viewCycle=nx.n;if(currentUser.role==='player'){const loc=findLoc(currentUser.name,activeN);if(loc)selGroup=loc.g;}toast(tf('cycle_closed_next',{n:c.n,nx:nx.n}));}else{toast(t('cycle3_closed'));}renderShell();showSub('grupos');}
+
+function editPuntosUI(gid){
+  const c=cycles[viewCycle-1];
+  const grp=c.groups[gid-1];
+  const len=Math.max(1,grp.players.length);
+  if(!PUNTOS[gid])PUNTOS[gid]=[];
+  let h=`<p class="legend-txt" style="margin-top:0;margin-bottom:.8rem">Ajustá los puntos que otorga cada posición en este grupo (0 a 100).</p>`;
+  h+=`<div class="form-row" style="grid-template-columns: 1fr;">`;
+  for(let i=0;i<len;i++){
+    let v=PUNTOS[gid][i]!==undefined?PUNTOS[gid][i]:0;
+    h+=`<div class="set-row"><label>${i+1}º Puesto</label><input type="number" id="pt-pos-${i}" value="${v}" min="0" max="100" class="po-in" style="width:70px"></div>`;
+  }
+  h+=`</div>`;
+  document.getElementById('modal-title').textContent=`Editar Puntos · ${groupName(gid)}`;
+  document.getElementById('modal-body').innerHTML=h;
+  document.getElementById('modal-actions').innerHTML=`<button class="btn btn-primary" onclick="savePuntos(${gid},${len})"><i class="ti ti-device-floppy"></i> Guardar</button><button class="btn" onclick="closeM()">Cancelar</button>`;
+  document.getElementById('modal-bg').classList.add('open');
+}
+function savePuntos(gid,len){
+  const newPts=[];
+  for(let i=0;i<len;i++){
+    let v=parseInt(document.getElementById(`pt-pos-${i}`).value);
+    if(isNaN(v))v=0;
+    if(v<0)v=0;if(v>100)v=100;
+    newPts.push(v);
+  }
+  PUNTOS[gid]=newPts;
+  persist();
+  closeM();
+  refreshAll();
+  toast('Puntos actualizados.');
+}
 
 function renderPerfil(){const u=currentUser;
 if(u.role==='admin'){
@@ -790,10 +819,10 @@ function storePo(ti,which,a,b,sets,w){const k=(which==='main'?ti:ti+'c')+'#'+[a,
 function applyPoPending(rec){storePo(rec.ti,rec.which,rec.poNames[0],rec.poNames[1],rec.sets,rec.winner);rebuildTramo(rec.ti);}
 function refreshAll(){try{if(typeof persist==='function')persist();}catch(e){}if(viewCycle==='po'){showPlayoffView();renderPend();renderCycleBar();return;}if(subView==='grupos')renderGrupos();if(subView==='general')renderGeneral();if(subView==='pendientes')renderPend();if(subView==='admin')renderAdmin();if(subView==='cargar')renderCargarDisputas();renderPend();renderCycleBar();updateBadge();}
 function toast(m){let t=document.getElementById('_toast');if(!t){t=document.createElement('div');t.id='_toast';t.className='toast';document.body.appendChild(t);}t.textContent=m;t.style.opacity='1';setTimeout(()=>t.style.opacity='0',3800);}
-// initLogin() is called by persist.js after Supabase state loads
-// ===== Conexión con Supabase (guarda y comparte los datos) =====
+
+// ===== Conexión con Supabase =====
 let _sb=null,_lastSaved=null,_saving=false;
-function _serialize(){return JSON.stringify({cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,ALLNAMES,users:USERS});}
+function _serialize(){return JSON.stringify({cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,ALLNAMES,users:USERS,PUNTOS});}
 function _hydrate(d){try{
   if(d.cycles)cycles=d.cycles;
   if(Array.isArray(d.matches))matches=d.matches;
@@ -804,6 +833,7 @@ function _hydrate(d){try{
   if(d.FECHAS)FECHAS=d.FECHAS;
   if(Array.isArray(d.ALLNAMES))ALLNAMES=d.ALLNAMES;
   if(d.users){Object.keys(USERS).forEach(k=>delete USERS[k]);Object.assign(USERS,d.users);}
+  if(d.PUNTOS)PUNTOS=d.PUNTOS;
 }catch(e){console.warn('hydrate',e);}}try{const sl=localStorage.getItem('liga_lang');if(sl&&(sl==='es'||sl==='en'))LANG=sl;}catch(e){}
 function initSupabase(){try{if(typeof window!=='undefined'&&window.supabase&&typeof SUPA_URL==='string'&&SUPA_URL&&SUPA_URL.indexOf('PEGA_')<0){_sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);}}catch(e){_sb=null;}}
 async function loadState(){if(!_sb)return;const r=await _sb.from('liga_state').select('data').eq('id',1).maybeSingle();if(r.error)throw r.error;if(r.data&&r.data.data){_hydrate(typeof r.data.data==='string'?JSON.parse(r.data.data):r.data.data);_lastSaved=_serialize();}else{await persist(true);}}
