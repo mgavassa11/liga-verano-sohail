@@ -161,7 +161,7 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
     scrollbar-width: none; 
     padding-bottom: 4px;
   }
-  .cycle-bar::-webkit-scrollbar, .tabs::-webkit-scrollbar, .grp-pick::-webkit-scrollbar { display: none; }
+  .cycle-bar::-webkit-scrollbar, .tabs::-webkit-scrollbar, .grp-pick::-webkit-scrollbar, .overflow-x::-webkit-scrollbar { display: none; }
   
   .overflow-x { 
     overflow-x: auto !important; 
@@ -230,6 +230,9 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
   <div id="view-playoff" style="display:none"></div><div id="view-perfil" style="display:none"></div><div id="view-admin" style="display:none"></div>
 </div>
 <div class="modal-bg" id="modal-bg"><div class="modal"><h3 id="modal-title">Resultado</h3><div id="modal-body"></div><div class="gap-sm" style="margin-top:1rem" id="modal-actions"></div></div></div>
+
+<script src="config.js"></script>
+
 <script>
 // ===== TRADUCCIONES & ESTADO =====
 let demoBackup=null;
@@ -559,7 +562,33 @@ function confirmPlayoffUI(){if(!confirmPlayoff())return;renderShell();showPlayof
 function renderCargarDisputas(){ }
 function resolveD(mid){const m=matches.find(x=>x.id===mid);if(m){m.status='confirmed';m.locked=true;if(m.po)applyPoPending(m);}refreshAll();toast(t('toast_dispute_resolved'));}
 function forceConfirmAll(){matches.forEach(m=>{if(m.status==='pending'){m.status='confirmed';m.locked=true;if(m.po)applyPoPending(m);}});refreshAll();toast(t('toast_pending_confirmed'));}
-function demoFillUI(){if(!demoBackup)demoBackup=JSON.stringify({cycles,activeN,playoff});demoFill();refreshAll();toast(t('toast_simulated'));}
+
+// ---> FUNCIONES DE SIMULACIÓN RESTAURADAS <---
+function demoFillUI(){
+  if(!demoBackup)demoBackup=JSON.stringify({cycles,activeN,playoff});
+  demoFill();
+  refreshAll();
+  toast(t('toast_simulated'));
+}
+function undoDemoUI(){
+  if(!confirm(t('confirm_undo_demo')))return;
+  matches=matches.filter(m=>!m.isDemo);
+  if(demoBackup){
+    try{
+      const b=JSON.parse(demoBackup);
+      cycles=b.cycles;
+      activeN=b.activeN;
+      playoff=b.playoff;
+      viewCycle=activeN;
+      demoBackup=null;
+    }catch(e){}
+  }
+  persist();
+  refreshAll();
+  toast(t('toast_demo_undone'));
+}
+// ----------------------------------------------
+
 function startNextCycle(){const c=getActive();if(!c||!c.groups)return;const need=pairsNeeded(c);const done=matches.filter(m=>m.cycle===activeN&&!m.po&&m.status==='confirmed').length;const notC=matches.filter(m=>m.cycle===activeN&&!m.po&&m.status!=='confirmed').length;if(done<need||notC>0){toast(t('missing_before_close'));return;}const buckets={};for(let k=1;k<=12;k++)buckets[k]=[];c.groups.forEach((g,gi)=>{const gid=gi+1;const st=computeStats(activeN,gid);ensureDestino(gid,st.length);const dest=DESTINO[gid];st.forEach((s,pos)=>{const d=dest[pos]||('G'+Math.min(gid+1,12));const dn=parseInt(d.replace('G',''));buckets[dn].push({name:s.name,total:ptsForPos(gid,pos)+(pos===0?2:0)});});});const ng=[];for(let k=1;k<=12;k++)ng.push({players:buckets[k].sort((a,b)=>b.total-a.total).map(x=>x.name)});c.status='finished';if(activeN<3){const nx=cycles[activeN];nx.groups=ng;nx.status='active';activeN=nx.n;viewCycle=nx.n;if(currentUser.role==='player'){const loc=findLoc(currentUser.name,activeN);if(loc)selGroup=loc.g;}toast(tf('cycle_closed_next',{n:c.n,nx:nx.n}));}else{toast(t('cycle3_closed'));}renderShell();showSub('grupos');}
 
 function editPuntosUI(gid){
