@@ -1095,9 +1095,13 @@ function storePo(ti,which,a,b,sets,w){const k=(which==='main'?ti:ti+'c')+'#'+[a,
 function applyPoPending(rec){storePo(rec.ti,rec.which,rec.poNames[0],rec.poNames[1],rec.sets,rec.winner);rebuildTramo(rec.ti);}
 function toast(m){let t=document.getElementById('_toast');if(!t){t=document.createElement('div');t.id='_toast';t.className='toast';document.body.appendChild(t);}t.textContent=m;t.style.opacity='1';setTimeout(()=>t.style.opacity='0',3800);}
 
-// ===== CONEXIÓN A SUPABASE ORIGINAL (cod viejo.html) =====
-let _sb=null,_lastSaved=null,_saving=false;
-function _serialize(){return JSON.stringify({cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,ALLNAMES,users:USERS,PUNTOS,demoBackup});}
+// ===== CONEXIÓN A SUPABASE — guardado instantáneo =====
+let _sb=null,_lastSaved=null,_saving=false,_pendingForce=false;
+
+function _serialize(){
+  return JSON.stringify({cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,ALLNAMES,users:USERS,PUNTOS});
+}
+
 function _hydrate(d){try{
   if(d.cycles)cycles=d.cycles;
   if(Array.isArray(d.matches))matches=d.matches;
@@ -1109,13 +1113,86 @@ function _hydrate(d){try{
   if(Array.isArray(d.ALLNAMES))ALLNAMES=d.ALLNAMES;
   if(d.users){Object.keys(USERS).forEach(k=>delete USERS[k]);Object.assign(USERS,d.users);}
   if(d.PUNTOS)PUNTOS=d.PUNTOS;
-  if(d.demoBackup!==undefined)demoBackup=d.demoBackup;
-}catch(e){console.warn('hydrate',e);}}try{const sl=localStorage.getItem('liga_lang');if(sl&&(sl==='es'||sl==='en'))LANG=sl;}catch(e){}
-function initSupabase(){try{if(typeof window!=='undefined'&&window.supabase&&typeof SUPA_URL==='string'&&SUPA_URL&&SUPA_URL.indexOf('PEGA_')<0){_sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);}}catch(e){_sb=null;}}
-async function loadState(){if(!_sb)return;const r=await _sb.from('liga_state').select('data').eq('id',1).maybeSingle();if(r.error)throw r.error;if(r.data&&r.data.data){_hydrate(typeof r.data.data==='string'?JSON.parse(r.data.data):r.data.data);_lastSaved=_serialize();}else{await persist(true);}}
-async function persist(force){if(!_sb||_saving)return;const json=_serialize();if(!force&&json===_lastSaved)return;_saving=true;try{const r=await _sb.from('liga_state').upsert({id:1,data:json});if(!r.error)_lastSaved=json;else console.warn('persist',r.error);}catch(e){console.warn('persist',e);}_saving=false;}
-if(typeof setInterval!=='undefined')setInterval(function(){persist();},3000);
-if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('beforeunload',function(){try{persist(true);}catch(e){}});
+}catch(e){console.warn('hydrate',e);}
+}
+
+try{const sl=localStorage.getItem('liga_lang');if(sl&&(sl==='es'||sl==='en'))LANG=sl;}catch(e){}
+
+function initSupabase(){
+  try{
+    if(typeof window!=='undefined'&&window.supabase&&typeof SUPA_URL==='string'&&SUPA_URL&&SUPA_URL.indexOf('PEGA_')<0){
+      _sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+    }
+  }catch(e){_sb=null;}
+}
+
+async function loadState(){
+  if(!_sb)return;
+  const r=await _sb.from('liga_state').select('data').eq('id',1).maybeSingle();
+  if(r.error)throw r.error;
+  if(r.data&&r.data.data){
+    _hydrate(typeof r.data.data==='string'?JSON.parse(r.data.data):r.data.data);
+    _lastSaved=_serialize();
+  }else{
+    await _doPersist();
+  }
+}
+
+// Core save — always executes, returns a Promise
+async function _doPersist(){
+  if(!_sb)return;
+  const json=_serialize();
+  try{
+    const r=await _sb.from('liga_state').upsert({id:1,data:json});
+    if(!r.error){_lastSaved=json;}
+    else{console.warn('Supabase save error:',r.error);}
+  }catch(e){console.warn('Supabase save exception:',e);}
+}
+
+// Public persist — called everywhere in the app
+// force=true: save right now even if nothing changed
+// force=false: skip if data is identical to last save
+async function persist(force){
+  if(!_sb)return;
+  const json=_serialize();
+  if(!force&&json===_lastSaved)return;
+  if(_saving){
+    // Already saving — mark that we need another save after this one finishes
+    _pendingForce=true;
+    return;
+  }
+  _saving=true;
+  _pendingForce=false;
+  try{
+    const r=await _sb.from('liga_state').upsert({id:1,data:json});
+    if(!r.error){_lastSaved=json;}
+    else{console.warn('Supabase save error:',r.error);}
+  }catch(e){console.warn('Supabase save exception:',e);}
+  _saving=false;
+  // If a persist was requested while we were saving, do it now
+  if(_pendingForce){
+    _pendingForce=false;
+    await persist(true);
+  }
+}
+
+// Auto-save every 5 seconds (backup)
+if(typeof setInterval!=='undefined')setInterval(function(){persist(false);},5000);
+
+// Save on page close — use synchronous XHR as last resort (sendBeacon doesn't work for upsert)
+if(typeof window!=='undefined'&&window.addEventListener){
+  window.addEventListener('visibilitychange',function(){
+    if(document.visibilityState==='hidden')persist(true);
+  });
+  window.addEventListener('pagehide',function(){persist(true);});
+  window.addEventListener('beforeunload',function(){persist(true);});
+}
+
 initSupabase();
-(async function(){try{await loadState();}catch(e){console.warn('Supabase load',e);}initLogin();updateLangUI();if(typeof currentUser !== 'undefined' && currentUser){renderAll();}})();
+(async function(){
+  try{await loadState();}catch(e){console.warn('Supabase load error:',e);}
+  initLogin();
+  updateLangUI();
+  if(typeof currentUser!=='undefined'&&currentUser){renderAll();}
+})();
 </script></body></html>
