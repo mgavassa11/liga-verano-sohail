@@ -120,13 +120,24 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 .po-tramos{display:flex;gap:6px;margin-bottom:.6rem;flex-wrap:wrap}
 .po-tab{flex:1;min-width:110px;padding:9px;border:1px solid var(--border);background:var(--surface);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;text-align:center;color:var(--text)}
 .po-tab:hover{background:var(--soft)}.po-tab.active{background:var(--pri);color:#fff;border-color:var(--pri)}.po-rng{font-size:10px;opacity:.8}
-.bracket{display:flex;gap:10px;overflow-x:auto;padding:.5rem 0;align-items:stretch}
-.round{display:flex;flex-direction:column;min-width:172px}
-.round-lbl{min-height:22px;font-size:11px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:.05em;text-align:center;margin-bottom:.35rem;flex-shrink:0}
-.round-date{font-size:9.5px;font-weight:500;color:var(--text2);text-transform:none;letter-spacing:0;margin-top:1px}
-.round-body{flex:1;display:flex;flex-direction:column;justify-content:space-around;gap:8px}
-.match-wrap{display:flex;align-items:center}
-.match-box{flex:1;border:1px solid var(--border2);border-radius:8px;overflow:hidden;background:var(--surface)}
+.bracket{display:flex;gap:0;overflow-x:auto;padding:.75rem .25rem;align-items:flex-start}
+.round{display:flex;flex-direction:column;position:relative}
+.round-name{font-size:11px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:.06em;text-align:center;padding:0 12px;margin-bottom:.6rem;flex-shrink:0}
+.round-slots{display:flex;flex-direction:column;position:relative}
+/* match-wrap: each pair of players + connector lines */
+.match-wrap{display:flex;align-items:center;position:relative}
+.match-group{display:flex;flex-direction:column;position:relative;margin-bottom:0}
+/* The bracket box itself */
+.match-box{width:190px;border:1px solid var(--border2);border-radius:8px;overflow:hidden;background:var(--surface);flex-shrink:0}
+/* Vertical line on right side connecting to next round */
+.connector-right{width:24px;flex-shrink:0;position:relative;align-self:stretch;display:flex;align-items:center}
+.connector-right::before{content:'';position:absolute;left:0;top:50%;width:24px;height:1px;background:var(--border2);}
+/* Vertical bracket lines between pairs */
+.bracket-pair{display:flex;flex-direction:column;position:relative}
+.bracket-pair>.match-group{flex:1}
+.bracket-pair::after{content:'';position:absolute;right:-24px;top:25%;height:50%;width:1px;background:var(--border2);}
+/* Round column spacing */
+.round+.round{margin-left:24px}
 .slot{display:flex;align-items:center;gap:5px;padding:6px 9px;font-size:12px;border-bottom:1px solid var(--border)}
 .slot:last-child{border-bottom:none}.slot.winner{background:var(--winrow);font-weight:700;color:var(--priD)}
 .slot.empty-slot{color:var(--text2);font-style:italic}.slot .nm{flex:1}
@@ -668,7 +679,7 @@ function doLogin(){const u=document.getElementById('login-user').value,p=documen
 function doLogout(){currentUser=null;document.getElementById('main-app').style.display='none';document.getElementById('login-screen').style.display='block';document.getElementById('login-pass').value='';initLogin();}
 function renderShell(){renderCycleBar();renderSubTabs();updateBadge();}
 function renderCycleBar(){const bar=document.getElementById('cycle-bar');let html='';cycles.forEach(c=>{const playable=!!c.groups;const isView=viewCycle===c.n;const icon=c.status==='finished'?'<i class="ti ti-circle-check st"></i>':c.status==='active'?'<i class="ti ti-player-play st"></i>':'<i class="ti ti-lock st"></i>';html+=`<button class="cycle-tab ${playable?'':'locked'} ${isView?'active':''}" onclick="${playable?`viewCyc(${c.n})`:''}">${icon} ${t('cycle')} ${c.n}</button>`;});const showPO=playoff.started||(playoff.preview&&currentUser.role==='admin');const poLabel=showPO?(playoff.preview&&!playoff.started?`<i class="ti ti-eye st"></i> ${t('playoffs_prev')}`:`<i class="ti ti-tournament st"></i> ${t('playoffs')}`):`<i class="ti ti-lock st"></i> ${t('playoffs')}`;html+=`<button class="cycle-tab ${showPO?'':'locked'} ${viewCycle==='po'?'active':''}" onclick="${showPO?`viewCyc('po')`:''}">${poLabel}</button>`;bar.innerHTML=html;}
-function renderSubTabs(){const tabs=document.getElementById('tabs');if(viewCycle==='po'){if(currentUser.role==='admin'){tabs.style.display='flex';let tabs_def=[{id:'pendientes',i:'ti-bell',l:t('tab_pendientes_admin'),b:true},{id:'perfil',i:'ti-user',l:t('tab_perfil')},{id:'admin',i:'ti-settings',l:t('tab_admin')}];tabs.innerHTML=tabs_def.map(x=>`<button class="tab${subView===x.id?' active':''}" id="tab-${x.id}" onclick="showSub('${x.id}')"><i class="ti ${x.i}" aria-hidden="true"></i> ${x.l}${x.b?' <span class="tab-n" id="pend-n" style="display:none">0</span>':''}</button>`).join('');}else{tabs.style.display='none';}return;}tabs.style.display='flex';let tabs_def=[{id:'grupos',i:'ti-layout-grid',l:t('tab_grupos')},{id:'general',i:'ti-chart-bar',l:t('tab_general')},{id:'cargar',i:'ti-upload',l:currentUser.role==='admin'?t('tab_cargar_admin'):t('tab_cargar')},{id:'pendientes',i:'ti-bell',l:currentUser.role==='admin'?t('tab_pendientes_admin'):t('tab_pendientes'),b:true},{id:'perfil',i:'ti-user',l:t('tab_perfil')}];if(currentUser.role==='admin')tabs_def.push({id:'admin',i:'ti-settings',l:t('tab_admin')});tabs.innerHTML=tabs_def.map(x=>`<button class="tab${subView===x.id?' active':''}" id="tab-${x.id}" onclick="showSub('${x.id}')"><i class="ti ${x.i}" aria-hidden="true"></i> ${x.l}${x.b?' <span class="tab-n" id="pend-n" style="display:none">0</span>':''}</button>`).join('');}
+function renderSubTabs(){const tabs=document.getElementById('tabs');tabs.style.display='flex';const showPO=playoff.started||(playoff.preview&&currentUser.role==='admin');let tabs_def=[{id:'grupos',i:'ti-layout-grid',l:t('tab_grupos')},{id:'general',i:'ti-chart-bar',l:t('tab_general')},{id:'cargar',i:'ti-upload',l:currentUser.role==='admin'?t('tab_cargar_admin'):t('tab_cargar')},{id:'pendientes',i:'ti-bell',l:currentUser.role==='admin'?t('tab_pendientes_admin'):t('tab_pendientes'),b:true},{id:'perfil',i:'ti-user',l:t('tab_perfil')}];if(currentUser.role==='admin')tabs_def.push({id:'admin',i:'ti-settings',l:t('tab_admin')});if(showPO)tabs_def.push({id:'po',i:'ti-tournament',l:t('playoffs'),po:true});tabs.innerHTML=tabs_def.map(x=>{if(x.po)return '<button class="tab'+(viewCycle==='po'?' active':'')+'" id="tab-po" onclick="viewCyc(\'po\')"><i class="ti ti-tournament" aria-hidden="true"></i> '+x.l+'</button>';return '<button class="tab'+(subView===x.id?' active':'')+'" id="tab-'+x.id+'" onclick="showSub(\''+x.id+'\')"><i class="ti '+x.i+'" aria-hidden="true"></i> '+x.l+(x.b?' <span class="tab-n" id="pend-n" style="display:none">0</span>':'')+'</button>';}).join('');}
 function viewCyc(n){
   viewCycle=n;
   if(n==='po'){
@@ -974,32 +985,57 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
   const aw=m.w&&m.w===m.a,bw=m.w&&m.w===m.b;
   const sc=m.sets?m.sets.map(([a,b])=>a+'-'+b).join(' '):'';
   const canLoad=m.a&&m.b&&!m.w&&(currentUser.role==='admin'||m.a===currentUser.name||m.b===currentUser.name);
-  const emptyLbl=isFirstRound?'BYE':t('tbd');
-  const nmA=m.a||(m.b?'BYE':emptyLbl);
-  const nmB=m.b||(m.a?'BYE':emptyLbl);
-  const slotA=`<div class="slot ${aw?'winner ':''} ${!m.a?'empty-slot':''}"><span class="seed">${m.sid[0]||''}</span><span class="nm">${nmA}</span></div>`;
-  const slotB=`<div class="slot ${bw?'winner ':''} ${!m.b&&m.a?'empty-slot':''}"><span class="seed">${m.sid[1]||''}</span><span class="nm">${nmB}</span></div>`;
-  let f='';
-  if(m.w&&m.a&&m.b) f=`<div class="slot slot-foot"><span class="slot-score">${sc}</span><span class="slot-win">✓ ${m.w}</span></div>`;
-  else if(m.a&&!m.b&&isFirstRound) f='';
-  else if(!m.a&&!m.b) f='';
-  else if(canLoad) f=`<div class="slot slot-center"><button class="po-load" onclick="poReport(${ti},'${which}',${ri},${mi})"><i class="ti ti-upload"></i> ${t('po_load_result')}</button></div>`;
-  else f=`<div class="slot slot-center"><span class="lock-note">${t('pending_match')}</span></div>`;
-  return `<div class="match-wrap"><div class="match-box">${slotA}${slotB}${f}</div></div>`;
+  const emptyTxt=isFirstRound?'BYE':t('tbd');
+  const sA=aw?'background:var(--winrow);font-weight:700;color:var(--priD);':'';
+  const sB=bw?'background:var(--winrow);font-weight:700;color:var(--priD);':'';
+  const iA=!m.a?'color:var(--text2);font-style:italic;':'';
+  const iB=!m.b&&m.a?'color:var(--text2);font-style:italic;':'';
+  const nmA=m.a||emptyTxt; const nmB=m.b||(m.a?'BYE':emptyTxt);
+  let bot='';
+  if(m.w&&m.a&&m.b) bot=`<div style="display:flex;justify-content:space-between;padding:4px 8px;background:var(--surface2);font-size:10px;border-top:1px solid var(--border)"><span style="color:var(--text2)">${sc}</span><span style="color:#085041;font-weight:700">✓ ${m.w}</span></div>`;
+  else if(canLoad) bot=`<div style="padding:5px 8px;border-top:1px solid var(--border);text-align:center"><button class="po-load" onclick="poReport(${ti},'${which}',${ri},${mi})"><i class="ti ti-upload"></i> ${t('po_load_result')}</button></div>`;
+  else if(m.a&&m.b&&!m.w) bot=`<div style="padding:4px 8px;border-top:1px solid var(--border);text-align:center"><span style="font-size:10px;color:var(--text2);font-style:italic">${t('pending_match')}</span></div>`;
+  return `<div style="border:1px solid var(--border2);border-radius:8px;overflow:hidden;background:var(--surface);width:190px;flex-shrink:0"><div style="display:flex;align-items:center;padding:6px 8px;border-bottom:1px solid var(--border);font-size:12px;${sA}${iA}"><span style="font-size:10px;color:var(--text2);min-width:18px">${m.sid[0]||''}</span><span style="flex:1">${nmA}</span></div><div style="display:flex;align-items:center;padding:6px 8px;font-size:12px;${sB}${iB}"><span style="font-size:10px;color:var(--text2);min-width:18px">${m.sid[1]||''}</span><span style="flex:1">${nmB}</span></div>${bot}</div>`;
 }
 
 function bracketHTML(rounds,ti,which){
   if(!rounds||!rounds.length)return'';
   const total=rounds.length;
-  let h='<div class="bracket">';
-  rounds.forEach((rd,ri)=>{
-    const isFirst=ri===0;
-    const rName=ri===total-1?t('round_final'):ri===total-2?t('round_semi'):ri===total-3?t('round_quarters'):ri===total-4?t('round_16'):ri===total-5?t('round_32'):tf('round_n',{n:ri+1});
-    h+=`<div class="round"><div class="round-name">${rName}</div>`;
-    rd.forEach((m,mi)=>{ h+=matchBox(m,ti,which,ri,mi,isFirst); });
-    h+='</div>';
-  });
-  return h+'</div>';
+  const BW=194,BH=82,GX=52,GY=10;
+  function rName(ri){const fe=total-1-ri;if(fe===0)return t('round_final');if(fe===1)return t('round_semi');if(fe===2)return t('round_quarters');if(fe===3)return t('round_16');if(fe===4)return t('round_32');return tf('round_n',{n:ri+1});}
+  function colH(ri){const n=rounds[ri].length;return n*BH+(n-1)*GY;}
+  const maxH=colH(0);
+  const totalW=total*(BW+GX);
+  let svg='';
+  for(let ri=0;ri<total-1;ri++){
+    const n=rounds[ri].length;const nn=rounds[ri+1].length;
+    const pairH=n*BH+(n-1)*GY;const topOff=(maxH-pairH)/2;
+    const nH=nn*BH+(nn-1)*GY;const nOff=(maxH-nH)/2;
+    const x1=ri*(BW+GX)+BW;const x2=(ri+1)*(BW+GX);const xm=x1+GX/2;
+    for(let mi=0;mi<n;mi+=2){
+      const yA=topOff+mi*(BH+GY)+BH/2;
+      const yB=topOff+(mi+1)*(BH+GY)+BH/2;
+      const yM=(yA+yB)/2;
+      const ni=mi/2;
+      const yN=nOff+ni*(BH+GY)+BH/2;
+      svg+=`<line x1="${x1}" y1="${yA}" x2="${xm}" y2="${yA}" stroke="var(--border2)" stroke-width="1.5"/>`;
+      svg+=`<line x1="${x1}" y1="${yB}" x2="${xm}" y2="${yB}" stroke="var(--border2)" stroke-width="1.5"/>`;
+      svg+=`<line x1="${xm}" y1="${yA}" x2="${xm}" y2="${yB}" stroke="var(--border2)" stroke-width="1.5"/>`;
+      svg+=`<line x1="${xm}" y1="${yM}" x2="${x2}" y2="${yN}" stroke="var(--border2)" stroke-width="1.5"/>`;
+    }
+  }
+  let cols='';
+  for(let ri=0;ri<total;ri++){
+    const rd=rounds[ri];const n=rd.length;
+    const pairH=n*BH+(n-1)*GY;const topOff=(maxH-pairH)/2;
+    const cx=ri*(BW+GX);const isFirst=ri===0;
+    cols+=`<div style="position:absolute;left:${cx}px;top:0;width:${BW}px">`;
+    cols+=`<div style="text-align:center;font-size:11px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:.06em;height:22px;line-height:22px">${rName(ri)}</div>`;
+    rd.forEach((m,mi)=>{const y=topOff+mi*(BH+GY);cols+=`<div style="position:absolute;top:${y+22}px;left:0;width:${BW}px">${matchBox(m,ti,which,ri,mi,isFirst)}</div>`;});
+    cols+='</div>';
+  }
+  const svgH=maxH+22;
+  return `<div style="position:relative;width:${totalW}px;height:${svgH}px;overflow:visible;padding-bottom:1rem"><svg style="position:absolute;top:22px;left:0;width:${totalW}px;height:${maxH}px;overflow:visible;pointer-events:none">${svg}</svg>${cols}</div>`;
 }
 
 function showPlayoffView(){
