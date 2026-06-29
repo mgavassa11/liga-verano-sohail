@@ -23,9 +23,12 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 .user-info{text-align:right}.user-info .name{font-size:13px;color:#fff;font-weight:600}.user-info .role{font-size:11px;color:#F5C518}
 .logout-btn{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:8px;padding:6px 9px;font-size:12px;cursor:pointer}.logout-btn:hover{background:rgba(255,255,255,.28)}
 
-.lang-btn { background: rgba(255,255,255,.15); color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer; font-weight: 600; }
+.lang-btn { background: rgba(255,255,255,.15);
+color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer; font-weight: 600;
+}
 .lang-btn:hover { background: rgba(255,255,255,.28); }
-.lang-btn.active { background: var(--priD); border-color: #F5C518; color: #F5C518; }
+.lang-btn.active { background: var(--priD); border-color: #F5C518; color: #F5C518;
+}
 
 .role-badge{background:#F5C518;color:var(--priD);font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;text-transform:uppercase}
 .cycle-bar{display:flex;gap:6px;margin-bottom:.6rem;flex-wrap:wrap}
@@ -38,7 +41,8 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 .tab.active{background:var(--pri);color:#fff;font-weight:600}.tab:hover:not(.active){background:var(--surface)}
 .tab-n{background:var(--surface2);color:var(--text2);border-radius:20px;padding:1px 6px;font-size:10px;margin-left:3px;font-weight:600;transition:.3s;}
 
-.tabs::-webkit-scrollbar, .cycle-bar::-webkit-scrollbar, .grp-pick::-webkit-scrollbar, .overflow-x::-webkit-scrollbar { display: none; }
+.tabs::-webkit-scrollbar, .cycle-bar::-webkit-scrollbar, .grp-pick::-webkit-scrollbar, .overflow-x::-webkit-scrollbar { display: none;
+}
 .tabs, .cycle-bar, .grp-pick, .overflow-x { -ms-overflow-style: none; scrollbar-width: none; }
 
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.875rem 1rem;margin-bottom:.625rem}
@@ -177,8 +181,7 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
   .logout-btn{padding:5px 7px;font-size:11px}
   
   .cycle-bar, .tabs, .grp-pick {
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
+    flex-wrap: nowrap !important; overflow-x: auto !important;
     justify-content: flex-start !important;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none; 
@@ -187,8 +190,7 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
   .cycle-bar::-webkit-scrollbar, .tabs::-webkit-scrollbar, .grp-pick::-webkit-scrollbar, .overflow-x::-webkit-scrollbar { display: none; }
   
   .overflow-x { 
-    overflow-x: auto !important; 
-    -webkit-overflow-scrolling: touch; 
+    overflow-x: auto !important; -webkit-overflow-scrolling: touch; 
     margin-bottom: 5px; 
     padding-bottom: 5px; 
   }
@@ -460,7 +462,6 @@ function ensureDestino(gid,len){if(!DESTINO[gid])DESTINO[gid]=[];while(DESTINO[g
 function addPlayerToCycle(name,gid){if(!name||!cycles[activeN-1].groups||!cycles[activeN-1].groups[gid-1])return false;if(ALLNAMES.indexOf(name)<0)ALLNAMES.push(name);if(!USERS[name])USERS[name]={role:'player',pass:'tenis',name};cycles[activeN-1].groups[gid-1].players.push(name);ensureDestino(gid,cycles[activeN-1].groups[gid-1].players.length);return true;}
 function buildUsers(){const u={admin:{role:'admin',pass:'admin123',name:'Organización',email:'',tel:''}};ALLNAMES.forEach(n=>u[n]={role:'player',pass:'tenis',name:n,email:'',tel:''});return u;}
 const USERS=buildUsers();let currentUser=null;
-
 function groupName(g){return (typeof t==='function'?t('group'):'Grupo')+' '+g;}
 function validSet(a,b){if(a==null||b==null||isNaN(a)||isNaN(b))return false;const hi=Math.max(a,b),lo=Math.min(a,b);if(hi===6&&lo<=4)return true;if(hi===7&&(lo===5||lo===6))return true;return false;}
 function validSTB(a,b){return (a===1&&b===0)||(a===0&&b===1);}
@@ -484,7 +485,6 @@ function computeStats(cycN,gid){
     if(w1>w2){a.g++;b.p++;a.pts+=3;b.pts+=1;}
     else{b.g++;a.p++;b.pts+=3;a.pts+=1;}
   });
-
   // ── H2H mini-stats for a subset of players ──────────────────────────
   function h2hStats(group){
     // Returns map: name -> {pts, sg, sp, gw, gl} only within matches inside group
@@ -508,7 +508,6 @@ function computeStats(cycN,gid){
   // 5. H2H set balance (2nd H2H)  6. Overall game balance
   function tiebreakSort(group){
     if(group.length<=1)return group;
-
     // Primary sort: 1º pts desc, 2º partidos jugados desc
     group.sort((x,y)=>{
       if(y.pts!==x.pts)return y.pts-x.pts;               // 1º Puntos
@@ -516,7 +515,6 @@ function computeStats(cycN,gid){
       if(mpY!==mpX)return mpY-mpX;                        // 2º Partidos jugados (más = mejor)
       return 0;
     });
-
     // Partition into sub-groups where BOTH pts AND partidos jugados are equal
     // Only those need H2H/tiebreak — the rest are already ordered correctly
     const result=[];let i=0;
@@ -536,7 +534,6 @@ function computeStats(cycN,gid){
 
   function breakTies(tied){
     if(tied.length===1)return tied;
-
     // Step 3: H2H pts among tied players
     const h=h2hStats(tied);
     tied.sort((x,y)=>{
@@ -551,7 +548,6 @@ function computeStats(cycN,gid){
       // Step 6: overall game balance
       return (y.gw-y.gl)-(x.gw-x.gl);
     });
-
     // After sorting, re-check if there are still tied sub-groups and recurse
     // (handles the 3-way scenario described: once one player separates by set balance,
     //  the remaining two go back to H2H, not set balance)
@@ -656,7 +652,6 @@ function updateBadge() {
     if(m.po) return m.poNames && m.poNames.includes(currentUser.name);
     return m.aName === currentUser.name || m.bName === currentUser.name;
   });
-  
   const cnt = currentUser.role === 'admin' ? (pend.length + disp.length) : userPend.length;
   const pn = document.getElementById('pend-n');
   if (pn) {
@@ -826,7 +821,6 @@ function renderPend(){
     if(m.po) return m.poNames && m.poNames.includes(currentUser.name);
     return m.aName === currentUser.name || m.bName === currentUser.name;
   });
-  
   updateBadge();
 
   let html = '';
@@ -865,7 +859,8 @@ function renderPend(){
 }
 function openModal(mid){const m=matches.find(x=>x.id===mid);if(!m)return;currentModal=mid;let p1,p2,rep,tag;if(m.po){p1=m.poNames[0];p2=m.poNames[1];rep=m.reporter;tag='Play Off '+m.tLabel;}else{p1=m.aName;p2=m.bName;rep=m.reporter;tag=`C${m.cycle} ${groupName(m.g)}`;}const sc=m.sets.map(([a,b])=>`${a}-${b}`).join(' / ');
 document.getElementById('modal-title').textContent=(m.status==='confirmed'?t('validated_result'):m.status==='disputed'?t('disputed_result'):t('review_result'))+` · ${tag}`;
-const statusLabel = m.status === 'confirmed' ? t('confirmed_label') : m.status === 'disputed' ? t('legend_disputed') : t('legend_pending');
+const statusLabel = m.status === 'confirmed' ?
+t('confirmed_label') : m.status === 'disputed' ? t('legend_disputed') : t('legend_pending');
 document.getElementById('modal-body').innerHTML=`<p class="modal-rep">${t('reported_by')} <strong>${rep}</strong>${m.club?` · Club <strong>${m.club}</strong>`:''}</p><div class="modal-score ${m.club==='Haza'?'ms-haza':'ms-sohail'}"><p>${p1} ${sc} ${p2}</p></div><p class="modal-meta">${t('date_field')}: ${m.date} · ${t('status_field')}: ${statusLabel}${m.locked?' · 🔒 '+t('locked_label'):''}</p>`;
 const acts=document.getElementById('modal-actions');let h='';const canAct=involvedPend(m)&&m.status==='pending';
 if(canAct)h+=`<button class="btn btn-success" onclick="confirmM()"><i class="ti ti-check"></i> ${t('confirm')}</button><button class="btn btn-danger" onclick="disputeM()"><i class="ti ti-x"></i> ${t('dispute')}</button>`;
@@ -885,18 +880,17 @@ function adminEdit(mid){const m=matches.find(x=>x.id===mid);closeM();showSub('ca
 
 function renderAdmin(){
   try {
-    const c = getActive() || { groups: [] };
+    const c = getActive() ||
+    { groups: [] };
     const grps = c.groups || [];
     const need = pairsNeeded(c);
     const done = matches.filter(m=>m.cycle===activeN&&!m.po&&m.status==='confirmed').length;
     const notC = matches.filter(m=>m.cycle===activeN&&!m.po&&m.status!=='confirmed').length;
     const ready = done>=need&&notC===0;
     const cyclesDone = allCyclesDone();
-    
     let h=`<div class="card"><div class="section-lbl">${t('admin_cycle_status')}</div><div class="alert ${ready?'alert-ok':'alert-info'}">${t('cycle')} ${activeN}: ${tf('validated_count',{done,need})}${notC>0?` · ${notC} sin validar`:''}. ${ready?t('ready_close'):t('missing_results')}</div>`+
     (ready&&activeN===3&&c.status!=='finished'?`<div class="alert alert-ok" style="margin-top:.4rem;font-weight:600"><i class="ti ti-info-circle"></i> ¡Todos los partidos validados! Presioná "Finalizar último ciclo" para habilitar los Play Offs.</div>`:'')+
     `<div class="gap-sm mt-sm">${activeN<3?`<button class="btn btn-accent" ${(!ready)?'disabled':''} onclick="startNextCycle()"><i class="ti ti-arrow-right-circle"></i> ${t('close_cycle')}</button>`:`<button class="btn btn-accent" ${(!ready||(c&&c.status==='finished'))?'disabled':''} onclick="finishLastCycle()"><i class="ti ti-flag-check"></i> ${t('finish_last_cycle')}</button>`}<button class="btn" onclick="demoFillUI()"><i class="ti ti-wand"></i> ${t('simulate')}</button><button class="btn btn-danger" onclick="undoDemoUI()"><i class="ti ti-eraser"></i> ${t('undo_demo')}</button></div></div>`;
-    
     // --- PDF EXPORT CARD ---
     h+=`<div class="card"><div class="section-lbl">Exportar a PDF</div><p class="legend-txt" style="margin-top:0">Exportá los resultados completos o los Play Offs para compartir.</p><div class="gap-sm mt-sm">`;
     cycles.forEach(cy => {
@@ -920,15 +914,12 @@ function renderAdmin(){
 
 
     h+=`<div class="card"><div class="section-lbl">${tf('edit_groups',{n:activeN})}</div><p class="legend-txt" style="margin-top:0">${t('edit_groups_hint')}</p>`;
-
     h+=`<div class="grpedit">`+grps.map((g,gi)=>{
       const gid=gi+1;
       const players = g.players || [];
       return `<div class="ge-group"><div class="ge-gtitle">${groupName(gid)} (${players.length})</div>`+
       players.map(n=>`<div class="ge-row"><span class="ge-nm">${n}</span><select class="ge-sel" onchange="movePlayerUI('${esc(n)}',${gid},this.value)"><option value="">${t('move_to')}</option>${grps.map((_,k)=>k+1!==gid?`<option value="${k+1}">${groupName(k+1)}</option>`:'').join('')}</select><button class="btn btn-danger btn-sm" onclick="removePlayerUI('${esc(n)}',${gid})">${t('remove')}</button></div>`).join('')+`</div>`;
     }).join('')+`</div></div>`;
-
-    
     h+=destinoCard();
 
 
@@ -954,7 +945,6 @@ function printCycle(n) {
   viewCycle = n;
   c.groups.forEach((g, gi) => { html += groupCardHTML(gi + 1); });
   viewCycle = oldView;
-
   const pa = document.getElementById('print-area');
   pa.innerHTML = html;
   
@@ -965,9 +955,9 @@ function printCycle(n) {
 }
 
 function printPlayoffs() {
-  if(!playoff.started && !playoff.preview) { toast('Play Offs no disponibles.'); return; }
+  if(!playoff.started && !playoff.preview) { toast('Play Offs no disponibles.'); return;
+  }
   let html = `<h2 style="margin-bottom:1rem;color:var(--priD)">Liga de Tenis Sohail - Play Offs</h2>`;
-  
   playoff.tramos.forEach((tr, ti) => {
      html += `<div class="po-card">`;
      html += `<h3 style="background:var(--pri);color:#fff;padding:8px;border-radius:8px;margin-bottom:10px">${tf('po_main_title',{l:tr.label})}</h3>`;
@@ -978,7 +968,6 @@ function printPlayoffs() {
      }
      html += `</div>`;
   });
-
   const pa = document.getElementById('print-area');
   pa.innerHTML = html;
 
@@ -1175,6 +1164,7 @@ function showPlayoffView(){
     </div>
     <div class="form-row" style="margin-top:.4rem">
       <div class="form-group"><label>Mover jugador desde otro cuadro</label><select id="po-move-${ti}"><option value="">Elegí jugador...</option>${inOtherBrackets.map(n=>`<option value="${n}">#${rank(n)} ${n} (Cuadro ${playoff.tramos[inPo[n]].label})</option>`).join('')}</select></div>
+      
       <div class="form-group" style="align-self:end"><button class="btn btn-sm" style="background:var(--soft);border:1px solid var(--border2)" onclick="moveSeedUI(${ti})"><i class="ti ti-arrows-exchange"></i> Mover acá</button></div>
     </div>
     <p class="legend-txt">${t('po_bye_note')}</p></div>`;
@@ -1183,7 +1173,6 @@ function showPlayoffView(){
   // Main bracket
   const finalM=tr.main&&tr.main.length?tr.main[tr.main.length-1][0]:null;
   html+=`<div class="card"><div class="po-section-title"><i class="ti ti-trophy"></i> ${tf('po_main_title',{l:tr.label})}</div>${bracketHTML(tr.main,ti,'main')}${finalM&&finalM.w?`<div class="champ-card"><div class="lbl">${tf('po_champ',{l:tr.label})}</div><div class="who"><i class="ti ti-crown"></i> ${finalM.w}</div></div>`:''}</div>`;
-
   // Consolation bracket
   if(tr.cons){
     const cf=tr.cons[tr.cons.length-1][0];
@@ -1321,7 +1310,6 @@ function startNextCycle(){
       buckets[dn].push({name:s.name,total:ptsForPos(gid,pos)+(pos===0?2:0)});
     });
   });
-  
   const ng=[];for(let k=1;k<=12;k++)ng.push({players:buckets[k].sort((a,b)=>b.total-a.total).map(x=>x.name)});
   c.status='finished';
   let switched = false;
@@ -1338,9 +1326,11 @@ function startNextCycle(){
     toast(t('cycle3_closed'));
   }
   
-  persist(true); // GUARDADO FORZADO INMEDIATO
+  persist(true);
+  // GUARDADO FORZADO INMEDIATO
   refreshAll(); // Refresca todo sin delay
-  if(switched) showSub('grupos'); // Va a grupos solo si cambió de ciclo
+  if(switched) showSub('grupos');
+  // Va a grupos solo si cambió de ciclo
 }
 
 function finishLastCycle(){
@@ -1403,7 +1393,6 @@ function renderPerfil(){
     h += `<div class="form-group"><label>${t('new_pass')}</label><input type="password" id="pw-new"></div></div>`;
     h += `<div class="form-row"><div class="form-group"><label>${t('repeat_pass')}</label><input type="password" id="pw-new2"></div>`;
     h += `<div class="form-group" style="align-self:end"><button class="btn btn-accent" onclick="changePw()"><i class="ti ti-lock"></i> ${t('save_pass')}</button></div></div></div>`;
-    
     // Agregar jugador card
     const grps = (getActive() && getActive().groups) ? getActive().groups : [];
     h += `<div class="card"><div class="section-lbl">${t('add_player')}</div>`;
@@ -1429,7 +1418,6 @@ function renderPerfil(){
     h += `<div class="prof-row"><span>${t('phone')}</span><span>${u.tel||'—'}</span></div>`;
     if(loc) h += `<div class="prof-row"><span>${t('current_group_label')}</span><span>${groupName(loc.g)}</span></div>`;
     h += `</div>`;
-    
     h += `<div class="card"><div class="section-lbl">${t('change_password')}</div><div id="pw-alert"></div>`;
     h += `<div class="form-row"><div class="form-group"><label>${t('current_pass')}</label><input type="password" id="pw-old"></div>`;
     h += `<div class="form-group"><label>${t('new_pass')}</label><input type="password" id="pw-new"></div></div>`;
@@ -1443,7 +1431,6 @@ function renderPlayerList(players, filter) {
   const f = (filter||'').toLowerCase();
   const visible = players.filter(p => p && p.name && (!f || p.name.toLowerCase().includes(f)));
   if (!visible.length) return `<div class="empty">${t('no_results')}</div>`;
-  
   return visible.map(p => {
     const loc = findLoc(p.name, activeN);
     const curG = loc ? loc.g : '';
@@ -1454,6 +1441,7 @@ function renderPlayerList(players, filter) {
         <div class="ge-gtitle">${p.name}${loc ? ` <span class="badge badge-tag">${groupName(loc.g)}</span>` : ''}</div>
         <button class="btn btn-sm" onclick="togglePlayerEdit('${esc(p.name)}')"><i class="ti ti-edit"></i> ${t('edit')}</button>
       </div>
+    
       <div id="pe-${esc(p.name)}" style="display:none;margin-top:.5rem">
         <div class="form-row">
           <div class="form-group"><label>Nombre completo</label><input type="text" id="pe-name-${esc(p.name)}" value="${esc(p.name)}"></div>
@@ -1463,6 +1451,7 @@ function renderPlayerList(players, filter) {
           <div class="form-group"><label>Teléfono</label><input type="tel" id="pe-tel-${esc(p.name)}" value="${esc(p.tel||'')}"></div>
           <div class="form-group"><label>Grupo (Ciclo Activo)</label><select id="pe-grp-${esc(p.name)}"><option value="">Sin grupo</option>${gOpts}</select></div>
         </div>
+   
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;">
           <button class="btn btn-danger btn-sm" onclick="deletePlayerAdmin('${esc(p.name)}')"><i class="ti ti-trash"></i> ${t('delete_match').split(' ')[0]}</button>
           <div class="gap-sm">
@@ -1471,6 +1460,7 @@ function renderPlayerList(players, filter) {
           </div>
         </div>
       </div>
+   
     </div>`;
   }).join('');
 }
@@ -1519,38 +1509,159 @@ function saveProfile(){const name=(document.getElementById('pf-name').value||'')
 function changePw(){const o=document.getElementById('pw-old').value,n=document.getElementById('pw-new').value,n2=document.getElementById('pw-new2').value,a=document.getElementById('pw-alert');function al(m,cl){a.className='alert alert-'+cl;a.textContent=m;}if(o!==currentUser.pass){al(t('pass_wrong'),'err');return;}if(!n||n.length<4){al(t('pass_short'),'err');return;}if(n!==n2){al(t('pass_no_match'),'err');return;}const key=currentUser.role==='admin'?'admin':currentUser.name;USERS[key].pass=n;currentUser.pass=n;al(t('pass_ok'),'ok');['pw-old','pw-new','pw-new2'].forEach(id=>document.getElementById(id).value='');persist(true);}
 
 // ===== FUNCIONES FALTANTES DEL PLAYOFF =====
-function poReport(ti,which,ri,mi){const tr=playoff.tramos[ti];const m=(which==='main'?tr.main:tr.cons)[ri][mi];if(!m.a||!m.b){toast(t('po_report_no_players'));return;}if(m.locked&&currentUser.role!=='admin'){toast(t('po_locked'));return;}if(currentUser.role==='player'&&m.a!==currentUser.name&&m.b!==currentUser.name){toast(t('po_not_yours'));return;}poContext={ti,which,ri,mi};openPoForm(m,ti);}
+let poFormClub = '';
+function pickPoClub(c) {
+    poFormClub = c;
+    const optSohail = document.getElementById('po-club-sohail');
+    const optHaza = document.getElementById('po-club-haza');
+    const pickCont = document.getElementById('po-club-pick');
+    if(optSohail) optSohail.className = 'club-opt' + (c === 'Sohail' ? ' sel-sohail' : '');
+    if(optHaza) optHaza.className = 'club-opt' + (c === 'Haza' ? ' sel-haza' : '');
+    if(pickCont) pickCont.classList.remove('req-empty');
+}
+
+function poReport(ti,which,ri,mi){
+  const tr = playoff.tramos[ti];
+  const m = (which === 'main' ? tr.main : tr.cons)[ri][mi];
+  if(!m.a || !m.b){toast(t('po_report_no_players')); return;}
+  if(m.locked && currentUser.role !== 'admin'){toast(t('po_locked')); return;}
+  if(currentUser.role === 'player' && m.a !== currentUser.name && m.b !== currentUser.name){toast(t('po_not_yours')); return;}
+  poContext = {ti,which,ri,mi};
+  openPoForm(m,ti);
+}
+
 function openPoForm(m,ti){
-  const existing=m.locked&&m.sets;
-  document.getElementById('modal-title').textContent=(existing?t('edit_result'):t('po_load_result'))+' · '+tf('po_match',{l:playoff.tramos[ti].label});
-  const s1a=existing?m.sets[0][0]:'',s1b=existing?m.sets[0][1]:'',s2a=existing?m.sets[1]?.[0]:'',s2b=existing?m.sets[1]?.[1]:'';
-  const s3=existing&&m.sets[2];const s3a=s3?m.sets[2][0]:'',s3b=s3?m.sets[2][1]:'';
-  document.getElementById('modal-body').innerHTML=`<p class="modal-rep">${m.a} <span class="vs">vs</span> ${m.b}</p><div class="set-row"><label>Set 1</label><input type="number" id="po-s1a" min="0" max="7" class="po-in" value="${s1a}"><span class="sep">–</span><input type="number" id="po-s1b" min="0" max="7" class="po-in" value="${s1b}"></div><div class="set-row"><label>Set 2</label><input type="number" id="po-s2a" min="0" max="7" class="po-in" value="${s2a}"><span class="sep">–</span><input type="number" id="po-s2b" min="0" max="7" class="po-in" value="${s2b}"></div><div class="set-row" id="po-s3-row" style="display:${s3?'flex':'none'}"><label>S.Tiebreak</label><input type="number" id="po-s3a" min="0" max="1" class="po-in" value="${s3a}"><span class="sep">–</span><input type="number" id="po-s3b" min="0" max="1" class="po-in" value="${s3b}"><span class="set-hint">1-0 o 0-1</span></div><button class="btn btn-sm" onclick="document.getElementById('po-s3-row').style.display='flex'" style="margin-top:4px"><i class="ti ti-plus"></i> Supertiebreak</button><p class="lock-note" id="po-alert" style="margin-top:.5rem"></p>`;
-  let actions=`<button class="btn btn-accent" onclick="submitPo()"><i class="ti ti-send"></i> ${currentUser.role==='admin'?t('save_validate'):t('send')}</button>`;
-  if(existing&&currentUser.role==='admin'){actions+=`<button class="btn btn-danger" onclick="deletePo()" style="margin-left:.25rem"><i class="ti ti-trash"></i> Eliminar</button>`;}
-  actions+=`<button class="btn" onclick="closeM()">${t('close')}</button>`;
-  document.getElementById('modal-actions').innerHTML=actions;
+  const existing = m.locked && m.sets;
+  document.getElementById('modal-title').textContent = (existing ? t('edit_result') : t('po_load_result')) + ' · ' + tf('po_match',{l:playoff.tramos[ti].label});
+  
+  const s1a = existing ? m.sets[0][0] : '', s1b = existing ? m.sets[0][1] : '', s2a = existing ? m.sets[1]?.[0] : '', s2b = existing ? m.sets[1]?.[1] : '';
+  const s3 = existing && m.sets[2]; const s3a = s3 ? m.sets[2][0] : '', s3b = s3 ? m.sets[2][1] : '';
+
+  const extMatch = matches.find(x => x.po && x.ti === ti && x.which === poContext.which && x.poNames && x.poNames.includes(m.a) && x.poNames.includes(m.b));
+  const extDate = extMatch && extMatch.date ? extMatch.date : (()=>{const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');})();
+  poFormClub = extMatch && extMatch.club ? extMatch.club : '';
+
+  document.getElementById('modal-body').innerHTML = `
+  <div class="req-wrap" style="margin-bottom:1.25rem">
+    <div class="form-row" style="margin-bottom:0">
+      <div class="form-group">
+        <label>Club <span class="reqmark">obligatorio</span></label>
+        <div class="club-pick" id="po-club-pick">
+          <div class="club-opt ${poFormClub === 'Sohail' ? 'sel-sohail' : ''}" id="po-club-sohail" onclick="pickPoClub('Sohail')">Sohail</div>
+          <div class="club-opt ${poFormClub === 'Haza' ? 'sel-haza' : ''}" id="po-club-haza" onclick="pickPoClub('Haza')">Haza</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Fecha <span class="reqmark">obligatorio</span></label>
+        <input type="date" id="po-f-fecha" class="req" value="${extDate}">
+      </div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 100px 1fr 15px 1fr; gap: 8px; align-items: center; margin-bottom: 0.5rem;">
+     <div></div>
+     <div style="text-align:center;font-weight:700;font-size:12px;color:var(--pri)">${m.a}</div>
+     <div></div>
+     <div style="text-align:center;font-weight:700;font-size:12px;color:var(--pri)">${m.b}</div>
+
+     <div style="font-size:12px;font-weight:700;color:var(--text2)">SET 1</div>
+     <input type="number" id="po-s1a" min="0" max="7" class="po-in" style="width:100%" value="${s1a}">
+     <span class="sep" style="text-align:center;color:var(--border2)">|</span>
+     <input type="number" id="po-s1b" min="0" max="7" class="po-in" style="width:100%" value="${s1b}">
+
+     <div style="font-size:12px;font-weight:700;color:var(--text2)">SET 2</div>
+     <input type="number" id="po-s2a" min="0" max="7" class="po-in" style="width:100%" value="${s2a}">
+     <span class="sep" style="text-align:center;color:var(--border2)">|</span>
+     <input type="number" id="po-s2b" min="0" max="7" class="po-in" style="width:100%" value="${s2b}">
+  </div>
+
+  <div id="po-s3-row" style="display:${s3 ? 'grid' : 'none'}; grid-template-columns: 100px 1fr 15px 1fr; gap: 8px; align-items: center; margin-bottom: 0.5rem;">
+     <div style="font-size:11px;font-weight:700;color:var(--text2)">SUPER TIEBREAK</div>
+     <input type="number" id="po-s3a" min="0" max="1" class="po-in" style="width:100%" value="${s3a}">
+     <span class="sep" style="text-align:center; font-weight:bold; font-size:18px">.</span>
+     <input type="number" id="po-s3b" min="0" max="1" class="po-in" style="width:100%" value="${s3b}">
+  </div>
+
+  <div style="text-align:center; margin-top:12px">
+    <button class="btn btn-sm" onclick="document.getElementById('po-s3-row').style.display='grid'"><i class="ti ti-plus"></i> Supertiebreak</button>
+  </div>
+  <p class="lock-note" id="po-alert" style="margin-top:.5rem"></p>`;
+
+  let actions = `<button class="btn btn-accent" onclick="submitPo()"><i class="ti ti-send"></i> ${currentUser.role === 'admin' ? t('save_validate') : t('send')}</button>`;
+  if(existing && currentUser.role === 'admin'){
+    actions += `<button class="btn btn-danger" onclick="deletePo()" style="margin-left:.25rem"><i class="ti ti-trash"></i> Eliminar</button>`;
+  }
+  actions += `<button class="btn" onclick="closeM()">${t('close')}</button>`;
+  document.getElementById('modal-actions').innerHTML = actions;
   document.getElementById('modal-bg').classList.add('open');
 }
+
 function deletePoDirect(ti,which,ri,mi){
-  if(!confirm('¿Eliminar este resultado? El partido vuelve a estar pendiente.'))return;
-  const m=(which==='main'?playoff.tramos[ti].main:playoff.tramos[ti].cons)[ri][mi];
-  const k=(which==='main'?ti:ti+'c')+'#'+[m.a,m.b].sort().join('|');
+  if(!confirm('¿Eliminar este resultado? El partido vuelve a estar pendiente.')) return;
+  const m = (which === 'main' ? playoff.tramos[ti].main : playoff.tramos[ti].cons)[ri][mi];
+  const k = (which === 'main' ? ti : ti + 'c') + '#' + [m.a, m.b].sort().join('|');
   delete playoff.results[k];
-  rebuildTramo(ti);showPlayoffView();toast('Resultado eliminado.');persist(true);
+  matches = matches.filter(x => !(x.po && x.ti === ti && x.which === which && ((x.poNames[0] === m.a && x.poNames[1] === m.b) || (x.poNames[0] === m.b && x.poNames[1] === m.a))));
+  rebuildTramo(ti); showPlayoffView(); toast('Resultado eliminado.'); persist(true);
 }
+
 function deletePo(){
-  const ti=poContext.ti,which=poContext.which,ri=poContext.ri,mi=poContext.mi;
-  deletePoDirect(ti,which,ri,mi);closeM();
+  const ti = poContext.ti, which = poContext.which, ri = poContext.ri, mi = poContext.mi;
+  deletePoDirect(ti,which,ri,mi);
+  closeM();
 }
-function submitPo(){const s=[[+document.getElementById('po-s1a').value,+document.getElementById('po-s1b').value],[+document.getElementById('po-s2a').value,+document.getElementById('po-s2b').value]];if(document.getElementById('po-s3-row').style.display!=='none')s.push([+document.getElementById('po-s3a').value,+document.getElementById('po-s3b').value]);const v=validMatch(s);if(!v.ok){const a=document.getElementById('po-alert');a.textContent='✕ '+v.msg;a.classList.add('err-txt');return;}const ti=poContext.ti,which=poContext.which,ri=poContext.ri,mi=poContext.mi;const m=(which==='main'?playoff.tramos[ti].main:playoff.tramos[ti].cons)[ri][mi];let w1=0,w2=0;s.forEach(([a,b])=>{if(a>b)w1++;else w2++;});const winner=w1>w2?m.a:m.b;if(currentUser.role==='admin'){storePo(ti,which,m.a,m.b,s,winner);rebuildTramo(ti);closeM();showPlayoffView();toast(t('po_validated'));persist(true);}else{matches.push({id:matchId++,po:true,ti,which,tLabel:playoff.tramos[ti].label,poNames:[m.a,m.b],sets:s,status:'pending',reporter:currentUser.name,winner,date:'2026'});closeM();renderPend();renderCycleBar();showPlayoffView();toast(t('po_sent'));persist(true);}}
+
+function submitPo(){
+  const s = [
+    [+document.getElementById('po-s1a').value, +document.getElementById('po-s1b').value],
+    [+document.getElementById('po-s2a').value, +document.getElementById('po-s2b').value]
+  ];
+  if(document.getElementById('po-s3-row').style.display !== 'none') {
+    s.push([+document.getElementById('po-s3a').value, +document.getElementById('po-s3b').value]);
+  }
+  
+  const v = validMatch(s);
+  if(!v.ok){
+    const a = document.getElementById('po-alert'); 
+    a.textContent = '✕ ' + v.msg; a.classList.add('err-txt'); 
+    return;
+  }
+
+  const fecha = document.getElementById('po-f-fecha').value;
+  if(!poFormClub){
+      const a = document.getElementById('po-alert'); a.textContent = '✕ Elegí el club.'; a.classList.add('err-txt');
+      document.getElementById('po-club-pick').classList.add('req-empty');
+      return;
+  }
+  if(!fecha){
+      const a = document.getElementById('po-alert'); a.textContent = '✕ Completá la fecha.'; a.classList.add('err-txt');
+      document.getElementById('po-f-fecha').classList.add('req-empty');
+      return;
+  }
+
+  const ti = poContext.ti, which = poContext.which, ri = poContext.ri, mi = poContext.mi;
+  const m = (which === 'main' ? playoff.tramos[ti].main : playoff.tramos[ti].cons)[ri][mi];
+  
+  let w1 = 0, w2 = 0; s.forEach(([a,b]) => {if(a > b) w1++; else w2++;}); 
+  const winner = w1 > w2 ? m.a : m.b;
+  
+  matches = matches.filter(x => !(x.po && x.ti === ti && x.which === which && ((x.poNames[0] === m.a && x.poNames[1] === m.b) || (x.poNames[0] === m.b && x.poNames[1] === m.a))));
+  
+  if(currentUser.role === 'admin'){
+    storePo(ti, which, m.a, m.b, s, winner);
+    matches.push({id: matchId++, po: true, ti, which, tLabel: playoff.tramos[ti].label, poNames: [m.a, m.b], sets: s, status: 'confirmed', reporter: currentUser.name, winner, date: fecha, club: poFormClub, locked: true});
+    rebuildTramo(ti); closeM(); showPlayoffView(); toast(t('po_validated')); persist(true);
+  } else {
+    matches.push({id: matchId++, po: true, ti, which, tLabel: playoff.tramos[ti].label, poNames: [m.a, m.b], sets: s, status: 'pending', reporter: currentUser.name, winner, date: fecha, club: poFormClub});
+    closeM(); renderPend(); renderCycleBar(); showPlayoffView(); toast(t('po_sent')); persist(true);
+  }
+}
 function storePo(ti,which,a,b,sets,w){const k=(which==='main'?ti:ti+'c')+'#'+[a,b].sort().join('|');playoff.results[k]={sets,w};}
 function applyPoPending(rec){storePo(rec.ti,rec.which,rec.poNames[0],rec.poNames[1],rec.sets,rec.winner);rebuildTramo(rec.ti);}
 function toast(m){let t=document.getElementById('_toast');if(!t){t=document.createElement('div');t.id='_toast';t.className='toast';document.body.appendChild(t);}t.textContent=m;t.style.opacity='1';setTimeout(()=>t.style.opacity='0',3800);}
 
 // ===== CONEXIÓN A SUPABASE — guardado instantáneo =====
 let _sb=null,_lastSaved=null,_saving=false,_pendingForce=false;
-
 function _serialize(){
   return JSON.stringify({cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,ALLNAMES,users:USERS,PUNTOS});
 }
