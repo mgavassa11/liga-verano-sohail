@@ -1168,13 +1168,13 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
   const sc=m.sets?m.sets.map(([a,b])=>a+'-'+b).join(' '):'';
   const canLoad=m.a&&m.b&&!m.w&&(currentUser&&currentUser.role==='admin'||m.a===currentUser.name||m.b===currentUser.name);
   const emptyTxt=isFirstRound?'BYE':t('tbd');
+  const isBYE_A=!m.a&&m.b;const isBYE_B=!m.b&&m.a;
   const sA=aw?'background:var(--winrow);font-weight:700;color:var(--priD);':(isBYE_A?'background:var(--surface2);':'');
   const sB=bw?'background:var(--winrow);font-weight:700;color:var(--priD);':(isBYE_B?'background:var(--surface2);':'');
   const iA=!m.a?'color:var(--text2);font-style:italic;':'';
   const iB=!m.b&&m.a?'color:var(--text2);font-style:italic;':'';
   const nmA=m.a||emptyTxt;const nmB=m.b||(m.a?'BYE':emptyTxt);
   const meA=currentUser&&m.a===currentUser.name;const meB=currentUser&&m.b===currentUser.name;
-  const isBYE_A=!m.a&&m.b;const isBYE_B=!m.b&&m.a;
   const seedA=m.sid[0]||'';const seedB=m.sid[1]||'';
   function fn(n){return n?n.split(' ')[0]:'';}
   const fA=fn(m.a),fB=fn(m.b);
@@ -1279,8 +1279,7 @@ function bracketHTML(rounds,ti,which){
 
 function showPlayoffView(){
   const pv=document.getElementById('view-playoff');
-  console.log('showPlayoffView called. playoff.started=',playoff.started,'playoff.preview=',playoff.preview,'tramos=',playoff.tramos?.length,'pv=',!!pv);
-  if(!pv){console.error('view-playoff element NOT FOUND');return;}
+  if(!pv)return;
   pv.style.display='block';
   ['grupos','general','cargar','pendientes','admin','perfil'].forEach(v=>{
     const el=document.getElementById('view-'+v);
@@ -1288,7 +1287,6 @@ function showPlayoffView(){
   });
   if(!playoff.started&&!playoff.preview){
     pv.innerHTML=`<div class="card"><div class="empty">${t('po_not_yet')}</div></div>`;
-    console.log('Playoff not started/preview');
     return;
   }
   try{
