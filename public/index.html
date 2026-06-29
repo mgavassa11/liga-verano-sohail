@@ -1,14 +1,3 @@
-¡Entendido! El error de la pantalla blanca ("Hubo un problema cargando los grupos") ocurre cuando, por algún motivo, un array de jugadores o la tabla de posiciones quedó con un dato `null` (por ejemplo, si en la base de datos se borró mal a un jugador o se desconfiguró algún destino de los grupos). Cuando JavaScript intenta leer el nombre de un jugador que ya no existe, la función colapsa y muestra ese cartel.
-
-Para resolverlo definitivamente:
-
-1. **Agregué filtros de seguridad (`try/catch` y `.filter(Boolean)`)** en todas las funciones que dibujan la tabla de los grupos. De esta forma, si algún dato de un jugador o del historial de puntos está corrupto, la aplicación va a ignorar ese error específico y va a cargar la liga de todas maneras sin "romper" la pantalla.
-2. **Reemplacé la carga manual de fechas por calendarios (`<input type="date">`).** Armé un sistema inteligente que te permite elegir "Desde" y "Hasta" para los ciclos usando el calendario de tu celular o navegador, y lo formatea automáticamente a texto (`15/06/26 – 19/07/26`) para que no se rompa la estética de los encabezados.
-3. **Agregué los mismos calendarios para los Play Offs.**
-
-Aquí tenés el código completo, listo para reemplazar, sin perder nada de tu base de datos ni tu configuración en Supabase:
-
-```html
 <!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Liga de Tenis Sohail</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#EEF2F7;--surface:#ffffff;--surface2:#EDF1F6;--text:#1b2433;--text2:#5b6675;--border:#e2e7ef;--border2:#c8d0dc;
@@ -1857,5 +1846,3 @@ initSupabase();
   if(typeof currentUser!=='undefined'&&currentUser){renderAll();}
 })();
 </script></body></html>
-
-```
