@@ -334,7 +334,7 @@ legend_pts:'<strong>Tabla de posiciones:</strong> Pts: puntos (3 victoria · 1 d
 legend_matrix:'El marcador se lee en la fila del jugador (sus juegos primero). Celeste = jugado en Sohail · naranja = jugado en Haza.',
 legend_sohail:'Sohail',legend_haza:'Haza',legend_pending:'Pendiente',legend_disputed:'Disputado',legend_load:'+ cargar',legend_noedit:'· no editable',
 general_title:'Clasificación general acumulada (todos los ciclos)',
-current_group:'Grupo actual',you:'Vos',
+current_group:'Grupo actual',you:'Vos',me_label:'Tú',
 report_result:'Reportar resultado',reporter:'Jugador (quien reporta)',rival:'Rival',club_label:'Club',date_label:'Fecha',
 reqmark_label:'OBLIGATORIO',set:'Set',
 sets_section:'Resultado por sets',supertiebreak:'S.Tiebreak',stb_hint:'solo 1-0 o 0-1',add_stb:'Supertiebreak (1-1)',
@@ -395,7 +395,7 @@ legend_pts:'<strong>Standings table:</strong> Pts: points (3 win · 1 loss · 0 
 legend_matrix:"Score is read in the player's row (their games first). Blue = played at Sohail · orange = played at Haza.",
 legend_sohail:'Sohail',legend_haza:'Haza',legend_pending:'Pending',legend_disputed:'Disputed',legend_load:'+ upload',legend_noedit:'· locked',
 general_title:'Cumulative general standings (all cycles)',
-current_group:'Current group',you:'You',
+current_group:'Current group',you:'You',me_label:'You',
 report_result:'Report Result',reporter:'Player (Who Reports)',rival:'Opponent',club_label:'Club',date_label:'Date',
 reqmark_label:'MANDATORY',set:'Set',
 sets_section:'Results by set',supertiebreak:'S.Tiebreak',stb_hint:'only 1-0 or 0-1',add_stb:'Super tiebreak (1-1)',
@@ -792,7 +792,7 @@ const th_p=document.getElementById('gen-th-player');if(th_p)th_p.textContent=t('
 const th_g=document.getElementById('gen-th-group');if(th_g)th_g.textContent=t('current_group');
 const th_t=document.getElementById('gen-th-total');if(th_t)th_t.textContent=t('total');
 const title=document.getElementById('gen-title');if(title)title.textContent=t('general_title');
-document.getElementById('gen-body').innerHTML=all.map((p,i)=>{const me=currentUser&&currentUser.role==='player'&&p.name===currentUser.name;const loc=findLoc(p.name,activeN);return'<tr class="'+(me?'me-row':'')+'"><td><span class="pos '+(pc[i]||'pn')+'">'+(i+1)+'</span></td><td><span class="avatar">'+getInitials(p.name)+'</span>'+p.name+(me?' <span class="badge badge-ok">'+t('you')+'</span>':'')+'</td><td>'+(loc?groupName(loc.g):'—')+'</td><td><strong>'+p.total+'</strong></td></tr>';}).join('');}
+document.getElementById('gen-body').innerHTML=all.map((p,i)=>{const me=currentUser&&currentUser.role==='player'&&p.name===currentUser.name;const loc=findLoc(p.name,activeN);return'<tr class="'+(me?'me-row':'')+'"><td><span class="pos '+(pc[i]||'pn')+'">'+(i+1)+'</span></td><td><span class="avatar">'+getInitials(p.name)+'</span>'+p.name+(me?' <span class="badge badge-ok">'+t('me_label')+'</span>':'')+'</td><td>'+(loc?groupName(loc.g):'—')+'</td><td><strong>'+p.total+'</strong></td></tr>';}).join('');}
 
 function pickClub(c){formClub=c;document.getElementById('club-sohail').className='club-opt'+(c==='Sohail'?' sel-sohail':'');document.getElementById('club-haza').className='club-opt'+(c==='Haza'?' sel-haza':'');document.getElementById('club-pick').classList.remove('req-empty');}
 function populateForm(gid,na,nb){poContext=null;formClub='';const r=document.getElementById('f-reporter'),o=document.getElementById('f-rival'),note=document.getElementById('cargar-note');r.innerHTML='<option value="">—</option>';o.innerHTML='<option value="">—</option>';const c=getActive();if(!c||!c.groups){note.textContent="Ciclo inactivo.";r.disabled=true;o.disabled=true;return;}if(currentUser.role==='player'){const loc=findLoc(currentUser.name,activeN);if(!loc){note.textContent=t('not_in_cycle');return;}r.add(new Option(currentUser.name,currentUser.name));r.value=currentUser.name;r.disabled=true;(c.groups[loc.g-1].players||[]).slice().sort((a,b)=>a.localeCompare(b,'es')).forEach(j=>{if(j!==currentUser.name && !findMatch(activeN, loc.g, currentUser.name, j))o.add(new Option(j,j));});note.textContent=tf('load_note_player',{g:groupName(loc.g)});}else{r.disabled=false;c.groups.forEach((g,gi)=>{const gid2=gi+1;const og=document.createElement('optgroup');og.label=groupName(gid2);(g.players||[]).slice().sort((a,b)=>a.localeCompare(b,'es')).forEach(j=>og.appendChild(new Option(j,gi+'|'+j)));r.appendChild(og);});r.onchange=function(){filterRival(this.value,null);};note.textContent=t('load_note_admin');if(gid!=null){const gi=gid-1;r.value=`${gi}|${na}`;filterRival(`${gi}|${na}`,nb);}else{filterRival('',null);}}document.getElementById('club-sohail').className='club-opt';document.getElementById('club-haza').className='club-opt';document.getElementById('f-fecha').value=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
@@ -1164,13 +1164,13 @@ function removeSeedUI(ti,name){removeSeed(ti,name);showPlayoffView();toast(tf('p
 function addSeedUI(ti){const sel=document.getElementById('po-add-'+ti);const name=sel?sel.value:'';if(!name){toast(t('po_choose_add'));return;}addSeed(ti,name);showPlayoffView();toast(tf('po_seed_added',{name}));persist(true);}
 
 function matchBox(m,ti,which,ri,mi,isFirstRound){
-  const aw=m.w&&m.w===m.a,bw=m.w&&m.w===m.b;
+  const realMatch=!!(m.a&&m.b);const aw=realMatch&&m.w&&m.w===m.a,bw=realMatch&&m.w&&m.w===m.b;
   const sc=m.sets?m.sets.map(([a,b])=>a+'-'+b).join(' '):'';
   const canLoad=m.a&&m.b&&!m.w&&(currentUser&&currentUser.role==='admin'||m.a===currentUser.name||m.b===currentUser.name);
   const emptyTxt=isFirstRound?'BYE':t('tbd');
   const isBYE_A=!m.a&&m.b;const isBYE_B=!m.b&&m.a;
-  const sA=aw?'background:var(--winrow);font-weight:700;color:var(--priD);':(isBYE_A?'background:var(--surface2);':'');
-  const sB=bw?'background:var(--winrow);font-weight:700;color:var(--priD);':(isBYE_B?'background:var(--surface2);':'');
+  const sA=aw?'background:var(--winrow);font-weight:700;color:var(--priD);':meA?'background:#FFF8DC;font-weight:700;':isBYE_A?'background:var(--surface2);':'';
+  const sB=bw?'background:var(--winrow);font-weight:700;color:var(--priD);':meB?'background:#FFF8DC;font-weight:700;':isBYE_B?'background:var(--surface2);':'';
   const iA=!m.a?'color:var(--text2);font-style:italic;':'';
   const iB=!m.b&&m.a?'color:var(--text2);font-style:italic;':'';
   const nmA=m.a||emptyTxt;const nmB=m.b||(m.a?'BYE':emptyTxt);
@@ -1202,8 +1202,8 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
     bot=currentUser&&currentUser.role==='admin'?'<div style="height:56px"></div>':'<div style="height:22px"></div>';
   }
   return '<div style="border:1px solid var(--border2);border-radius:10px;overflow:hidden;background:var(--surface);width:220px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.08)">'
-    +hA+'<div style="display:flex;align-items:center;padding:5px 10px 8px;border-bottom:1px solid var(--border);font-size:12px;min-height:32px;'+sA+iA+'"><span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">'+seedA+'</span><span style="flex:1;font-weight:'+(aw?'700':'400')+'">'+nmA+(meA?' <span style="font-size:9px;background:#F5C518;color:#1a2540;border-radius:4px;padding:1px 4px;font-weight:700">'+t('you')+'</span>':'')+'</span></div>'
-    +hB+'<div style="display:flex;align-items:center;padding:5px 10px 8px;font-size:12px;min-height:32px;'+sB+iB+'"><span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">'+seedB+'</span><span style="flex:1;font-weight:'+(bw?'700':'400')+'">'+nmB+(meB?' <span style="font-size:9px;background:#F5C518;color:#1a2540;border-radius:4px;padding:1px 4px;font-weight:700">'+t('you')+'</span>':'')+'</span></div>'
+    +hA+'<div style="display:flex;align-items:center;padding:5px 10px 8px;border-bottom:1px solid var(--border);font-size:12px;min-height:32px;'+sA+iA+'"><span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">'+seedA+'</span><span style="flex:1;font-weight:'+(aw?'700':'400')+'">'+nmA+(meA?' <span style="font-size:9px;background:#F5C518;color:#1a2540;border-radius:4px;padding:1px 4px;font-weight:700">'+t('me_label')+'</span>':'')+'</span></div>'
+    +hB+'<div style="display:flex;align-items:center;padding:5px 10px 8px;font-size:12px;min-height:32px;'+sB+iB+'"><span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">'+seedB+'</span><span style="flex:1;font-weight:'+(bw?'700':'400')+'">'+nmB+(meB?' <span style="font-size:9px;background:#F5C518;color:#1a2540;border-radius:4px;padding:1px 4px;font-weight:700">'+t('me_label')+'</span>':'')+'</span></div>'
     +bot+'</div>';
 }
 
@@ -1258,15 +1258,13 @@ function bracketHTML(rounds,ti,which){
     cols+=`<div style="position:absolute;left:${cx}px;top:0;width:${BW}px">`;
     // Round name + date
     const dateStr=rDateLabel(ri);
-    cols+=`<div style="text-align:center;height:${LABEL_H}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px">
-      <span style="font-size:11px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:.06em">${rName(ri)}</span>
-      ${dateStr
-        ? `<span style="font-size:11px;font-weight:700;color:var(--pri);letter-spacing:.03em">${dateStr}</span>`
-        : (currentUser&&currentUser.role==='admin'
-            ? `<span style="font-size:10px;color:var(--border2);font-style:italic;cursor:pointer" onclick="showSub('admin')">+ fecha</span>`
-            : '<span style="font-size:10px;color:transparent">·</span>')
-      }
-    </div>`;
+    const dateLine=dateStr
+      ?'<span style="font-size:11px;font-weight:700;color:var(--pri);letter-spacing:.03em">'+dateStr+'</span>'
+      :(currentUser&&currentUser.role==='admin'?'<span style="font-size:10px;color:var(--border2);font-style:italic;cursor:pointer" onclick="showSub(&quot;admin&quot;)">+ fecha</span>':'');
+    cols+='<div style="text-align:center;height:'+LABEL_H+'px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px">'
+      +'<span style="font-size:11px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:.06em">'+rName(ri)+'</span>'
+      +dateLine
+      +'</div>';
     rd.forEach((m,mi)=>{
       const yc=matchY(ri,mi);
       const yTop=yc-BOX_CONNECT;
@@ -1297,10 +1295,10 @@ function showPlayoffView(){
     html+=`<div class="card" style="background:var(--soft);border-color:var(--pri)"><p style="color:var(--priD);font-weight:600;margin-bottom:.4rem"><i class="ti ti-eye"></i> ${t('po_preview_banner')}</p><p class="legend-txt" style="margin-top:0">${t('po_preview_hint')}</p>${isAdmin?`<button class="btn btn-accent" onclick="confirmPlayoffUI()"><i class="ti ti-check"></i> ${t('po_confirm_start')}</button>`:''}</div>`;
   }
 
-  // Auto-jump to own bracket when player first enters
-  if(currentUser&&currentUser.role==='player'){
+  // Auto-jump to own bracket only on first visit (viewT starts at 0)
+  if(currentUser&&currentUser.role==='player'&&playoff._autoJumped!==currentUser.name){
     const myTi=playoff.tramos.findIndex(tr=>tr.seeds.includes(currentUser.name));
-    if(myTi>=0&&playoff.viewT!==myTi)playoff.viewT=myTi;
+    if(myTi>=0){playoff.viewT=myTi;playoff._autoJumped=currentUser.name;}
   }
 
   html+=`<div class="po-tramos">${playoff.tramos.map((tr,i)=>{
