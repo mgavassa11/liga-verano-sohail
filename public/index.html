@@ -631,7 +631,7 @@ function previewPlayoff(){if(!allCyclesDone())return false;const T=playoff.numTr
 function confirmPlayoff(){if(!playoff.preview&&!playoff.started)return false;playoff.started=true;playoff.preview=false;return true;}
 function startPlayoff(){if(!allCyclesDone())return false;const T=playoff.numTramos||4;playoff=Object.assign({started:true,preview:false,forcedSize:playoff.forcedSize||0},buildTramosFromGeneral(T));rebuildAll();return true;}
 function setNumTramos(T){playoff.numTramos=T;if(playoff.started||playoff.preview){const gen=playoff.qualified;const slices=splitTramos(gen,T);playoff.results={};playoff.viewT=0;playoff.tramos=slices.map((s,i)=>({label:label(i),seeds:s.slice(),main:null,cons:null}));rebuildAll();}}
-function setPoSize(v){playoff.forcedSize=+v;if(playoff.started||playoff.preview){rebuildAll();showPlayoffView();toast('Tamaño del cuadro actualizado.');}}
+function setPoSize_old_removed(){}
 function removeSeed(t,name){const tr=playoff.tramos[t];tr.seeds=tr.seeds.filter(n=>n!==name);rebuildTramo(t);}
 function addSeed(t,name){const tr=playoff.tramos[t];if(name&&!tr.seeds.includes(name))tr.seeds.push(name);rebuildTramo(t);}
 function tramoOf(name){for(let t=0;t<playoff.tramos.length;t++)if(playoff.tramos[t].seeds.includes(name))return t;return -1;}
@@ -1132,8 +1132,32 @@ function resetCycleUI(n){
 }
 
 function resetPlayoffUI(){if(!confirm(t('reset_confirm_po')))return;playoff={started:false,numTramos:4,tramos:[],results:{},viewT:0,qualified:[],preview:false,forcedSize:0};matches=matches.filter(m=>!m.po);if(viewCycle==='po')viewCycle=activeN;persist(true);renderShell();showSub('admin');toast(t('reset_done'));}
-function setPoNum(v){playoff.numTramos=+v;if(playoff.started||playoff.preview){setNumTramos(+v);persist(true);}}
+function setPoNum(v){
+  const newV=+v;
+  if(playoff.started&&newV!==playoff.numTramos){
+    if(!confirm('⚠️ Los Play Offs ya están iniciados. Cambiar la cantidad de cuadros va a reorganizar todos los jugadores y se perderán los resultados ya cargados. ¿Confirmar cambio a '+newV+' cuadros?')){
+      // Revert select to current value
+      const sel=document.querySelector('[onchange*="setPoNum"]');
+      if(sel)sel.value=playoff.numTramos;
+      return;
+    }
+  }
+  playoff.numTramos=newV;
+  if(playoff.started||playoff.preview){setNumTramos(newV);persist(true);}
+}
 
+function setPoSize(v){
+  const newV=+v;
+  if(playoff.started&&newV!==playoff.forcedSize){
+    if(!confirm('⚠️ Los Play Offs ya están iniciados. Cambiar el tamaño del cuadro va a reorganizar los brackets y se perderán los resultados ya cargados. ¿Confirmar?')){
+      const sel=document.querySelector('[onchange*="setPoSize"]');
+      if(sel)sel.value=playoff.forcedSize||0;
+      return;
+    }
+  }
+  playoff.forcedSize=newV;
+  if(playoff.started||playoff.preview){rebuildAll();showPlayoffView();toast('Tamaño del cuadro actualizado.');}
+}
 function addPlayerUI(){const nom=(document.getElementById('ap-nom').value||'').trim();const ape=(document.getElementById('ap-ape').value||'').trim();const gid=+document.getElementById('ap-grp').value;const full=(nom+' '+ape).trim();if(!nom||!ape){toast(t('add_fill_both'));return;}if(!gid){toast(t('add_choose_group'));return;}if(USERS[full]){toast(t('add_exists'));return;}addPlayerToCycle(full,gid);initLogin();renderPerfil();toast(tf('add_done',{name:full,g:groupName(gid)}));persist(true);}
 function setDestino(gid,pos,val){ensureDestino(gid,pos+1);DESTINO[gid][pos]='G'+val;if(subView==='admin')renderAdmin();toast(groupName(gid)+' · '+(pos+1)+'º → '+groupName(+val));persist(true);}
 function destinoCard(){
