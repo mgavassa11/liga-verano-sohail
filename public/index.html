@@ -640,7 +640,8 @@ function startPlayoff(){if(!allCyclesDone())return false;const T=playoff.numTram
 function setNumTramos(T){playoff.numTramos=T;if(playoff.started||playoff.preview){const gen=playoff.qualified;const slices=splitTramos(gen,T);playoff.results={};playoff.viewT=0;playoff.tramos=slices.map((s,i)=>({label:label(i),seeds:s.slice(),main:null,cons:null}));rebuildAll();}}
 function setPoSize_old_removed(){}
 function removeSeed(t,name){const tr=playoff.tramos[t];tr.seeds=tr.seeds.filter(n=>n!==name);rebuildTramo(t);}
-function addSeed(t,name){const tr=playoff.tramos[t];if(name&&!tr.seeds.includes(name))tr.seeds.push(name);rebuildTramo(t);}
+function addSeed(t,name){const tr=playoff.tramos[t];if(name&&!tr.seeds.includes(name)){tr.seeds.push(name);// Re-sort seeds by general standings order
+const order=playoff.qualified||[];tr.seeds.sort((a,b)=>{const ia=order.indexOf(a),ib=order.indexOf(b);if(ia<0&&ib<0)return 0;if(ia<0)return 1;if(ib<0)return -1;return ia-ib;});}rebuildTramo(t);}
 function tramoOf(name){for(let t=0;t<playoff.tramos.length;t++)if(playoff.tramos[t].seeds.includes(name))return t;return -1;}
 
 function movePlayer(name,fromG,toG){if(fromG===toG)return;const c=cycles[activeN-1];if(!c||!c.groups)return;const a=c.groups[fromG-1].players;const i=a.indexOf(name);if(i<0)return;a.splice(i,1);c.groups[toG-1].players.push(name);}
@@ -1000,9 +1001,8 @@ function moveSeedUI(toTi){
   const srcKey=fromTi+'#';
   Object.keys(playoff.results).forEach(k=>{if(k.startsWith(srcKey)&&k.includes(name))delete playoff.results[k];});
   rebuildTramo(fromTi);
-  // Add to destination bracket
-  playoff.tramos[toTi].seeds.push(name);
-  rebuildTramo(toTi);
+  // Add to destination bracket using addSeed (sorts by standings automatically)
+  addSeed(toTi,name);
   showPlayoffView();
   toast(`${name} movido al Cuadro ${playoff.tramos[toTi].label}.`);
   persist(true);
@@ -1021,7 +1021,7 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
   const iB=!m.b&&m.a?'color:var(--text2);font-style:italic;':'';
   const nmA=m.a||emptyTxt; const nmB=m.b||(m.a?'BYE':emptyTxt);
   let bot='';
-  if(m.w&&m.a&&m.b) bot=`<div style="display:flex;justify-content:space-between;padding:4px 8px;background:var(--surface2);font-size:10px;border-top:1px solid var(--border)"><span style="color:var(--text2)">${sc}</span><span style="color:#085041;font-weight:700">✓ ${m.w}</span></div>`;
+  if(m.w&&m.a&&m.b){const editBtns=currentUser.role==='admin'?`<span style="display:flex;gap:3px;flex-shrink:0;margin-left:4px"><button onclick="poReport(${ti},'${which}',${ri},${mi})" title="Editar" style="background:none;border:1px solid var(--border2);border-radius:5px;padding:1px 5px;cursor:pointer;font-size:10px;color:var(--pri)"><i class="ti ti-edit"></i></button><button onclick="deletePoDirect(${ti},'${which}',${ri},${mi})" title="Eliminar" style="background:none;border:1px solid #fca5a5;border-radius:5px;padding:1px 5px;cursor:pointer;font-size:10px;color:#dc2626"><i class="ti ti-trash"></i></button></span>`:'';bot=`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:var(--surface2);font-size:10px;border-top:1px solid var(--border)"><span style="color:var(--text2)">${sc}</span><span style="color:#085041;font-weight:700">✓ ${m.w}</span>${editBtns}</div>`;}
   else if(canLoad) bot=`<div style="padding:5px 8px;border-top:1px solid var(--border);text-align:center"><button class="po-load" onclick="poReport(${ti},'${which}',${ri},${mi})"><i class="ti ti-upload"></i> ${m.locked&&currentUser.role==='admin'?'Editar resultado':t('po_load_result')}</button></div>`;
   else if(m.a&&m.b&&!m.w) bot=`<div style="padding:4px 8px;border-top:1px solid var(--border);text-align:center"><span style="font-size:10px;color:var(--text2);font-style:italic">${t('pending_match')}</span></div>`;
   return `<div style="border:1px solid var(--border2);border-radius:8px;overflow:hidden;background:var(--surface);width:190px;flex-shrink:0"><div style="display:flex;align-items:center;padding:6px 8px;border-bottom:1px solid var(--border);font-size:12px;${sA}${iA}"><span style="font-size:10px;color:var(--text2);min-width:18px">${m.sid[0]||''}</span><span style="flex:1">${nmA}</span></div><div style="display:flex;align-items:center;padding:6px 8px;font-size:12px;${sB}${iB}"><span style="font-size:10px;color:var(--text2);min-width:18px">${m.sid[1]||''}</span><span style="flex:1">${nmB}</span></div>${bot}</div>`;
@@ -1487,13 +1487,16 @@ function openPoForm(m,ti){
   document.getElementById('modal-actions').innerHTML=actions;
   document.getElementById('modal-bg').classList.add('open');
 }
-function deletePo(){
-  if(!confirm('¿Eliminar este resultado de Play Off? El partido vuelve a estar pendiente.'))return;
-  const ti=poContext.ti,which=poContext.which,ri=poContext.ri,mi=poContext.mi;
+function deletePoDirect(ti,which,ri,mi){
+  if(!confirm('¿Eliminar este resultado? El partido vuelve a estar pendiente.'))return;
   const m=(which==='main'?playoff.tramos[ti].main:playoff.tramos[ti].cons)[ri][mi];
   const k=(which==='main'?ti:ti+'c')+'#'+[m.a,m.b].sort().join('|');
   delete playoff.results[k];
-  rebuildTramo(ti);closeM();showPlayoffView();toast('Resultado eliminado.');persist(true);
+  rebuildTramo(ti);showPlayoffView();toast('Resultado eliminado.');persist(true);
+}
+function deletePo(){
+  const ti=poContext.ti,which=poContext.which,ri=poContext.ri,mi=poContext.mi;
+  deletePoDirect(ti,which,ri,mi);closeM();
 }
 function submitPo(){const s=[[+document.getElementById('po-s1a').value,+document.getElementById('po-s1b').value],[+document.getElementById('po-s2a').value,+document.getElementById('po-s2b').value]];if(document.getElementById('po-s3-row').style.display!=='none')s.push([+document.getElementById('po-s3a').value,+document.getElementById('po-s3b').value]);const v=validMatch(s);if(!v.ok){const a=document.getElementById('po-alert');a.textContent='✕ '+v.msg;a.classList.add('err-txt');return;}const ti=poContext.ti,which=poContext.which,ri=poContext.ri,mi=poContext.mi;const m=(which==='main'?playoff.tramos[ti].main:playoff.tramos[ti].cons)[ri][mi];let w1=0,w2=0;s.forEach(([a,b])=>{if(a>b)w1++;else w2++;});const winner=w1>w2?m.a:m.b;if(currentUser.role==='admin'){storePo(ti,which,m.a,m.b,s,winner);rebuildTramo(ti);closeM();showPlayoffView();toast(t('po_validated'));persist(true);}else{matches.push({id:matchId++,po:true,ti,which,tLabel:playoff.tramos[ti].label,poNames:[m.a,m.b],sets:s,status:'pending',reporter:currentUser.name,winner,date:'2026'});closeM();renderPend();renderCycleBar();showPlayoffView();toast(t('po_sent'));persist(true);}}
 function storePo(ti,which,a,b,sets,w){const k=(which==='main'?ti:ti+'c')+'#'+[a,b].sort().join('|');playoff.results[k]={sets,w};}
