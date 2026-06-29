@@ -1297,15 +1297,15 @@ function showPlayoffView(){
   }
 
   // Auto-jump to own bracket when player first enters
-  if(currentUser.role==='player'){
+  if(currentUser&&currentUser.role==='player'){
     const myTi=playoff.tramos.findIndex(tr=>tr.seeds.includes(currentUser.name));
     if(myTi>=0&&playoff.viewT!==myTi)playoff.viewT=myTi;
   }
 
   html+=`<div class="po-tramos">${playoff.tramos.map((tr,i)=>{
-    const hasMe=currentUser.role==='player'&&tr.seeds.includes(currentUser.name);
-    return `<button class="po-tab ${playoff.viewT===i?'active':''}" onclick="setViewT(${i})">${tf('po_match',{l:tr.label})}${hasMe?` <span style="font-size:9px;background:#F5C518;color:#1a2540;border-radius:4px;padding:1px 4px;font-weight:700">✓</span>`:''}
-      <br><span class="po-rng">${tr.seeds.length} ${t('po_tab_players')}</span></button>`;
+    const hasMe=currentUser&&currentUser.role==='player'&&tr.seeds.includes(currentUser.name);
+    const badge=hasMe?'<span style="font-size:9px;background:#F5C518;color:#1a2540;border-radius:4px;padding:1px 4px;font-weight:700">✓</span>':'';
+    return '<button class="po-tab '+(playoff.viewT===i?'active':'')+'" onclick="setViewT('+i+')">'+tf('po_match',{l:tr.label})+badge+'<br><span class="po-rng">'+tr.seeds.length+' '+t('po_tab_players')+'</span></button>';
   }).join('')}</div>`;
 
   const ti=playoff.viewT;
