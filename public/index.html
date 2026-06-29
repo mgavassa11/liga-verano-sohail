@@ -345,7 +345,7 @@ disputes_title:'Disputas activas (resuelve el admin)',no_disputes:'No hay disput
 pending_title:'Pendientes de confirmación',no_pending:'No hay pendientes',waiting_rival:'Esperando al rival',review:'Revisar',
 validated_result:'Resultado validado',disputed_result:'Resultado disputado',review_result:'Revisar resultado',reported_by:'Reportado por',date_field:'Fecha',status_field:'Estado',confirmed_label:'Confirmado',locked_label:'Validado',confirm:'Confirmar',dispute:'Disputar',close:'Cerrar',validated_only_admin:'Validado — solo el admin edita',
 admin_cycle_status:'Estado del ciclo',validated_count:'{done}/{need} partidos validados',ready_close:'✓ Listo para cerrar el ciclo.',missing_results:'Faltan validar resultados.',close_cycle:'Cerrar ciclo e iniciar siguiente',finish_last_cycle:'Finalizar último ciclo (habilita Play Offs)',simulate:'Simular y validar todos',confirm_pending:'Confirmar pendientes',
-cycle_dates:'Fechas de los ciclos',cycle_date_hint:'Editá el período de cada ciclo (texto libre, ej. "15/06/26 – 19/07/26").',
+cycle_dates:'Fechas de los ciclos',cycle_date_hint:'Editá el período de cada ciclo.',
 promotions_title:'Ascensos y descensos — a qué grupo pasa cada puesto',promotions_hint:'Para cada grupo, elegí a qué grupo va cada puesto al cerrar el ciclo. Las filas se ajustan solas a la cantidad de jugadores de cada grupo.',pos_goes_to:'{pos}º →',
 edit_groups:'Editar grupos (Ciclo {n})',edit_groups_hint:'Reasigná, quitá o agregá jugadores. Podés dejar grupos de distinto tamaño si hace falta.',add_player:'Agregar jugador',first_name:'Nombre',last_name:'Apellido',add_btn:'Agregar',move_to:'mover a…',remove:'Quitar',
 move_done:'{name} movido a {g}.',remove_done:'{name} quitado del ciclo.',add_fill_both:'Completá nombre y apellido.',add_choose_group:'Elegí el grupo.',add_exists:'Ya existe un jugador con ese nombre y apellido.',add_done:'{name} agregado al {g}.',
@@ -406,7 +406,7 @@ disputes_title:'Active disputes (resolved by admin)',no_disputes:'No disputes',v
 pending_title:'Pending Confirmation',no_pending:'No pending items',waiting_rival:'Waiting for opponent',review:'Review',
 validated_result:'Validated result',disputed_result:'Disputed result',review_result:'Review result',reported_by:'Reported by',date_field:'Date',status_field:'Status',confirmed_label:'Confirmed',locked_label:'Validated',confirm:'Confirm',dispute:'Dispute',close:'Close',validated_only_admin:'Validated — only admin can edit',
 admin_cycle_status:'Cycle status',validated_count:'{done}/{need} matches validated',ready_close:'✓ Ready to close the cycle.',missing_results:'Some results still need validating.',close_cycle:'Close cycle and start next',finish_last_cycle:'Finish last cycle (enables Play Offs)',simulate:'Simulate and validate all',confirm_pending:'Confirm pending',
-cycle_dates:'Cycle dates',cycle_date_hint:"Edit each cycle's period (free text, e.g. \"15/06/26 – 19/07/26\").",
+cycle_dates:'Cycle dates',cycle_date_hint:"Edit each cycle's period.",
 promotions_title:'Promotions & relegations — where each position goes',promotions_hint:'For each group, choose which group each finishing position goes to when the cycle closes.',pos_goes_to:'{pos} →',
 edit_groups:'Edit groups (Cycle {n})',edit_groups_hint:'Reassign, remove or add players. Groups can have different sizes if needed.',add_player:'Add player',first_name:'First name',last_name:'Last name',add_btn:'Add',move_to:'move to…',remove:'Remove',
 move_done:'{name} moved to {g}.',remove_done:'{name} removed from cycle.',add_fill_both:'Please fill in first and last name.',add_choose_group:'Please choose a group.',add_exists:'A player with that name already exists.',add_done:'{name} added to {g}.',
@@ -458,7 +458,37 @@ let playoff={started:false,numTramos:4,tramos:[],results:{},viewT:0,qualified:[]
 let matches=[],matchId=1,activeN=1,viewCycle=1,subView='grupos',currentModal=null,formClub='',poContext=null,selGroup=1,adminMode='';
 let ALLNAMES=C1.flat();
 
-function ensureDestino(gid,len){if(!DESTINO[gid])DESTINO[gid]=[];while(DESTINO[gid].length<len)DESTINO[gid].push('G'+Math.min(gid+1,12));return DESTINO[gid];}
+// Auxiliares de fechas
+function parseDateRange(str) {
+  const parts = (str||'').split('–').map(s=>s.trim());
+  const parse = (s) => {
+     if(!s) return '';
+     if(s.includes('-')) return s;
+     const p = s.split('/');
+     if(p.length===3) return `20${p[2]}-${p[1]}-${p[0]}`;
+     return '';
+  }
+  return [parse(parts[0]), parse(parts[1])];
+}
+function formatDispDate(d) {
+  if(!d) return '';
+  const p = d.split('-');
+  if(p.length===3) return `${p[2]}/${p[1]}/${p[0].slice(-2)}`;
+  return d;
+}
+function updateCycleDate(i, type, val) {
+  const parts = parseDateRange(FECHAS[i] || '');
+  if(type === 'start') parts[0] = val;
+  else parts[1] = val;
+  const d1 = formatDispDate(parts[0]);
+  const d2 = formatDispDate(parts[1]);
+  if(!d1 && !d2) FECHAS[i] = '';
+  else if(d1 && d2) FECHAS[i] = `${d1} – ${d2}`;
+  else FECHAS[i] = d1 || d2;
+  updateHdr(); renderCycleBar(); persist(true);
+}
+
+function ensureDestino(gid,len){if(!DESTINO)DESTINO={};if(!DESTINO[gid]||!Array.isArray(DESTINO[gid]))DESTINO[gid]=[];while(DESTINO[gid].length<len)DESTINO[gid].push('G'+Math.min(gid+1,12));return DESTINO[gid];}
 function addPlayerToCycle(name,gid){if(!name||!cycles[activeN-1].groups||!cycles[activeN-1].groups[gid-1])return false;if(ALLNAMES.indexOf(name)<0)ALLNAMES.push(name);if(!USERS[name])USERS[name]={role:'player',pass:'tenis',name};cycles[activeN-1].groups[gid-1].players.push(name);ensureDestino(gid,cycles[activeN-1].groups[gid-1].players.length);return true;}
 function buildUsers(){const u={admin:{role:'admin',pass:'admin123',name:'Organización',email:'',tel:''}};ALLNAMES.forEach(n=>u[n]={role:'player',pass:'tenis',name:n,email:'',tel:''});return u;}
 const USERS=buildUsers();let currentUser=null;
@@ -469,10 +499,11 @@ function validMatch(s){if(s.length<2)return{ok:false,msg:t('valid_need2sets')};i
 function findLoc(name,cycN){const c=cycles[cycN-1];if(!c||!c.groups)return null;for(let gi=0;gi<c.groups.length;gi++){if(c.groups[gi]&&c.groups[gi].players&&c.groups[gi].players.indexOf(name)>=0)return{g:gi+1};}return null;}
 function getActive(){return cycles[activeN-1];}
 function getInitials(n){if(!n)return'?';return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();}
+function ptsForPos(gid,pos){if(!PUNTOS)PUNTOS={};const pb=PUNTOS[gid];if(!pb||!Array.isArray(pb)||pb.length===0)return 0;return pos<pb.length?pb[pos]:Math.max(0,pb[pb.length-1]-(pos-pb.length+1));}
 
 function computeStats(cycN,gid){
   const c=cycles[cycN-1];if(!c||!c.groups||!c.groups[gid-1])return[];
-  const g=c.groups[gid-1];const players=g.players||[];
+  const g=c.groups[gid-1];const players=(g.players||[]).filter(Boolean);
   const st=players.map((name)=>({name,pts:0,g:0,p:0,nj:0,sg:0,sp:0,gw:0,gl:0}));
   const byName={};st.forEach(s=>byName[s.name]=s);
   const confirmed=matches.filter(m=>!m.po&&m.cycle===cycN&&m.g===gid&&m.status==='confirmed');
@@ -622,7 +653,7 @@ function updateBadge() {
     if(m.po) return m.poNames && m.poNames.includes(currentUser.name);
     return m.aName === currentUser.name || m.bName === currentUser.name;
   });
-  const cnt = currentUser.role === 'admin' ? (pend.length + disp.length) : userPend.length;
+  const cnt = currentUser&&currentUser.role === 'admin' ? (pend.length + disp.length) : userPend.length;
   const pn = document.getElementById('pend-n');
   if (pn) {
     pn.textContent = cnt;
@@ -653,8 +684,8 @@ function initLogin(){
 function doLogin(){const u=document.getElementById('login-user').value,p=document.getElementById('login-pass').value,e=document.getElementById('login-err');if(!u||!USERS[u]){e.textContent=t('invalid_user');e.style.display='block';return;}if(USERS[u].pass!==p){e.textContent=t('wrong_pass');e.style.display='block';return;}currentUser=USERS[u];e.style.display='none';document.getElementById('login-screen').style.display='none';document.getElementById('main-app').style.display='block';document.getElementById('cur-name').textContent=currentUser.name;document.getElementById('cur-role').innerHTML=currentUser.role==='admin'?'<span class="role-badge">' + t('role_admin') + '</span>':t('role_player');if(currentUser.role==='player'){const loc=findLoc(currentUser.name,activeN);if(loc)selGroup=loc.g;}viewCycle=activeN;renderShell();showSub('grupos');clearForm();}
 function doLogout(){closeM();clearForm();currentUser=null;document.getElementById('main-app').style.display='none';document.getElementById('login-screen').style.display='block';document.getElementById('login-pass').value='';initLogin();}
 function renderShell(){renderCycleBar();renderSubTabs();updateBadge();}
-function renderCycleBar(){const bar=document.getElementById('cycle-bar');let html='';cycles.forEach(c=>{const playable=!!c.groups;const isView=viewCycle===c.n;const icon=c.status==='finished'?'<i class="ti ti-circle-check st"></i>':c.status==='active'?'<i class="ti ti-player-play st"></i>':'<i class="ti ti-lock st"></i>';html+=`<button class="cycle-tab ${playable?'':'locked'} ${isView?'active':''}" onclick="${playable?`viewCyc(${c.n})`:''}">${icon} ${t('cycle')} ${c.n}</button>`;});const showPO=playoff.started||(playoff.preview&&currentUser.role==='admin');const poLabel=showPO?(playoff.preview&&!playoff.started?`<i class="ti ti-eye st"></i> ${t('playoffs_prev')}`:`<i class="ti ti-tournament st"></i> ${t('playoffs')}`):`<i class="ti ti-lock st"></i> ${t('playoffs')}`;html+=`<button class="cycle-tab ${showPO?'':'locked'} ${viewCycle==='po'?'active':''}" onclick="${showPO?`viewCyc('po')`:''}">${poLabel}</button>`;bar.innerHTML=html;}
-function renderSubTabs(){const tabs=document.getElementById('tabs');tabs.style.display='flex';const showPO=playoff.started||(playoff.preview&&currentUser.role==='admin');const inPO=viewCycle==='po';let tabs_def=[];if(showPO){tabs_def.push({id:'po',i:'ti-tournament',l:t('playoffs'),po:true});}else{tabs_def.push({id:'grupos',i:'ti-layout-grid',l:t('tab_grupos')});}tabs_def.push({id:'general',i:'ti-chart-bar',l:t('tab_general')});tabs_def.push({id:'cargar',i:'ti-upload',l:currentUser.role==='admin'?t('tab_cargar_admin'):t('tab_cargar')});tabs_def.push({id:'pendientes',i:'ti-bell',l:currentUser.role==='admin'?t('tab_pendientes_admin'):t('tab_pendientes'),b:true});tabs_def.push({id:'perfil',i:'ti-user',l:t('tab_perfil')});if(currentUser.role==='admin')tabs_def.push({id:'admin',i:'ti-settings',l:t('tab_admin')});tabs.innerHTML=tabs_def.map(x=>{if(x.po){const active=inPO;return '<button class="tab'+(active?' active':'')+'" id="tab-po" onclick="viewCyc(\'po\')"><i class="ti ti-tournament" aria-hidden="true"></i> '+x.l+'</button>';}const active=!inPO&&subView===x.id;return '<button class="tab'+(active?' active':'')+'" id="tab-'+x.id+'" onclick="showSub(\''+x.id+'\')" ><i class="ti '+x.i+'" aria-hidden="true"></i> '+x.l+(x.b?' <span class="tab-n" id="pend-n" style="display:none">0</span>':'')+'</button>';}).join('');}
+function renderCycleBar(){const bar=document.getElementById('cycle-bar');let html='';cycles.forEach(c=>{const playable=!!c.groups;const isView=viewCycle===c.n;const icon=c.status==='finished'?'<i class="ti ti-circle-check st"></i>':c.status==='active'?'<i class="ti ti-player-play st"></i>':'<i class="ti ti-lock st"></i>';html+=`<button class="cycle-tab ${playable?'':'locked'} ${isView?'active':''}" onclick="${playable?`viewCyc(${c.n})`:''}">${icon} ${t('cycle')} ${c.n}</button>`;});const showPO=playoff.started||(playoff.preview&&currentUser&&currentUser.role==='admin');const poLabel=showPO?(playoff.preview&&!playoff.started?`<i class="ti ti-eye st"></i> ${t('playoffs_prev')}`:`<i class="ti ti-tournament st"></i> ${t('playoffs')}`):`<i class="ti ti-lock st"></i> ${t('playoffs')}`;html+=`<button class="cycle-tab ${showPO?'':'locked'} ${viewCycle==='po'?'active':''}" onclick="${showPO?`viewCyc('po')`:''}">${poLabel}</button>`;bar.innerHTML=html;}
+function renderSubTabs(){const tabs=document.getElementById('tabs');tabs.style.display='flex';const showPO=playoff.started||(playoff.preview&&currentUser&&currentUser.role==='admin');const inPO=viewCycle==='po';let tabs_def=[];if(showPO){tabs_def.push({id:'po',i:'ti-tournament',l:t('playoffs'),po:true});}else{tabs_def.push({id:'grupos',i:'ti-layout-grid',l:t('tab_grupos')});}tabs_def.push({id:'general',i:'ti-chart-bar',l:t('tab_general')});tabs_def.push({id:'cargar',i:'ti-upload',l:currentUser&&currentUser.role==='admin'?t('tab_cargar_admin'):t('tab_cargar')});tabs_def.push({id:'pendientes',i:'ti-bell',l:currentUser&&currentUser.role==='admin'?t('tab_pendientes_admin'):t('tab_pendientes'),b:true});tabs_def.push({id:'perfil',i:'ti-user',l:t('tab_perfil')});if(currentUser&&currentUser.role==='admin')tabs_def.push({id:'admin',i:'ti-settings',l:t('tab_admin')});tabs.innerHTML=tabs_def.map(x=>{if(x.po){const active=inPO;return '<button class="tab'+(active?' active':'')+'" id="tab-po" onclick="viewCyc(\'po\')"><i class="ti ti-tournament" aria-hidden="true"></i> '+x.l+'</button>';}const active=!inPO&&subView===x.id;return '<button class="tab'+(active?' active':'')+'" id="tab-'+x.id+'" onclick="showSub(\''+x.id+'\')" ><i class="ti '+x.i+'" aria-hidden="true"></i> '+x.l+(x.b?' <span class="tab-n" id="pend-n" style="display:none">0</span>':'')+'</button>';}).join('');}
 function viewCyc(n){
   viewCycle=n;
   if(n==='po'){
@@ -674,48 +705,54 @@ function viewCyc(n){
   }
 }
 function showSub(name){if(viewCycle==='po')viewCycle=activeN;subView=name;['grupos','general','cargar','pendientes','admin','playoff','perfil'].forEach(v=>{const el=document.getElementById('view-'+v);if(el)el.style.display='none';});const pv=document.getElementById('view-playoff');if(pv)pv.style.display='none';renderSubTabs();document.getElementById('view-'+name).style.display='block';if(name==='grupos')renderGrupos();if(name==='general')renderGeneral();if(name==='cargar'){populateForm();}if(name==='pendientes')renderPend();if(name==='admin')renderAdmin();if(name==='perfil')renderPerfil();updateHdr();if(name!=='pendientes')renderPend();updateBadge();}
-function updateHdr(){const hs=viewCycle==='po'?t('playoffs'):t('cycle')+' '+viewCycle+' · '+FECHAS[viewCycle-1]+' · '+cycles[viewCycle-1].status;const sub=document.getElementById('hdr-sub');if(sub)sub.textContent=hs;const tit=document.getElementById('hdr-title');if(tit)tit.textContent=t('app_title');const eb=document.getElementById('exit-btn');if(eb)eb.textContent=t('exit');}
+function updateHdr(){const hs=viewCycle==='po'?t('playoffs'):t('cycle')+' '+viewCycle+' · '+(FECHAS[viewCycle-1]||'')+' · '+(cycles[viewCycle-1]?cycles[viewCycle-1].status:'');const sub=document.getElementById('hdr-sub');if(sub)sub.textContent=hs;const tit=document.getElementById('hdr-title');if(tit)tit.textContent=t('app_title');const eb=document.getElementById('exit-btn');if(eb)eb.textContent=t('exit');}
 
 function groupCardHTML(gid){
-  const c=cycles[viewCycle-1];
-  if(!c || !c.groups || !c.groups[gid-1]) return '';
-  const isActive=c.status==='active';
-  const grp=c.groups[gid-1];
-  const players=grp.players||[];
-  const st=computeStats(viewCycle,gid);
-  const dest=DESTINO[gid] || ensureDestino(gid, Math.max(1, players.length));
-  
-  const fc={};
-  players.forEach(p=>{if(p){const f=p.split(' ')[0];fc[f]=(fc[f]||0)+1;}});
-  const lbl=p=>{if(!p)return'';const f=p.split(' ')[0];return fc[f]>1?p:f;};
-  
-  let cls=st.map((s,i)=>{
-    const d=dest[i]||'',dn=parseInt((d||'G99').replace('G',''));
-    const ar=dn<gid?'dest-up':dn>gid?'dest-down':'dest-same';
-    const ic=dn<gid?'↑':dn>gid?'↓':'=';
-    const ex=i===0?2:0;
-    const base=ptsForPos(gid,i);
-    return `<tr class="${i===0?'winner-row':''}"><td>${d?`<span class="dest ${ar}">${ic}${groupName(dn)}</span>`:''}</td><td><span class="avatar">${getInitials(s.name)}</span>${s.name}</td><td><strong>${s.pts}</strong></td><td>${s.g}</td><td>${s.p}</td><td>${s.nj}</td><td>${s.sg}</td><td>${s.sp}</td><td>${s.sg-s.sp}</td><td>${base}</td><td>${ex>0?ex:''}</td><td><strong>${base+ex}</strong></td></tr>`;
-  }).join('');
-  
-  const head=players.map(p=>`<th>${lbl(p)}</th>`).join('');
-  let mrows=players.map((p,i)=>{
-    const cols=players.map((q,j)=>{
-      if(i===j)return`<td class="res-black"></td>`;
-      const m=findMatch(viewCycle,gid,p,q);
-      if(m&&m.status==='confirmed'){const sc=m.aName===p?m.sets.map(([a,b])=>`${a}-${b}`).join(' '):m.sets.map(([a,b])=>`${b}-${a}`).join(' ');return`<td class="${m.club==='Haza'?'cell-haza':'cell-sohail'}" onclick="openModal(${m.id})">${sc}</td>`;}
-      if(m&&m.status==='pending'){const sc=m.aName===p?m.sets.map(([a,b])=>`${a}-${b}`).join(' '):m.sets.map(([a,b])=>`${b}-${a}`).join(' ');return`<td class="cell-pending" onclick="openModal(${m.id})">${sc}⏳</td>`;}
-      if(m&&m.status==='disputed')return`<td class="cell-disputed" onclick="openModal(${m.id})">disp.</td>`;
-      if(isActive&&canCreate(gid,p,q))return`<td class="cell-empty" onclick="prefill(${gid},'${esc(p)}','${esc(q)}')">+</td>`;
-      return`<td class="cell-locked">·</td>`;
-    }).join('');
-    return`<tr><td>${lbl(p)}</td>${cols}</tr>`;
-  }).join('');
-  
-  const thPtsText = t('pts_classif') + (currentUser&&currentUser.role==='admin' ? ` <button class="btn btn-sm" style="padding:2px 6px;font-size:10px;margin-left:5px" onclick="editPuntosUI(${gid})"><i class="ti ti-edit"></i> ${t('edit')}</button>` : '');
-  const thr=`<tr><th>${t('destination')}</th><th>${t('player')}</th><th>Pts</th><th>${t('won')}</th><th>${t('lost')}</th><th>${t('not_played')}</th><th>${t('sets_won')}</th><th>${t('sets_lost')}</th><th>${t('balance')}</th><th>${t('pts_pos')}</th><th>${t('extra')}</th><th>${t('total')}</th></tr>`;
-  
-  return `<div class="card grp-card"><div class="grp-title">${t('group')} ${gid}</div><div class="overflow-x"><table class="cls-table"><thead><tr class="clg-head"><th colspan="9"></th><th colspan="3">${thPtsText}</th></tr>${thr}</thead><tbody>${cls}</tbody></table></div><p class="legend-txt">${t('legend_pts')}</p><div class="section-lbl">${t('players_col')} ${groupName(gid)}</div><div class="overflow-x"><table class="res-table"><thead><tr><th>${t('players_col')}</th>${head}</tr></thead><tbody>${mrows}</tbody></table></div><p class="legend-txt">${t('legend_matrix')}</p></div>`;
+  try {
+      const c=cycles[viewCycle-1];
+      if(!c || !c.groups || !c.groups[gid-1]) return '';
+      const isActive=c.status==='active';
+      const grp=c.groups[gid-1];
+      const players=(grp.players||[]).filter(Boolean); // Filtro contra nulls
+      const st=computeStats(viewCycle,gid);
+      if(!DESTINO) DESTINO = {};
+      const dest=DESTINO[gid] || ensureDestino(gid, Math.max(1, players.length));
+      
+      const fc={};
+      players.forEach(p=>{const f=p.split(' ')[0];fc[f]=(fc[f]||0)+1;});
+      const lbl=p=>{if(!p)return'';const f=p.split(' ')[0];return fc[f]>1?p:f;};
+      
+      let cls=st.map((s,i)=>{
+        const d=dest[i]||'',dn=parseInt((d||'G99').replace('G',''));
+        const ar=dn<gid?'dest-up':dn>gid?'dest-down':'dest-same';
+        const ic=dn<gid?'↑':dn>gid?'↓':'=';
+        const ex=i===0?2:0;
+        const base=ptsForPos(gid,i);
+        return `<tr class="${i===0?'winner-row':''}"><td>${d?`<span class="dest ${ar}">${ic}${groupName(dn)}</span>`:''}</td><td><span class="avatar">${getInitials(s.name)}</span>${s.name}</td><td><strong>${s.pts}</strong></td><td>${s.g}</td><td>${s.p}</td><td>${s.nj}</td><td>${s.sg}</td><td>${s.sp}</td><td>${s.sg-s.sp}</td><td>${base}</td><td>${ex>0?ex:''}</td><td><strong>${base+ex}</strong></td></tr>`;
+      }).join('');
+      
+      const head=players.map(p=>`<th>${lbl(p)}</th>`).join('');
+      let mrows=players.map((p,i)=>{
+        const cols=players.map((q,j)=>{
+          if(i===j)return`<td class="res-black"></td>`;
+          const m=findMatch(viewCycle,gid,p,q);
+          if(m&&m.status==='confirmed'){const sc=m.aName===p?m.sets.map(([a,b])=>`${a}-${b}`).join(' '):m.sets.map(([a,b])=>`${b}-${a}`).join(' ');return`<td class="${m.club==='Haza'?'cell-haza':'cell-sohail'}" onclick="openModal(${m.id})">${sc}</td>`;}
+          if(m&&m.status==='pending'){const sc=m.aName===p?m.sets.map(([a,b])=>`${a}-${b}`).join(' '):m.sets.map(([a,b])=>`${b}-${a}`).join(' ');return`<td class="cell-pending" onclick="openModal(${m.id})">${sc}⏳</td>`;}
+          if(m&&m.status==='disputed')return`<td class="cell-disputed" onclick="openModal(${m.id})">disp.</td>`;
+          if(isActive&&canCreate(gid,p,q))return`<td class="cell-empty" onclick="prefill(${gid},'${esc(p)}','${esc(q)}')">+</td>`;
+          return`<td class="cell-locked">·</td>`;
+        }).join('');
+        return`<tr><td>${lbl(p)}</td>${cols}</tr>`;
+      }).join('');
+      
+      const thPtsText = t('pts_classif') + (currentUser&&currentUser.role==='admin' ? ` <button class="btn btn-sm" style="padding:2px 6px;font-size:10px;margin-left:5px" onclick="editPuntosUI(${gid})"><i class="ti ti-edit"></i> ${t('edit')}</button>` : '');
+      const thr=`<tr><th>${t('destination')}</th><th>${t('player')}</th><th>Pts</th><th>${t('won')}</th><th>${t('lost')}</th><th>${t('not_played')}</th><th>${t('sets_won')}</th><th>${t('sets_lost')}</th><th>${t('balance')}</th><th>${t('pts_pos')}</th><th>${t('extra')}</th><th>${t('total')}</th></tr>`;
+      
+      return `<div class="card grp-card"><div class="grp-title">${t('group')} ${gid}</div><div class="overflow-x"><table class="cls-table"><thead><tr class="clg-head"><th colspan="9"></th><th colspan="3">${thPtsText}</th></tr>${thr}</thead><tbody>${cls}</tbody></table></div><p class="legend-txt">${t('legend_pts')}</p><div class="section-lbl">${t('players_col')} ${groupName(gid)}</div><div class="overflow-x"><table class="res-table"><thead><tr><th>${t('players_col')}</th>${head}</tr></thead><tbody>${mrows}</tbody></table></div><p class="legend-txt">${t('legend_matrix')}</p></div>`;
+  } catch(e) {
+      console.error("Error regenerando tabla del grupo:", gid, e);
+      return `<div class="card"><div class="alert alert-err">Datos corruptos en el Grupo ${gid}.</div></div>`;
+  }
 }
 
 function esc(s){return String(s).replace(/'/g,"\\'");}
@@ -728,7 +765,8 @@ function renderGrupos(){
       if(LAYOUT==='selector'){
         html+=`<div class="card"><div class="section-lbl">${t('choose_group')}</div><div class="grp-pick">`+c.groups.map((g,i)=>{
             const gid=i+1;
-            const mine=currentUser&&currentUser.role==='player'&&findLoc(currentUser.name,viewCycle)&&findLoc(currentUser.name,viewCycle).g===gid;
+            const loc=currentUser?findLoc(currentUser.name,viewCycle):null;
+            const mine=currentUser&&currentUser.role==='player'&&loc&&loc.g===gid;
             return `<button class="grp-btn ${selGroup===gid?'active':''}" onclick="setSelGroup(${gid})">${groupName(gid)}${mine?`<span class="mine">${t('mine_label')}</span>`:''}</button>`;
         }).join('')+`</div></div>`;
         if(selGroup>c.groups.length)selGroup=1;
@@ -741,7 +779,7 @@ function renderGrupos(){
       document.getElementById('view-grupos').innerHTML=html;
   } catch(e) {
       console.error("Error crítico en renderGrupos:", e);
-      document.getElementById('view-grupos').innerHTML=`<div class="card"><div class="alert alert-err">Hubo un problema cargando los grupos. Contacte a soporte o actualice la página.</div></div>`;
+      document.getElementById('view-grupos').innerHTML=`<div class="card"><div class="alert alert-err">Hubo un problema cargando los grupos. Contacte a soporte o actualice la página.</div><pre style="font-size:10px;color:#c0392b;margin-top:10px">${e.message}</pre></div>`;
   }
 }
 function setSelGroup(g){selGroup=g;renderGrupos();}
@@ -957,16 +995,26 @@ function renderAdmin(){
           </div>`;
 
     h+=`<div class="form-row" style="grid-template-columns:1fr 1fr;gap:.625rem;align-items:start">`;
-    h+=`<div class="card" style="margin:0"><div class="section-lbl">${t('cycle_dates')}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">`+
-       cycles.map((cyc,i)=>`<div class="form-group"><label>${t('cycle')} ${i+1}</label><input type="text" value="${(FECHAS[i]||'').replace(/"/g,'&quot;')}" onchange="setFecha(${i},this.value)"></div>`).join('')+
-       `</div><p class="legend-txt" style="margin-top:.4rem">${t('cycle_date_hint')}</p></div>`;
+    
+    h+=`<div class="card" style="margin:0"><div class="section-lbl">${t('cycle_dates')}</div><div style="display:grid;grid-template-columns:1fr;gap:12px">`+
+       cycles.map((cyc,i)=>{
+         const [d1, d2] = parseDateRange(FECHAS[i]);
+         return `<div class="form-group"><label>${t('cycle')} ${i+1}</label>
+                 <div style="display:flex;gap:6px;align-items:center">
+                   <input type="date" value="${d1}" onchange="updateCycleDate(${i}, 'start', this.value)" style="padding:6px 8px">
+                   <span style="color:var(--text2);font-weight:bold">–</span>
+                   <input type="date" value="${d2}" onchange="updateCycleDate(${i}, 'end', this.value)" style="padding:6px 8px">
+                 </div></div>`;
+       }).join('')+
+       `</div><p class="legend-txt" style="margin-top:.4rem">Seleccioná inicio y fin de cada ciclo.</p></div>`;
+
     h+=`<div class="card" style="margin:0"><div class="section-lbl">Fechas de Play Offs</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-         <div class="form-group"><label>32avos</label><input type="text" value="${esc(PO_FECHAS.r64||'')}" onchange="setPoFecha('r64',this.value)"></div>
-         <div class="form-group"><label>16avos</label><input type="text" value="${esc(PO_FECHAS.r32||'')}" onchange="setPoFecha('r32',this.value)"></div>
-         <div class="form-group"><label>Octavos</label><input type="text" value="${esc(PO_FECHAS.r16||'')}" onchange="setPoFecha('r16',this.value)"></div>
-         <div class="form-group"><label>Cuartos</label><input type="text" value="${esc(PO_FECHAS.r8||'')}" onchange="setPoFecha('r8',this.value)"></div>
-         <div class="form-group"><label>Semifinales</label><input type="text" value="${esc(PO_FECHAS.r4||'')}" onchange="setPoFecha('r4',this.value)"></div>
-         <div class="form-group"><label>Final</label><input type="text" value="${esc(PO_FECHAS.r2||'')}" onchange="setPoFecha('r2',this.value)"></div>
+         <div class="form-group"><label>32avos</label><input type="date" value="${esc(PO_FECHAS.r64||'')}" onchange="setPoFecha('r64',this.value)" style="padding:6px 8px"></div>
+         <div class="form-group"><label>16avos</label><input type="date" value="${esc(PO_FECHAS.r32||'')}" onchange="setPoFecha('r32',this.value)" style="padding:6px 8px"></div>
+         <div class="form-group"><label>Octavos</label><input type="date" value="${esc(PO_FECHAS.r16||'')}" onchange="setPoFecha('r16',this.value)" style="padding:6px 8px"></div>
+         <div class="form-group"><label>Cuartos</label><input type="date" value="${esc(PO_FECHAS.r8||'')}" onchange="setPoFecha('r8',this.value)" style="padding:6px 8px"></div>
+         <div class="form-group"><label>Semifinales</label><input type="date" value="${esc(PO_FECHAS.r4||'')}" onchange="setPoFecha('r4',this.value)" style="padding:6px 8px"></div>
+         <div class="form-group"><label>Final</label><input type="date" value="${esc(PO_FECHAS.r2||'')}" onchange="setPoFecha('r2',this.value)" style="padding:6px 8px"></div>
        </div></div>`;
     h+=`</div>`;
 
