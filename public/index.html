@@ -1020,6 +1020,11 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
   const iA=!m.a?'color:var(--text2);font-style:italic;':'';
   const iB=!m.b&&m.a?'color:var(--text2);font-style:italic;':'';
   const nmA=m.a||emptyTxt; const nmB=m.b||(m.a?'BYE':emptyTxt);
+  // Show standings rank for seeded players
+  const ord=playoff.qualified||[];
+  const rankA=m.a&&ord.indexOf(m.a)>=0?ord.indexOf(m.a)+1:'';
+  const rankB=m.b&&ord.indexOf(m.b)>=0?ord.indexOf(m.b)+1:'';
+  const seedA=m.sid[0]||''; const seedB=m.sid[1]||'';
   let bot='';
   if(m.w&&m.a&&m.b){
     const editRow=currentUser.role==='admin'
@@ -1032,13 +1037,25 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
   }
   else if(canLoad) bot=`<div style="padding:5px 8px;border-top:1px solid var(--border);text-align:center"><button class="po-load" onclick="poReport(${ti},'${which}',${ri},${mi})"><i class="ti ti-upload"></i> ${m.locked&&currentUser.role==='admin'?'Editar resultado':t('po_load_result')}</button></div>`;
   else if(m.a&&m.b&&!m.w) bot=`<div style="padding:4px 8px;border-top:1px solid var(--border);text-align:center"><span style="font-size:10px;color:var(--text2);font-style:italic">${t('pending_match')}</span></div>`;
-  return `<div style="border:1px solid var(--border2);border-radius:8px;overflow:hidden;background:var(--surface);width:190px;flex-shrink:0"><div style="display:flex;align-items:center;padding:6px 8px;border-bottom:1px solid var(--border);font-size:12px;${sA}${iA}"><span style="font-size:10px;color:var(--text2);min-width:18px">${m.sid[0]||''}</span><span style="flex:1">${nmA}</span></div><div style="display:flex;align-items:center;padding:6px 8px;font-size:12px;${sB}${iB}"><span style="font-size:10px;color:var(--text2);min-width:18px">${m.sid[1]||''}</span><span style="flex:1">${nmB}</span></div>${bot}</div>`;
+  return `<div style="border:1px solid var(--border2);border-radius:10px;overflow:hidden;background:var(--surface);width:${210}px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+    <div style="display:flex;align-items:center;padding:8px 10px;border-bottom:1px solid var(--border);font-size:12px;min-height:36px;${sA}${iA}">
+      <span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">${seedA||''}</span>
+      <span style="flex:1;font-weight:${aw?'700':'400'}">${nmA}</span>
+      ${rankA?`<span style="font-size:9px;color:var(--text2);margin-left:4px">#${rankA}</span>`:''}
+    </div>
+    <div style="display:flex;align-items:center;padding:8px 10px;font-size:12px;min-height:36px;${sB}${iB}">
+      <span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">${seedB||''}</span>
+      <span style="flex:1;font-weight:${bw?'700':'400'}">${nmB}</span>
+      ${rankB?`<span style="font-size:9px;color:var(--text2);margin-left:4px">#${rankB}</span>`:''}
+    </div>
+    ${bot}
+  </div>`;
 }
 
 function bracketHTML(rounds,ti,which){
   if(!rounds||!rounds.length)return'';
   const total=rounds.length;
-  const BW=200, BH=76, GAP=16, GX=56, LABEL_H=28;
+  const BW=210, BH=96, GAP=24, GX=64, LABEL_H=32;
   // Key insight: slot spacing doubles each round
   // Round 0: spacing = BH+GAP between match centers
   // Round 1: spacing = 2*(BH+GAP)
@@ -1126,19 +1143,20 @@ function showPlayoffView(){
 
   // Admin seed editor
   if(isAdmin){
+    const standingsOrder=playoff.qualified||[];
     const inPo={};playoff.tramos.forEach((tr2,ti2)=>tr2.seeds.forEach(n=>inPo[n]=ti2));
     const avail=ALLNAMES.filter(n=>!Object.keys(inPo).includes(n));
-    // Players in OTHER brackets sorted by general standings
-    const standingsOrder=playoff.qualified||[];
     const inOtherBrackets=standingsOrder.filter(n=>inPo[n]!==undefined&&inPo[n]!==ti);
+    // Helper: get rank from standings
+    function rank(n){const r=standingsOrder.indexOf(n);return r>=0?r+1:'';}
     html+=`<div class="card"><div class="section-lbl">${tf('po_seeds_title',{l:tr.label})}</div>
-    <div class="seed-list">${tr.seeds.map(n=>`<span class="seed-chip">${n} <button class="rm" onclick="removeSeedUI(${ti},'${esc(n)}')" aria-label="Quitar"><i class="ti ti-x"></i></button></span>`).join('')}</div>
+    <div class="seed-list">${tr.seeds.map(n=>`<span class="seed-chip"><span style="color:var(--text2);font-size:10px;min-width:18px;display:inline-block">#${rank(n)}</span> ${n} <button class="rm" onclick="removeSeedUI(${ti},'${esc(n)}')" aria-label="Quitar"><i class="ti ti-x"></i></button></span>`).join('')}</div>
     <div class="form-row" style="margin-top:.6rem">
-      <div class="form-group"><label>${t('po_add_label')}</label><select id="po-add-${ti}"><option value="">${t('po_add_choose')}</option>${avail.map(n=>`<option value="${n}">${n}</option>`).join('')}</select></div>
+      <div class="form-group"><label>${t('po_add_label')}</label><select id="po-add-${ti}"><option value="">${t('po_add_choose')}</option>${avail.map(n=>`<option value="${n}">#${rank(n)} ${n}</option>`).join('')}</select></div>
       <div class="form-group" style="align-self:end"><button class="btn btn-primary btn-sm" onclick="addSeedUI(${ti})"><i class="ti ti-plus"></i> ${t('po_add_btn')}</button></div>
     </div>
     <div class="form-row" style="margin-top:.4rem">
-      <div class="form-group"><label>Mover jugador desde otro cuadro</label><select id="po-move-${ti}"><option value="">Elegí jugador...</option>${inOtherBrackets.map(n=>`<option value="${n}">${n} (Cuadro ${playoff.tramos[inPo[n]].label})</option>`).join('')}</select></div>
+      <div class="form-group"><label>Mover jugador desde otro cuadro</label><select id="po-move-${ti}"><option value="">Elegí jugador...</option>${inOtherBrackets.map(n=>`<option value="${n}">#${rank(n)} ${n} (Cuadro ${playoff.tramos[inPo[n]].label})</option>`).join('')}</select></div>
       <div class="form-group" style="align-self:end"><button class="btn btn-sm" style="background:var(--soft);border:1px solid var(--border2)" onclick="moveSeedUI(${ti})"><i class="ti ti-arrows-exchange"></i> Mover acá</button></div>
     </div>
     <p class="legend-txt">${t('po_bye_note')}</p></div>`;
