@@ -646,6 +646,7 @@ function tramoOf(name){for(let t=0;t<playoff.tramos.length;t++)if(playoff.tramos
 
 function movePlayer(name,fromG,toG){if(fromG===toG)return;const c=cycles[activeN-1];if(!c||!c.groups)return;const a=(c.groups[fromG-1]||{}).players||[];const i=a.indexOf(name);if(i<0)return;a.splice(i,1);if(c.groups[toG-1]&&c.groups[toG-1].players)c.groups[toG-1].players.push(name);}
 function removePlayerCycle(name,fromG){const c=cycles[activeN-1];if(!c||!c.groups)return;const a=(c.groups[fromG-1]||{}).players||[];const i=a.indexOf(name);if(i>=0)a.splice(i,1);}
+function movePlayerUI(name,fromG,toG){if(!toG)return;movePlayer(name,fromG,parseInt(toG));renderAdmin();persist(true);toast(name+' movido a '+groupName(parseInt(toG))+'.');}
 
 function updateBadge() {
   const pend = matches.filter(m => m.status === 'pending');
@@ -730,7 +731,9 @@ function groupCardHTML(gid){
         const ic=dn<gid?'↑':dn>gid?'↓':'=';
         const ex=i===0?2:0;
         const base=ptsForPos(gid,i);
-        return `<tr class="${i===0?'winner-row':''}"><td>${d?`<span class="dest ${ar}">${ic}${groupName(dn)}</span>`:''}</td><td><span class="avatar">${getInitials(s.name)}</span>${s.name}</td><td><strong>${s.pts}</strong></td><td>${s.g}</td><td>${s.p}</td><td>${s.nj}</td><td>${s.sg}</td><td>${s.sp}</td><td>${s.sg-s.sp}</td><td>${base}</td><td>${ex>0?ex:''}</td><td><strong>${base+ex}</strong></td></tr>`;
+        const pInactive = USERS[s.name]&&USERS[s.name].inactive;
+        const inactiveBadge = pInactive?'<span style="font-size:9px;background:#e55;color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px;font-weight:700">INACTIVO</span>':'';
+        return `<tr class="${i===0?'winner-row':''}" style="${pInactive?'opacity:.55':''}"><td>${d?`<span class="dest ${ar}">${ic}${groupName(dn)}</span>`:''}</td><td><span class="avatar">${getInitials(s.name)}</span>${s.name}${inactiveBadge}</td><td><strong>${s.pts}</strong></td><td>${s.g}</td><td>${s.p}</td><td>${s.nj}</td><td>${s.sg}</td><td>${s.sp}</td><td>${s.sg-s.sp}</td><td>${pInactive?'<span style="font-size:10px;color:#e55;font-weight:700">—</span>':base}</td><td>${ex>0?ex:''}</td><td><strong>${pInactive?'<span style="font-size:10px;color:#e55">inactivo</span>':base+ex}</strong></td></tr>`;
       }).join('');
       
       const head=players.map(p=>`<th>${lbl(p)}</th>`).join('');
@@ -1632,9 +1635,10 @@ function renderPlayerList(players, filter) {
     const curG = loc ? loc.g : '';
     const c = getActive();
     const gOpts = (c && c.groups) ? c.groups.map((_,k) => `<option value="${k+1}" ${curG===k+1?'selected':''}>${groupName(k+1)}</option>`).join('') : '';
-    return `<div class="ge-group" style="margin-bottom:.5rem">
+    const isInactive = !!(p.inactive);
+    return `<div class="ge-group" style="margin-bottom:.5rem;${isInactive?'opacity:.6':''}">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <div class="ge-gtitle">${p.name}${loc ? ` <span class="badge badge-tag">${groupName(loc.g)}</span>` : ''}</div>
+        <div class="ge-gtitle">${p.name}${loc ? ` <span class="badge badge-tag">${groupName(loc.g)}</span>` : ''}${isInactive?' <span style="font-size:10px;background:#e55;color:#fff;border-radius:4px;padding:1px 5px;font-weight:700">INACTIVO</span>':''}</div>
         <button class="btn btn-sm" onclick="togglePlayerEdit('${esc(p.name)}')"><i class="ti ti-edit"></i> ${t('edit')}</button>
       </div>
     
@@ -1651,6 +1655,7 @@ function renderPlayerList(players, filter) {
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;">
           <button class="btn btn-danger btn-sm" onclick="deletePlayerAdmin('${esc(p.name)}')"><i class="ti ti-trash"></i> ${t('delete_match').split(' ')[0]}</button>
           <div class="gap-sm">
+            <button class="btn btn-sm" style="${isInactive?'background:#aaa':'background:#f59e0b'};color:#fff" onclick="toggleInactive('${esc(p.name)}')"><i class="ti ti-${isInactive?'user-check':'user-off'}"></i> ${isInactive?'Activar':'Inactivo'}</button>
             <button class="btn btn-success btn-sm" onclick="savePlayerAdmin('${esc(p.name)}')"><i class="ti ti-device-floppy"></i> ${t('save')}</button>
             <button class="btn btn-danger btn-sm" onclick="resetPwd('${esc(p.name)}')"><i class="ti ti-refresh"></i> Clave</button>
           </div>
@@ -1701,6 +1706,7 @@ function deletePlayerAdmin(name){
 }
 
 function resetPwd(name){const u=USERS[name];if(!u)return;u.pass='tenis';persist(true);toast(tf('reset_done',{name}));}
+function toggleInactive(name){const u=USERS[name];if(!u)return;u.inactive=!u.inactive;persist(true);renderPerfil();toast(name+(u.inactive?' marcado como inactivo.':' activado.'));}
 function saveProfile(){const name=(document.getElementById('pf-name').value||'').trim();const email=(document.getElementById('pf-email').value||'').trim();const tel=(document.getElementById('pf-tel').value||'').trim();const a=document.getElementById('edit-profile-alert');if(!name){a.className='alert alert-err';a.textContent=t('name_empty');return;}const u=currentUser;const oldName=u.name;u.email=email;u.tel=tel;if(name!==oldName){if(USERS[name]&&name!==oldName){a.className='alert alert-err';a.textContent=t('name_exists');return;}USERS[name]={...u,name};delete USERS[oldName];const idx=ALLNAMES.indexOf(oldName);if(idx>=0)ALLNAMES[idx]=name;cycles.forEach(c=>{if(!c.groups)return;c.groups.forEach(g=>{const pi=(g.players||[]).indexOf(oldName);if(pi>=0)g.players[pi]=name;});});currentUser=USERS[name];}persist(true);a.className='alert alert-ok';a.textContent=t('profile_saved');}
 function changePw(){const o=document.getElementById('pw-old').value,n=document.getElementById('pw-new').value,n2=document.getElementById('pw-new2').value,a=document.getElementById('pw-alert');function al(m,cl){a.className='alert alert-'+cl;a.textContent=m;}if(o!==currentUser.pass){al(t('pass_wrong'),'err');return;}if(!n||n.length<4){al(t('pass_short'),'err');return;}if(n!==n2){al(t('pass_no_match'),'err');return;}const key=currentUser.role==='admin'?'admin':currentUser.name;USERS[key].pass=n;currentUser.pass=n;al(t('pass_ok'),'ok');['pw-old','pw-new','pw-new2'].forEach(id=>document.getElementById(id).value='');persist(true);}
 
