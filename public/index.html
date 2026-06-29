@@ -281,7 +281,7 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
       <div class="section-lbl" id="sets-section-lbl">Resultado por sets</div>
       <div class="set-row"><label id="lbl-set1-field">Set 1</label><input type="number" id="s1a" min="0" max="7" oninput="checkAutoSTB()" placeholder="0"><span class="sep">–</span><input type="number" id="s1b" min="0" max="7" oninput="checkAutoSTB()" placeholder="0"><span class="set-hint">6-0 a 6-4, 7-5 o 7-6</span></div>
       <div class="set-row"><label>Set 2</label><input type="number" id="s2a" min="0" max="7" oninput="checkAutoSTB()" placeholder="0"><span class="sep">–</span><input type="number" id="s2b" min="0" max="7" oninput="checkAutoSTB()" placeholder="0"></div>
-      <div class="set-row" id="s3-row" style="display:none"><label>S.Tiebreak</label><input type="number" id="s3a" min="0" max="1" placeholder="0"><span class="sep">–</span><input type="number" id="s3b" min="0" max="1" placeholder="0"><span class="set-hint" id="stb-hint">1-0 o 0-1</span></div>
+      <div class="set-row" id="s3-row" style="display:none"><label>S.Tiebreak</label><input type="number" id="s3a" min="0" max="1" placeholder="0"><span class="sep">–</span><input type="number" id="s3b" min="0" max="1" placeholder="0"><span class="set-hint" id="stb-hint">solo 1-0 o 0-1</span></div>
       
       <div class="gap-sm mt-sm">
         <button class="btn" id="stb-toggle-btn" onclick="toggleSTB()"><i class="ti ti-plus"></i> Supertiebreak (1-1)</button>
@@ -336,7 +336,7 @@ current_group:'Grupo actual',you:'Vos',
 report_result:'Reportar resultado',reporter:'Jugador (quien reporta)',rival:'Rival',club_label:'Club',date_label:'Fecha',
 reqmark_label:'OBLIGATORIO',set:'Set',
 sets_section:'Resultado por sets',supertiebreak:'S.Tiebreak',stb_hint:'solo 1-0 o 0-1',add_stb:'Supertiebreak (1-1)',
-remove_stb:'Quitar supertiebreak',send:'Enviar',clear:'Limpiar',set_hint:'6-0 a 6-4, 7-5 o 7-6',valid_need2sets:'Completá los dos sets.',valid_set1:'Set 1 inválido (6-0 a 6-4, 7-5 o 7-6).',valid_set2:'Set 2 inválido (6-0 a 6-4, 7-5 o 7-6).',valid_need_stb:'Sets empatados 1-1: completá el supertiebreak.',valid_stb_only:'El supertiebreak solo puede ser 1-0 o 0-1.',valid_no_stb:'Si el resultado es 2-0 o 0-2, no hay supertiebreak.',
+remove_stb:'Quitar supertiebreak',send:'Enviar',clear:'Limpiar',set_hint:'6-0 a 6-4, 7-5 o 7-6',
 not_in_cycle:'No estás en el ciclo activo.',load_note_player:'Cargás partidos tuyos del {g}. Solo aparecen los rivales con los que aún no tenés partido cargado. Tu rival debe confirmarlo.',load_note_admin:'Admin: cargás/editás cualquier partido. Lo que cargás queda validado.',
 select_two:'Seleccioná los dos jugadores.',same_group:'Ambos deben ser del mismo grupo.',validated_admin_only:'Ese resultado ya fue validado. Solo el admin puede editarlo.',result_sent_admin:'✓ Resultado válido y validado (admin).',result_sent_player:'✓ Resultado válido enviado. El rival debe confirmarlo.',select_club:'Elegí el club (Sohail o Haza).',select_date:'Completá la fecha del partido.',
 disputes_title:'Disputas activas (resuelve el admin)',no_disputes:'No hay disputas',validate:'Validar',
@@ -352,7 +352,7 @@ missing_before_close:'Faltan validar resultados antes de cerrar.',cycle_closed_n
 po_preview_banner:'Previsualización — los Play Offs todavía NO están iniciados',po_preview_hint:'Así quedarían los cuadros según la clasificación general. Quitá o agregá jugadores (los que no juegan) y ajustá la cantidad de cuadros. Cuando esté todo listo, confirmá el inicio. Hasta entonces los jugadores no ven nada.',po_confirm_start:'Iniciar Play Offs definitivamente',
 po_config:'Configuración de Play Offs',po_config_hint:'Al cambiar la cantidad, los cuadros se rearman repartiendo la clasificación general en partes iguales. Podés también forzar en qué ronda empezar cada cuadro.',po_seeds_title:'Jugadores del Cuadro {l} — quitá (✕) o agregá',po_removed:'Retirados: {list}.',po_add_label:'Agregar jugador a este cuadro',po_add_choose:'Elegí…',po_add_btn:'Agregar',po_bye_note:'Si quitás a alguien, no se reemplaza: pasa uno más por bye.',
 po_main_title:'Cuadro principal {l}',po_cons_title:'Consolación {l} (perdedores 1ª ronda)',po_legend:'Cuadros por tramos de la general. Cada uno con su consolación para los que pierden en primera ronda. El admin agrega/quita jugadores.',po_champ:'Campeón del Cuadro {l}',po_champ_cons:'Campeón Consolación {l}',
-po_load_result:'Cargar resultado',edit_result:'Editar resultado',save_validate:'Guardar y validar',po_to_play:'A jugar',po_not_available:'El admin todavía no inició los Play Offs.',po_not_yet:'Los Play Offs todavía no están disponibles.',po_match:'Cuadro {l}',po_no_bracket:'Sin cuadro.',
+po_load_result:'Cargar resultado',po_to_play:'A jugar',po_not_available:'El admin todavía no inició los Play Offs.',po_not_yet:'Los Play Offs todavía no están disponibles.',po_match:'Cuadro {l}',po_no_bracket:'Sin cuadro.',
 po_tab_players:'jug.',
 pending_match:'Pendiente de juego',
 po_started_toast:'Play Offs iniciados.',po_confirmed_toast:'¡Play Offs iniciados! Ya son visibles para los jugadores.',po_preview_toast:'Previsualización lista. Ajustá los jugadores y confirmá el inicio.',po_need_3cycles:'Primero cerrá los 3 ciclos.',po_seed_removed:'{name} quitado del Cuadro (pasa uno por bye).',po_seed_added:'{name} agregado al Cuadro.',po_choose_add:'Elegí un jugador para agregar.',po_report_no_players:'Ese partido todavía no tiene los dos jugadores.',po_locked:'Resultado ya validado. Solo el admin puede editarlo.',po_not_yours:'Solo los jugadores de ese partido (o el admin) pueden cargarlo.',po_validated:'Resultado de Play Off validado.',po_sent:'Resultado enviado. El rival debe confirmarlo.',
@@ -397,7 +397,7 @@ current_group:'Current group',you:'You',
 report_result:'Report Result',reporter:'Player (Who Reports)',rival:'Opponent',club_label:'Club',date_label:'Date',
 reqmark_label:'MANDATORY',set:'Set',
 sets_section:'Results by set',supertiebreak:'S.Tiebreak',stb_hint:'only 1-0 or 0-1',add_stb:'Super tiebreak (1-1)',
-remove_stb:'Remove super tiebreak',send:'Send',clear:'Clear',set_hint:'6-0 to 6-4, 7-5 or 7-6',valid_need2sets:'Please complete both sets.',valid_set1:'Invalid Set 1 (6-0 to 6-4, 7-5 or 7-6).',valid_set2:'Invalid Set 2 (6-0 to 6-4, 7-5 or 7-6).',valid_need_stb:'Sets tied 1-1: please complete the super tiebreak.',valid_stb_only:'The super tiebreak can only be 1-0 or 0-1.',valid_no_stb:'No super tiebreak needed if result is 2-0 or 0-2.',
+remove_stb:'Remove super tiebreak',send:'Send',clear:'Clear',set_hint:'6-0 to 6-4, 7-5 or 7-6',
 not_in_cycle:'You are not in the active cycle.',load_note_player:'Upload your matches in {g}. Only opponents you haven\'t played yet are shown. Opponent must confirm.',load_note_admin:'Admin: upload/edit any match. Immediately validated.',
 select_two:'Please select two players.',same_group:'Both players must be in the same group.',validated_admin_only:'That result is already validated. Only the admin can edit it.',result_sent_admin:'✓ Valid result — validated (admin).',result_sent_player:'✓ Valid result submitted. Opponent must confirm.',select_club:'Please choose a club (Sohail or Haza).',select_date:'Please fill in the match date.',
 disputes_title:'Active disputes (resolved by admin)',no_disputes:'No disputes',validate:'Validate',
@@ -413,7 +413,7 @@ missing_before_close:'Some results still need validating before closing.',cycle_
 po_preview_banner:'Preview — Play Offs have NOT started yet',po_preview_hint:'This is how the brackets would look. Remove or add players (those not playing) and adjust the number of brackets. When ready, confirm the start. Until then players see nothing.',po_confirm_start:'Start Play Offs for real',
 po_config:'Play Off settings',po_config_hint:'Changing the number of brackets redistributes the general standings evenly. You can also force the starting round.',po_seeds_title:'Players in Draw {l} — remove (✕) or add',po_removed:'Withdrawn: {list}.',po_add_label:'Add player to this bracket',po_add_choose:'Choose…',po_add_btn:'Add',po_bye_note:'If you remove someone they are not replaced: another player gets a bye instead.',
 po_main_title:'Main Draw {l}',po_cons_title:'Consolation {l} (1st round losers)',po_legend:'Brackets by general standings segment. Each has a consolation for 1st-round losers. Admin adds/removes players.',po_champ:'Champion Draw {l}',po_champ_cons:'Consolation champion {l}',
-po_load_result:'Upload result',edit_result:'Edit result',save_validate:'Save & validate',po_to_play:'To be played',po_not_available:'Admin has not started the Play Offs yet.',po_not_yet:'Play Offs are not available yet.',po_match:'Draw {l}',po_no_bracket:'No draw.',
+po_load_result:'Upload result',po_to_play:'To be played',po_not_available:'Admin has not started the Play Offs yet.',po_not_yet:'Play Offs are not available yet.',po_match:'Draw {l}',po_no_bracket:'No draw.',
 po_tab_players:'players',
 pending_match:'Pending match',
 po_started_toast:'Play Offs started.',po_confirmed_toast:'Play Offs started! Now visible to players.',po_preview_toast:'Preview ready. Adjust players and confirm the start.',po_need_3cycles:'Close all 3 cycles first.',po_seed_removed:'{name} removed from Draw (another player gets a bye).',po_seed_added:'{name} added to Draw.',po_choose_add:'Choose a player to add.',po_report_no_players:"That match doesn't have both players yet.",po_locked:'Result already validated. Only the admin can edit it.',po_not_yours:'Only the players in that match (or the admin) can upload it.',po_validated:'Play Off result validated.',po_sent:'Result submitted. Opponent must confirm.',
@@ -710,7 +710,7 @@ function viewCyc(n){
     showSub('grupos');
   }
 }
-function showSub(name){if(viewCycle==='po')viewCycle=activeN;subView=name;['grupos','general','cargar','pendientes','admin','playoff','perfil'].forEach(v=>{const el=document.getElementById('view-'+v);if(el)el.style.display='none';});const pv=document.getElementById('view-playoff');if(pv)pv.style.display='none';renderSubTabs();document.getElementById('view-'+name).style.display='block';if(name==='grupos')renderGrupos();if(name==='general')renderGeneral();if(name==='cargar'){['s1a','s1b','s2a','s2b','s3a','s3b'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});const sr=document.getElementById('s3-row');if(sr)sr.style.display='none';populateForm();}if(name==='pendientes')renderPend();if(name==='admin')renderAdmin();if(name==='perfil')renderPerfil();updateHdr();if(name!=='pendientes')renderPend();updateBadge();}
+function showSub(name){if(viewCycle==='po')viewCycle=activeN;subView=name;['grupos','general','cargar','pendientes','admin','playoff','perfil'].forEach(v=>{const el=document.getElementById('view-'+v);if(el)el.style.display='none';});const pv=document.getElementById('view-playoff');if(pv)pv.style.display='none';renderSubTabs();document.getElementById('view-'+name).style.display='block';if(name==='grupos')renderGrupos();if(name==='general')renderGeneral();if(name==='cargar'){populateForm();}if(name==='pendientes')renderPend();if(name==='admin')renderAdmin();if(name==='perfil')renderPerfil();updateHdr();if(name!=='pendientes')renderPend();updateBadge();}
 function updateHdr(){const hs=viewCycle==='po'?t('playoffs'):t('cycle')+' '+viewCycle+' · '+FECHAS[viewCycle-1]+' · '+cycles[viewCycle-1].status;const sub=document.getElementById('hdr-sub');if(sub)sub.textContent=hs;const tit=document.getElementById('hdr-title');if(tit)tit.textContent=t('app_title');const eb=document.getElementById('exit-btn');if(eb)eb.textContent=t('exit');}
 
 function groupCardHTML(gid){const c=cycles[viewCycle-1];const isActive=c.status==='active';const grp=c.groups[gid-1];const st=computeStats(viewCycle,gid);const dest=DESTINO[gid];const players=grp.players;const fc={};players.forEach(p=>{const f=p.split(' ')[0];fc[f]=(fc[f]||0)+1;});const lbl=p=>{const f=p.split(' ')[0];return fc[f]>1?p:f;};let cls=st.map((s,i)=>{const d=dest[i]||'',dn=parseInt((d||'G99').replace('G',''));const ar=dn<gid?'dest-up':dn>gid?'dest-down':'dest-same';const ic=dn<gid?'↑':dn>gid?'↓':'=';const ex=i===0?2:0;const base=ptsForPos(gid,i);return `<tr class="${i===0?'winner-row':''}"><td>${d?`<span class="dest ${ar}">${ic}${groupName(dn)}</span>`:''}</td><td><span class="avatar">${getInitials(s.name)}</span>${s.name}</td><td><strong>${s.pts}</strong></td><td>${s.g}</td><td>${s.p}</td><td>${s.nj}</td><td>${s.sg}</td><td>${s.sp}</td><td>${s.sg-s.sp}</td><td>${base}</td><td>${ex>0?ex:''}</td><td><strong>${base+ex}</strong></td></tr>`;}).join('');const head=players.map(p=>`<th>${lbl(p)}</th>`).join('');let mrows=players.map((p,i)=>{const cols=players.map((q,j)=>{if(i===j)return`<td class="res-black"></td>`;const m=findMatch(viewCycle,gid,p,q);if(m&&m.status==='confirmed'){const sc=m.aName===p?m.sets.map(([a,b])=>`${a}-${b}`).join(' '):m.sets.map(([a,b])=>`${b}-${a}`).join(' ');return`<td class="${m.club==='Haza'?'cell-haza':'cell-sohail'}" onclick="openModal(${m.id})">${sc}</td>`;}if(m&&m.status==='pending'){const sc=m.aName===p?m.sets.map(([a,b])=>`${a}-${b}`).join(' '):m.sets.map(([a,b])=>`${b}-${a}`).join(' ');return`<td class="cell-pending" onclick="openModal(${m.id})">${sc}⏳</td>`;}if(m&&m.status==='disputed')return`<td class="cell-disputed" onclick="openModal(${m.id})">disp.</td>`;if(isActive&&canCreate(gid,p,q))return`<td class="cell-empty" onclick="prefill(${gid},'${esc(p)}','${esc(q)}')">+</td>`;return`<td class="cell-locked">·</td>`;}).join('');return`<tr><td>${lbl(p)}</td>${cols}</tr>`;}).join('');
@@ -779,10 +779,10 @@ function prefill(gid,n1,n2){
   }
 }
 
-function toggleSTB(){const row=document.getElementById('s3-row');const btn=document.getElementById('stb-toggle-btn');if(row.style.display==='none'||row.style.display===''){row.style.display='flex';btn.innerHTML='<i class="ti ti-x"></i> '+t('remove_stb');['s3a','s3b'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});}else{row.style.display='none';btn.innerHTML='<i class="ti ti-plus"></i> '+t('add_stb');['s3a','s3b'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});}}
+function toggleSTB(){const row=document.getElementById('s3-row');const btn=document.getElementById('stb-toggle-btn');if(row.style.display==='none'||row.style.display===''){row.style.display='flex';btn.innerHTML='<i class="ti ti-x"></i> '+t('remove_stb');['s3a','s3b'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});}else{row.style.display='none';btn.innerHTML='<i class="ti ti-plus"></i> Supertiebreak (1-1)';['s3a','s3b'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});}}
 function checkAutoSTB(){const s1a=+document.getElementById('s1a').value,s1b=+document.getElementById('s1b').value;const s2a=+document.getElementById('s2a').value,s2b=+document.getElementById('s2b').value;if(!s1a&&!s1b&&!s2a&&!s2b)return;let w1=0,w2=0;if(validSet(s1a,s1b)){if(s1a>s1b)w1++;else w2++;}if(validSet(s2a,s2b)){if(s2a>s2b)w1++;else w2++;}const row=document.getElementById('s3-row');const btn=document.getElementById('stb-toggle-btn');if(w1===1&&w2===1){// 1-1: auto-show STB
 if(row.style.display==='none'||row.style.display===''){row.style.display='flex';if(btn)btn.innerHTML='<i class="ti ti-x"></i> '+t('remove_stb');}}else if(w1===2||w2===2){// 2-0 or 0-2: hide STB
-row.style.display='none';if(btn)btn.innerHTML='<i class="ti ti-plus"></i> '+t('add_stb');['s3a','s3b'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});}}
+row.style.display='none';if(btn)btn.innerHTML='<i class="ti ti-plus"></i> Supertiebreak (1-1)';['s3a','s3b'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});}}
 function readSets(){const s=[[+document.getElementById('s1a').value,+document.getElementById('s1b').value],[+document.getElementById('s2a').value,+document.getElementById('s2b').value]];let w1=0,w2=0;[s[0],s[1]].forEach(([a,b])=>{if(a>b)w1++;else w2++;});if(document.getElementById('s3-row').style.display!=='none'&&w1===1&&w2===1)s.push([+document.getElementById('s3a').value,+document.getElementById('s3b').value]);return s;}
 function parseSel(v){if(v.indexOf('|')>=0){const p=v.split('|');return{g:+p[0]+1,name:p[1]};}return{g:null,name:v};}
 
@@ -816,7 +816,7 @@ function submitResult(){
 }
 
 function fAlert(m,t){const e=document.getElementById('form-alert');e.className=`alert alert-${t}`;e.textContent=m;setTimeout(()=>{e.textContent='';e.className='';},6000);}
-function clearForm(){if(currentUser&&currentUser.role==='admin'){const r=document.getElementById('f-reporter');if(r)r.value='';}const rv=document.getElementById('f-rival');if(rv)rv.value='';['s1a','s1b','s2a','s2b','s3a','s3b'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='0';});const sr=document.getElementById('s3-row');if(sr)sr.style.display='none';const stbBtn=document.getElementById('stb-toggle-btn');if(stbBtn)stbBtn.innerHTML='<i class="ti ti-plus"></i> '+t('add_stb');formClub='';const cs=document.getElementById('club-sohail');if(cs)cs.className='club-opt';const ch=document.getElementById('club-haza');if(ch)ch.className='club-opt';const ff=document.getElementById('f-fecha');if(ff){const d=new Date();ff.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}const cp=document.getElementById('club-pick');if(cp)cp.classList.remove('req-empty');const fp=document.getElementById('f-fecha');if(fp)fp.classList.remove('req-empty');}
+function clearForm(){if(currentUser.role==='admin')document.getElementById('f-reporter').value='';document.getElementById('f-rival').value='';['s1a','s1b','s2a','s2b','s3a','s3b'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});document.getElementById('s3-row').style.display='none';const stbBtn=document.getElementById('stb-toggle-btn');if(stbBtn)stbBtn.innerHTML='<i class="ti ti-plus"></i> Supertiebreak (1-1)';formClub='';document.getElementById('club-sohail').className='club-opt';document.getElementById('club-haza').className='club-opt';document.getElementById('f-fecha').value=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();document.getElementById('club-pick').classList.remove('req-empty');document.getElementById('f-fecha').classList.remove('req-empty');}
 function involvedPend(m){if(currentUser.role==='admin')return true;if(m.po)return m.poNames&&m.poNames.includes(currentUser.name)&&m.reporter!==currentUser.name;return (m.aName===currentUser.name||m.bName===currentUser.name)&&m.reporter!==currentUser.name;}
 function renderPend(){
   var _pt=document.getElementById('pend-title');if(_pt)_pt.textContent=t('pending_title');
@@ -1032,28 +1032,44 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
   const sB=bw?'background:var(--winrow);font-weight:700;color:var(--priD);':'';
   const iA=!m.a?'color:var(--text2);font-style:italic;':'';
   const iB=!m.b&&m.a?'color:var(--text2);font-style:italic;':'';
-  const nmA=m.a||emptyTxt;const nmB=m.b||(m.a?'BYE':emptyTxt);
-  const seedA=m.sid[0]||'';const seedB=m.sid[1]||'';
-  // First name only; full name if both players share same first name
-  function firstName(n){return n?n.split(' ')[0]:'';}
-  const fA=firstName(m.a),fB=firstName(m.b);
-  const sameFirst=m.a&&m.b&&fA===fB;
-  const lblA=m.a?(sameFirst?m.a:fA):'';
-  const lblB=m.b?(sameFirst?m.b:fB):'';
-  const hdrA=lblA?'<div style="font-size:10px;font-weight:600;color:var(--pri);padding:4px 10px 0;">'+lblA+'</div>':'';
-  const hdrB=lblB?'<div style="font-size:10px;font-weight:600;color:var(--pri);padding:4px 10px 0;">'+lblB+'</div>':'';
+  const nmA=m.a||emptyTxt; const nmB=m.b||(m.a?'BYE':emptyTxt);
+  // Show standings rank for seeded players
+  const ord=playoff.qualified||[];
+  const rankA=m.a&&ord.indexOf(m.a)>=0?ord.indexOf(m.a)+1:'';
+  const rankB=m.b&&ord.indexOf(m.b)>=0?ord.indexOf(m.b)+1:'';
+  const seedA=m.sid[0]||''; const seedB=m.sid[1]||'';
   let bot='';
   if(m.w&&m.a&&m.b){
-    const editRow=currentUser.role==='admin'?'<div style="display:flex;gap:6px;padding:5px 8px;border-top:1px solid var(--border);background:var(--surface)"><button onclick="poReport('+ti+',''+which+'','+ri+','+mi+')" style="flex:1;padding:4px 0;font-size:11px;border:1px solid var(--border2);border-radius:6px;background:var(--soft);color:var(--pri);cursor:pointer;font-weight:500"><i class="ti ti-edit"></i> '+t('edit')+'</button><button onclick="deletePoDirect('+ti+',''+which+'','+ri+','+mi+')" style="flex:1;padding:4px 0;font-size:11px;border:1px solid #fca5a5;border-radius:6px;background:#fff5f5;color:#dc2626;cursor:pointer;font-weight:500"><i class="ti ti-trash"></i> Eliminar</button></div>':'<div style="height:0"></div>';
-    bot='<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 12px;background:var(--surface2);font-size:11px;border-top:1px solid var(--border)"><span style="color:var(--text2)">'+sc+'</span><span style="color:#085041;font-weight:700">✓ '+m.w+'</span></div>'+editRow;
-  }else if(canLoad){
-    bot='<div style="padding:6px 8px;border-top:1px solid var(--border);text-align:center"><button class="po-load" onclick="poReport('+ti+',''+which+'','+ri+','+mi+')"><i class="ti ti-upload"></i> '+t('po_load_result')+'</button></div>'+(currentUser.role==='admin'?'<div style="height:34px"></div>':'');
-  }else if(m.a&&m.b&&!m.w){
-    bot='<div style="padding:5px 8px;border-top:1px solid var(--border);text-align:center"><span style="font-size:11px;color:var(--text2);font-style:italic">'+t('pending_match')+'</span></div>'+(currentUser.role==='admin'?'<div style="height:34px"></div>':'');
-  }else{
+    const editRow=currentUser.role==='admin'
+      ?`<div style="display:flex;gap:6px;padding:5px 8px;border-top:1px solid var(--border);background:var(--surface)">
+          <button onclick="poReport(${ti},'${which}',${ri},${mi})" style="flex:1;padding:4px 0;font-size:11px;border:1px solid var(--border2);border-radius:6px;background:var(--soft);color:var(--pri);cursor:pointer;font-weight:500"><i class="ti ti-edit"></i> Editar</button>
+          <button onclick="deletePoDirect(${ti},'${which}',${ri},${mi})" style="flex:1;padding:4px 0;font-size:11px;border:1px solid #fca5a5;border-radius:6px;background:#fff5f5;color:#dc2626;cursor:pointer;font-weight:500"><i class="ti ti-trash"></i> Eliminar</button>
+        </div>`
+      :'<div style="height:0"></div>';
+    bot=`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 12px;background:var(--surface2);font-size:11px;border-top:1px solid var(--border)"><span style="color:var(--text2)">${sc}</span><span style="color:#085041;font-weight:700">✓ ${m.w}</span></div>${editRow}`;
+  } else if(canLoad){
+    // Fixed height placeholder + load button + empty edit row space
+    bot=`<div style="padding:6px 8px;border-top:1px solid var(--border);text-align:center"><button class="po-load" onclick="poReport(${ti},'${which}',${ri},${mi})"><i class="ti ti-upload"></i> ${m.locked&&currentUser.role==='admin'?'Editar resultado':t('po_load_result')}</button></div>`
+      +(currentUser.role==='admin'?'<div style="height:34px"></div>':'');
+  } else if(m.a&&m.b&&!m.w){
+    bot=`<div style="padding:5px 8px;border-top:1px solid var(--border);text-align:center"><span style="font-size:11px;color:var(--text2);font-style:italic">${t('pending_match')}</span></div>`
+      +(currentUser.role==='admin'?'<div style="height:34px"></div>':'');
+  } else {
+    // No players yet — placeholder to keep height consistent for admin
     bot=currentUser.role==='admin'?'<div style="height:56px"></div>':'<div style="height:22px"></div>';
   }
-  return '<div style="border:1px solid var(--border2);border-radius:10px;overflow:hidden;background:var(--surface);width:220px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.08)">'+hdrA+'<div style="display:flex;align-items:center;padding:6px 10px 8px;border-bottom:1px solid var(--border);font-size:12px;min-height:34px;'+sA+iA+'"><span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">'+seedA+'</span><span style="flex:1;font-weight:'+(aw?'700':'400')+'">'+nmA+'</span></div>'+hdrB+'<div style="display:flex;align-items:center;padding:6px 10px 8px;font-size:12px;min-height:34px;'+sB+iB+'"><span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">'+seedB+'</span><span style="flex:1;font-weight:'+(bw?'700':'400')+'">'+nmB+'</span></div>'+bot+'</div>';
+  return `<div style="border:1px solid var(--border2);border-radius:10px;overflow:hidden;background:var(--surface);width:${220}px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+    <div style="background:var(--soft);padding:3px 10px;font-size:9px;font-weight:700;color:var(--text2);border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.a&&m.b?'<span style="color:var(--pri);font-weight:700">'+nmA+'</span> <span style="color:var(--text2)">vs</span> '+nmB:(m.a?'<span style="color:var(--pri)">'+nmA+'</span>':m.b?'<span style="color:var(--pri)">'+nmB+'</span>':"&nbsp;")}</div>
+    <div style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;min-height:38px;${sA}${iA}">
+      <span style="font-size:11px;color:var(--text2);min-width:24px;font-weight:600">${seedA}</span>
+      <span style="flex:1;font-weight:${aw?'700':'400'}">${nmA}</span>
+    </div>
+    <div style="display:flex;align-items:center;padding:8px 12px;font-size:13px;min-height:38px;${sB}${iB}">
+      <span style="font-size:11px;color:var(--text2);min-width:24px;font-weight:600">${seedB}</span>
+      <span style="flex:1;font-weight:${bw?'700':'400'}">${nmB}</span>
+    </div>
+    ${bot}
+  </div>`;
 }
 
 function bracketHTML(rounds,ti,which){
@@ -1511,11 +1527,11 @@ function changePw(){const o=document.getElementById('pw-old').value,n=document.g
 function poReport(ti,which,ri,mi){const tr=playoff.tramos[ti];const m=(which==='main'?tr.main:tr.cons)[ri][mi];if(!m.a||!m.b){toast(t('po_report_no_players'));return;}if(m.locked&&currentUser.role!=='admin'){toast(t('po_locked'));return;}if(currentUser.role==='player'&&m.a!==currentUser.name&&m.b!==currentUser.name){toast(t('po_not_yours'));return;}poContext={ti,which,ri,mi};openPoForm(m,ti);}
 function openPoForm(m,ti){
   const existing=m.locked&&m.sets;
-  document.getElementById('modal-title').textContent=(existing?t('edit_result'):t('po_load_result'))+' · '+tf('po_match',{l:playoff.tramos[ti].label});
+  document.getElementById('modal-title').textContent=(existing?'Editar resultado':'Cargar resultado')+' · Cuadro '+playoff.tramos[ti].label;
   const s1a=existing?m.sets[0][0]:'',s1b=existing?m.sets[0][1]:'',s2a=existing?m.sets[1]?.[0]:'',s2b=existing?m.sets[1]?.[1]:'';
   const s3=existing&&m.sets[2];const s3a=s3?m.sets[2][0]:'',s3b=s3?m.sets[2][1]:'';
   document.getElementById('modal-body').innerHTML=`<p class="modal-rep">${m.a} <span class="vs">vs</span> ${m.b}</p><div class="set-row"><label>Set 1</label><input type="number" id="po-s1a" min="0" max="7" class="po-in" value="${s1a}"><span class="sep">–</span><input type="number" id="po-s1b" min="0" max="7" class="po-in" value="${s1b}"></div><div class="set-row"><label>Set 2</label><input type="number" id="po-s2a" min="0" max="7" class="po-in" value="${s2a}"><span class="sep">–</span><input type="number" id="po-s2b" min="0" max="7" class="po-in" value="${s2b}"></div><div class="set-row" id="po-s3-row" style="display:${s3?'flex':'none'}"><label>S.Tiebreak</label><input type="number" id="po-s3a" min="0" max="1" class="po-in" value="${s3a}"><span class="sep">–</span><input type="number" id="po-s3b" min="0" max="1" class="po-in" value="${s3b}"><span class="set-hint">1-0 o 0-1</span></div><button class="btn btn-sm" onclick="document.getElementById('po-s3-row').style.display='flex'" style="margin-top:4px"><i class="ti ti-plus"></i> Supertiebreak</button><p class="lock-note" id="po-alert" style="margin-top:.5rem"></p>`;
-  let actions=`<button class="btn btn-accent" onclick="submitPo()"><i class="ti ti-send"></i> ${currentUser.role==='admin'?t('save_validate'):t('send')}</button>`;
+  let actions=`<button class="btn btn-accent" onclick="submitPo()"><i class="ti ti-send"></i> ${currentUser.role==='admin'?'Guardar y validar':t('send')}</button>`;
   if(existing&&currentUser.role==='admin'){actions+=`<button class="btn btn-danger" onclick="deletePo()" style="margin-left:.25rem"><i class="ti ti-trash"></i> Eliminar</button>`;}
   actions+=`<button class="btn" onclick="closeM()">${t('close')}</button>`;
   document.getElementById('modal-actions').innerHTML=actions;
