@@ -1020,40 +1020,6 @@ function renderAdmin(){
        }).join('')+
        `</div><p class="legend-txt" style="margin-top:.4rem">Seleccioná inicio y fin de cada ciclo.</p></div>`;
 
-    // Build stage dates card with single/range picker per round
-    const poRounds = [
-      {key:'r64', label:'64avos / Round of 64'},
-      {key:'r32', label:'32avos / Round of 32'},
-      {key:'r16', label:'Octavos / Round of 16'},
-      {key:'r8',  label:'Cuartos / Quarterfinals'},
-      {key:'r4',  label:'Semifinales / Semifinals'},
-      {key:'r2',  label:'Final'},
-    ];
-    function poFechaRow(key, label){
-      const f=PO_FECHAS[key]||{type:'single',date:'',from:'',to:''};
-      const isSingle=f.type==='single';
-      return `<div class="form-group" style="margin-bottom:.5rem">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-          <label style="margin:0;min-width:120px">${label}</label>
-          <select onchange="setPoFechaType('${key}',this.value)" style="padding:3px 6px;font-size:11px;border-radius:6px;border:1px solid var(--border2);background:var(--surface)">
-            <option value="single" ${isSingle?'selected':''}>Fecha única</option>
-            <option value="range" ${!isSingle?'selected':''}>Rango de fechas</option>
-          </select>
-        </div>
-        ${isSingle
-          ? `<input type="date" value="${esc(f.date||'')}" onchange="setPoFecha('${key}','date',this.value)" style="padding:5px 8px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);width:100%">`
-          : `<div style="display:flex;gap:8px;align-items:center">
-              <input type="date" value="${esc(f.from||'')}" onchange="setPoFecha('${key}','from',this.value)" style="flex:1;padding:5px 8px;border-radius:7px;border:1px solid var(--border2);background:var(--surface)">
-              <span style="color:var(--text2);font-size:12px">→</span>
-              <input type="date" value="${esc(f.to||'')}" onchange="setPoFecha('${key}','to',this.value)" style="flex:1;padding:5px 8px;border-radius:7px;border:1px solid var(--border2);background:var(--surface)">
-             </div>`
-        }
-      </div>`;
-    }
-    h+=`<div class="card" style="margin:0"><div class="section-lbl">Fechas de Play Offs</div>
-      <p class="legend-txt" style="margin-top:0">Fecha única para un día concreto, o rango desde–hasta para una semana de juego.</p>
-      ${poRounds.map(r=>poFechaRow(r.key,r.label)).join('')}
-    </div>`;
     h+=`</div>`;
 
     h+=`<div class="card" style="margin-top:.625rem"><div class="section-lbl">${t('playoffs_title')}</div>`;
