@@ -679,7 +679,7 @@ function doLogin(){const u=document.getElementById('login-user').value,p=documen
 function doLogout(){currentUser=null;document.getElementById('main-app').style.display='none';document.getElementById('login-screen').style.display='block';document.getElementById('login-pass').value='';initLogin();}
 function renderShell(){renderCycleBar();renderSubTabs();updateBadge();}
 function renderCycleBar(){const bar=document.getElementById('cycle-bar');let html='';cycles.forEach(c=>{const playable=!!c.groups;const isView=viewCycle===c.n;const icon=c.status==='finished'?'<i class="ti ti-circle-check st"></i>':c.status==='active'?'<i class="ti ti-player-play st"></i>':'<i class="ti ti-lock st"></i>';html+=`<button class="cycle-tab ${playable?'':'locked'} ${isView?'active':''}" onclick="${playable?`viewCyc(${c.n})`:''}">${icon} ${t('cycle')} ${c.n}</button>`;});const showPO=playoff.started||(playoff.preview&&currentUser.role==='admin');const poLabel=showPO?(playoff.preview&&!playoff.started?`<i class="ti ti-eye st"></i> ${t('playoffs_prev')}`:`<i class="ti ti-tournament st"></i> ${t('playoffs')}`):`<i class="ti ti-lock st"></i> ${t('playoffs')}`;html+=`<button class="cycle-tab ${showPO?'':'locked'} ${viewCycle==='po'?'active':''}" onclick="${showPO?`viewCyc('po')`:''}">${poLabel}</button>`;bar.innerHTML=html;}
-function renderSubTabs(){const tabs=document.getElementById('tabs');tabs.style.display='flex';const showPO=playoff.started||(playoff.preview&&currentUser.role==='admin');let tabs_def=[{id:'grupos',i:'ti-layout-grid',l:t('tab_grupos')},{id:'general',i:'ti-chart-bar',l:t('tab_general')},{id:'cargar',i:'ti-upload',l:currentUser.role==='admin'?t('tab_cargar_admin'):t('tab_cargar')},{id:'pendientes',i:'ti-bell',l:currentUser.role==='admin'?t('tab_pendientes_admin'):t('tab_pendientes'),b:true},{id:'perfil',i:'ti-user',l:t('tab_perfil')}];if(currentUser.role==='admin')tabs_def.push({id:'admin',i:'ti-settings',l:t('tab_admin')});if(showPO)tabs_def.push({id:'po',i:'ti-tournament',l:t('playoffs'),po:true});tabs.innerHTML=tabs_def.map(x=>{if(x.po)return '<button class="tab'+(viewCycle==='po'?' active':'')+'" id="tab-po" onclick="viewCyc(\'po\')"><i class="ti ti-tournament" aria-hidden="true"></i> '+x.l+'</button>';return '<button class="tab'+(subView===x.id?' active':'')+'" id="tab-'+x.id+'" onclick="showSub(\''+x.id+'\')"><i class="ti '+x.i+'" aria-hidden="true"></i> '+x.l+(x.b?' <span class="tab-n" id="pend-n" style="display:none">0</span>':'')+'</button>';}).join('');}
+function renderSubTabs(){const tabs=document.getElementById('tabs');tabs.style.display='flex';const showPO=playoff.started||(playoff.preview&&currentUser.role==='admin');let tabs_def=[];if(showPO){tabs_def.push({id:'po',i:'ti-tournament',l:t('playoffs'),po:true});}else{tabs_def.push({id:'grupos',i:'ti-layout-grid',l:t('tab_grupos')});}tabs_def.push({id:'general',i:'ti-chart-bar',l:t('tab_general')});tabs_def.push({id:'cargar',i:'ti-upload',l:currentUser.role==='admin'?t('tab_cargar_admin'):t('tab_cargar')});tabs_def.push({id:'pendientes',i:'ti-bell',l:currentUser.role==='admin'?t('tab_pendientes_admin'):t('tab_pendientes'),b:true});tabs_def.push({id:'perfil',i:'ti-user',l:t('tab_perfil')});if(currentUser.role==='admin')tabs_def.push({id:'admin',i:'ti-settings',l:t('tab_admin')});tabs.innerHTML=tabs_def.map(x=>{if(x.po)return '<button class="tab'+(viewCycle==='po'?' active':'')+'" id="tab-po" onclick="viewCyc(\'po\')" style="background:'+(viewCycle==='po'?'var(--pri)':'')+';color:'+(viewCycle==='po'?'#fff':'')+';font-weight:'+(viewCycle==='po'?'600':'')+'"><i class="ti ti-tournament" aria-hidden="true"></i> '+x.l+'</button>';return '<button class="tab'+(subView===x.id&&viewCycle!=='po'?' active':'')+'" id="tab-'+x.id+'" onclick="showSub(\''+x.id+'\')" '+(x.id==='grupos'&&viewCycle==='po'?'style="display:none"':'')+' ><i class="ti '+x.i+'" aria-hidden="true"></i> '+x.l+(x.b?' <span class="tab-n" id="pend-n" style="display:none">0</span>':'')+'</button>';}).join('');}
 function viewCyc(n){
   viewCycle=n;
   if(n==='po'){
@@ -1001,41 +1001,62 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
 function bracketHTML(rounds,ti,which){
   if(!rounds||!rounds.length)return'';
   const total=rounds.length;
-  const BW=194,BH=82,GX=52,GY=10;
-  function rName(ri){const fe=total-1-ri;if(fe===0)return t('round_final');if(fe===1)return t('round_semi');if(fe===2)return t('round_quarters');if(fe===3)return t('round_16');if(fe===4)return t('round_32');return tf('round_n',{n:ri+1});}
-  function colH(ri){const n=rounds[ri].length;return n*BH+(n-1)*GY;}
-  const maxH=colH(0);
+  const BW=200, BH=76, GAP=16, GX=56, LABEL_H=28;
+  // Key insight: slot spacing doubles each round
+  // Round 0: spacing = BH+GAP between match centers
+  // Round 1: spacing = 2*(BH+GAP)
+  // Round ri: spacing = 2^ri * (BH+GAP)
+  function slotSpacing(ri){ return Math.pow(2,ri)*(BH+GAP); }
+  function matchCount(ri){ return rounds[ri].length; }
+  // Y center of match mi in round ri
+  function matchY(ri,mi){
+    const sp=slotSpacing(ri);
+    const n=matchCount(ri);
+    const totalH=n*sp;
+    const firstCenter=sp/2;
+    return firstCenter+mi*sp;
+  }
+  // Total height = round 0 total span
+  const totalH=matchCount(0)*(BH+GAP);
+  const svgH=totalH+LABEL_H;
   const totalW=total*(BW+GX);
+  function rName(ri){const fe=total-1-ri;if(fe===0)return t('round_final');if(fe===1)return t('round_semi');if(fe===2)return t('round_quarters');if(fe===3)return t('round_16');if(fe===4)return t('round_32');return tf('round_n',{n:ri+1});}
+  // Build SVG connector lines
   let svg='';
   for(let ri=0;ri<total-1;ri++){
-    const n=rounds[ri].length;const nn=rounds[ri+1].length;
-    const pairH=n*BH+(n-1)*GY;const topOff=(maxH-pairH)/2;
-    const nH=nn*BH+(nn-1)*GY;const nOff=(maxH-nH)/2;
-    const x1=ri*(BW+GX)+BW;const x2=(ri+1)*(BW+GX);const xm=x1+GX/2;
+    const n=rounds[ri].length;
+    const x1=ri*(BW+GX)+BW;
+    const x2=(ri+1)*(BW+GX);
+    const xm=x1+GX/2;
     for(let mi=0;mi<n;mi+=2){
-      const yA=topOff+mi*(BH+GY)+BH/2;
-      const yB=topOff+(mi+1)*(BH+GY)+BH/2;
+      const yA=matchY(ri,mi);
+      const yB=matchY(ri,mi+1);
       const yM=(yA+yB)/2;
-      const ni=mi/2;
-      const yN=nOff+ni*(BH+GY)+BH/2;
-      svg+=`<line x1="${x1}" y1="${yA}" x2="${xm}" y2="${yA}" stroke="var(--border2)" stroke-width="1.5"/>`;
-      svg+=`<line x1="${x1}" y1="${yB}" x2="${xm}" y2="${yB}" stroke="var(--border2)" stroke-width="1.5"/>`;
-      svg+=`<line x1="${xm}" y1="${yA}" x2="${xm}" y2="${yB}" stroke="var(--border2)" stroke-width="1.5"/>`;
-      svg+=`<line x1="${xm}" y1="${yM}" x2="${x2}" y2="${yN}" stroke="var(--border2)" stroke-width="1.5"/>`;
+      const yN=matchY(ri+1,mi/2);
+      // Horizontal out from match A and B
+      svg+=`<line x1="${x1}" y1="${yA}" x2="${xm}" y2="${yA}" stroke="#C8D0DC" stroke-width="1.5"/>`;
+      svg+=`<line x1="${x1}" y1="${yB}" x2="${xm}" y2="${yB}" stroke="#C8D0DC" stroke-width="1.5"/>`;
+      // Vertical connector between A and B
+      svg+=`<line x1="${xm}" y1="${yA}" x2="${xm}" y2="${yB}" stroke="#C8D0DC" stroke-width="1.5"/>`;
+      // Horizontal to next round (always straight — yM === yN by construction)
+      svg+=`<line x1="${xm}" y1="${yM}" x2="${x2}" y2="${yN}" stroke="#C8D0DC" stroke-width="1.5"/>`;
     }
   }
+  // Build match boxes as absolutely positioned divs
   let cols='';
   for(let ri=0;ri<total;ri++){
-    const rd=rounds[ri];const n=rd.length;
-    const pairH=n*BH+(n-1)*GY;const topOff=(maxH-pairH)/2;
-    const cx=ri*(BW+GX);const isFirst=ri===0;
+    const rd=rounds[ri];const isFirst=ri===0;
+    const cx=ri*(BW+GX);
     cols+=`<div style="position:absolute;left:${cx}px;top:0;width:${BW}px">`;
-    cols+=`<div style="text-align:center;font-size:11px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:.06em;height:22px;line-height:22px">${rName(ri)}</div>`;
-    rd.forEach((m,mi)=>{const y=topOff+mi*(BH+GY);cols+=`<div style="position:absolute;top:${y+22}px;left:0;width:${BW}px">${matchBox(m,ti,which,ri,mi,isFirst)}</div>`;});
+    cols+=`<div style="text-align:center;font-size:11px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:.06em;height:${LABEL_H}px;line-height:${LABEL_H}px">${rName(ri)}</div>`;
+    rd.forEach((m,mi)=>{
+      const yc=matchY(ri,mi); // center of this match
+      const yTop=yc-BH/2;
+      cols+=`<div style="position:absolute;top:${LABEL_H+yTop}px;left:0;width:${BW}px">${matchBox(m,ti,which,ri,mi,isFirst)}</div>`;
+    });
     cols+='</div>';
   }
-  const svgH=maxH+22;
-  return `<div style="position:relative;width:${totalW}px;height:${svgH}px;overflow:visible;padding-bottom:1rem"><svg style="position:absolute;top:22px;left:0;width:${totalW}px;height:${maxH}px;overflow:visible;pointer-events:none">${svg}</svg>${cols}</div>`;
+  return `<div style="overflow-x:auto;padding:.5rem 0"><div style="position:relative;width:${totalW}px;height:${svgH}px;flex-shrink:0"><svg style="position:absolute;top:${LABEL_H}px;left:0;width:${totalW}px;height:${totalH}px;overflow:visible;pointer-events:none">${svg}</svg>${cols}</div></div>`;
 }
 
 function showPlayoffView(){
