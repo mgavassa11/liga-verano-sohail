@@ -1213,7 +1213,7 @@ function bracketHTML(rounds,ti,which){
   // BH = actual rendered box height (must match CSS)
   // 2 name headers (~15px each) + 2 slots (34px each) + result row (22px) + edit row (34px admin) = ~154px
   // Use consistent 160px so SVG always centers correctly
-  const BW=220, BH=160, GAP=24, GX=72, LABEL_H=58;
+  const BW=220, BH=160, GAP=24, GX=72, LABEL_H=(currentUser&&currentUser.role==="admin"?90:58);
   // Slot connect offset: name header(14) + slot(34)/2 = 14+17 = 31 from top (first player slot center)
   // Second player slot center: 14+34+14+17 = 79
   // Mid-box connect point: (31+79)/2 = 55 from top of box
@@ -1259,9 +1259,20 @@ function bracketHTML(rounds,ti,which){
     cols+=`<div style="position:absolute;left:${cx}px;top:0;width:${BW}px">`;
     // Round name + date
     const dateStr=rDateLabel(ri);
-    const dateLine=dateStr
-      ?'<span style="font-size:11px;font-weight:700;color:var(--pri);letter-spacing:.03em">'+dateStr+'</span>'
-      :(currentUser&&currentUser.role==='admin'?'<span style="font-size:10px;color:var(--border2);font-style:italic;cursor:pointer" onclick="showSub(&quot;admin&quot;)">+ fecha</span>':'');
+    const rk=rKey(ri);
+    const pf=PO_FECHAS[rk]||{type:'single',date:'',from:'',to:''};
+    const isAdmin=currentUser&&currentUser.role==='admin';
+    let dateLine='';
+    if(isAdmin){
+      const isSingle=pf.type==='single';
+      const selHtml='<select onchange="setPoFechaType(\''+rk+'\',this.value);showPlayoffView()" style="font-size:10px;padding:2px 4px;border-radius:5px;border:1px solid var(--border2);background:var(--surface);margin-bottom:3px;width:100%"><option value="single" '+(isSingle?'selected':'')+'>Fecha única</option><option value="range" '+(!isSingle?'selected':'')+'>Rango de fechas</option></select>';
+      const inpHtml=isSingle
+        ?'<input type="date" value="'+esc(pf.date||'')+'" onchange="setPoFecha(\''+rk+'\',\'date\',this.value)" style="font-size:10px;padding:2px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--surface);width:100%">'
+        :'<div style="display:flex;gap:4px;align-items:center"><input type="date" value="'+esc(pf.from||'')+'" onchange="setPoFecha(\''+rk+'\',\'from\',this.value)" style="flex:1;font-size:10px;padding:2px 4px;border-radius:5px;border:1px solid var(--border2);background:var(--surface)"><span style="font-size:10px;color:var(--text2)">→</span><input type="date" value="'+esc(pf.to||'')+'" onchange="setPoFecha(\''+rk+'\',\'to\',this.value)" style="flex:1;font-size:10px;padding:2px 4px;border-radius:5px;border:1px solid var(--border2);background:var(--surface)"></div>';
+      dateLine='<div style="margin-top:2px">'+selHtml+inpHtml+'</div>';
+    } else if(dateStr){
+      dateLine='<span style="font-size:11px;font-weight:700;color:var(--pri);letter-spacing:.03em">'+dateStr+'</span>';
+    }
     cols+='<div style="text-align:center;height:'+LABEL_H+'px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px">'
       +'<span style="font-size:11px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:.06em">'+rName(ri)+'</span>'
       +dateLine
