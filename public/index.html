@@ -841,7 +841,9 @@ function renderAdmin(){
     const ready = done>=need&&notC===0;
     const cyclesDone = allCyclesDone();
     
-    let h=`<div class="card"><div class="section-lbl">${t('admin_cycle_status')}</div><div class="alert ${ready?'alert-ok':'alert-info'}">${t('cycle')} ${activeN}: ${tf('validated_count',{done,need})}${notC>0?` · ${notC} sin validar`:''}. ${ready?t('ready_close'):t('missing_results')}</div><div class="gap-sm mt-sm">${activeN<3?`<button class="btn btn-accent" ${(!ready)?'disabled':''} onclick="startNextCycle()"><i class="ti ti-arrow-right-circle"></i> ${t('close_cycle')}</button>`:`<button class="btn btn-accent" ${(!ready||(c&&c.status==='finished'))?'disabled':''} onclick="finishLastCycle()"><i class="ti ti-flag-check"></i> ${t('finish_last_cycle')}</button>`}<button class="btn" onclick="demoFillUI()"><i class="ti ti-wand"></i> ${t('simulate')}</button><button class="btn btn-danger" onclick="undoDemoUI()"><i class="ti ti-eraser"></i> ${t('undo_demo')}</button><button class="btn" onclick="forceConfirmAll()"><i class="ti ti-checks"></i> ${t('confirm_pending')}</button></div></div>`;
+    let h=`<div class="card"><div class="section-lbl">${t('admin_cycle_status')}</div><div class="alert ${ready?'alert-ok':'alert-info'}">${t('cycle')} ${activeN}: ${tf('validated_count',{done,need})}${notC>0?` · ${notC} sin validar`:''}. ${ready?t('ready_close'):t('missing_results')}</div>`+
+    (ready&&activeN===3&&c.status!=='finished'?`<div class="alert alert-ok" style="margin-top:.4rem;font-weight:600"><i class="ti ti-info-circle"></i> ¡Todos los partidos validados! Presioná "Finalizar último ciclo" para habilitar los Play Offs.</div>`:'')+
+    `<div class="gap-sm mt-sm">${activeN<3?`<button class="btn btn-accent" ${(!ready)?'disabled':''} onclick="startNextCycle()"><i class="ti ti-arrow-right-circle"></i> ${t('close_cycle')}</button>`:`<button class="btn btn-accent" ${(!ready||(c&&c.status==='finished'))?'disabled':''} onclick="finishLastCycle()"><i class="ti ti-flag-check"></i> ${t('finish_last_cycle')}</button>`}<button class="btn" onclick="demoFillUI()"><i class="ti ti-wand"></i> ${t('simulate')}</button><button class="btn btn-danger" onclick="undoDemoUI()"><i class="ti ti-eraser"></i> ${t('undo_demo')}</button><button class="btn" onclick="forceConfirmAll()"><i class="ti ti-checks"></i> ${t('confirm_pending')}</button></div></div>`;
     
     // --- PDF EXPORT CARD ---
     h+=`<div class="card"><div class="section-lbl">Exportar a PDF</div><p class="legend-txt" style="margin-top:0">Exportá los resultados completos o los Play Offs para compartir.</p><div class="gap-sm mt-sm">`;
@@ -1159,12 +1161,11 @@ function finishLastCycle(){
   const done=matches.filter(m=>m.cycle===activeN&&!m.po&&m.status==='confirmed').length;
   const notC=matches.filter(m=>m.cycle===activeN&&!m.po&&m.status!=='confirmed').length;
   if(done<need||notC>0){toast(t('last_cycle_missing'));return;}
-  
   c.status='finished';
-  
-  persist(true); // GUARDADO FORZADO INMEDIATO
-  refreshAll(); 
-  toast(t('toast_confirmed')); 
+  persist(true);
+  renderShell();
+  showSub('admin');
+  toast(t('last_cycle_finished'));
 }
 
 function editPuntosUI(gid){
