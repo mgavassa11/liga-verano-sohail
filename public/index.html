@@ -462,6 +462,17 @@ function demoFill(){const c=getActive();if(!c||!c.groups)return;const opts=[[[6,
 
 function allCyclesDone(){return cycles.every(c=>c.groups&&c.status==='finished');}
 
+function refreshAll(){
+  try{if(typeof persist==='function')persist(true);}catch(e){}
+  if(viewCycle==='po'){showPlayoffView();renderPend();renderCycleBar();return;}
+  if(subView==='grupos')renderGrupos();
+  if(subView==='general')renderGeneral();
+  if(subView==='pendientes')renderPend();
+  if(subView==='admin')renderAdmin();
+  if(subView==='cargar')renderCargarDisputas();
+  renderPend();renderCycleBar();updateBadge();
+}
+
 function splitTramos(qual,T){const n=qual.length;const base=Math.floor(n/T);let extra=n%T;const out=[];let idx=0;for(let t=0;t<T;t++){const size=base+(t<extra?1:0);out.push(qual.slice(idx,idx+size));idx+=size;}return out;}
 function seedOrder(n){if(n===1)return[0];const prev=seedOrder(n/2);const res=[];prev.forEach(p=>{res.push(p);res.push(n-1-p);});return res;}
 function buildRounds(seeds){
@@ -604,7 +615,8 @@ function submitResult(){
   
   clearForm();
   fAlert(isAdmin?t('result_sent_admin'):t('result_sent_player'),'ok');
-  refreshAll(); 
+  persist(true); // GUARDADO INSTANTÁNEO
+  renderPend();renderCycleBar();updateBadge();
 }
 
 function fAlert(m,t){const e=document.getElementById('form-alert');e.className=`alert alert-${t}`;e.textContent=m;setTimeout(()=>{e.textContent='';e.className='';},6000);}
@@ -663,9 +675,9 @@ if(currentUser.role==='admin') {
 }
 h+=`<button class="btn" onclick="closeM()">${t('close')}</button>`;acts.innerHTML=h;document.getElementById('modal-bg').classList.add('open');}
 function closeM(){document.getElementById('modal-bg').classList.remove('open');}
-function confirmM(){const m=matches.find(x=>x.id===currentModal);if(m){m.status='confirmed';m.locked=true;if(m.po)applyPoPending(m);}closeM();refreshAll();toast(t('toast_confirmed'));}
-function disputeM(){const m=matches.find(x=>x.id===currentModal);if(m)m.status='disputed';closeM();refreshAll();toast(t('toast_disputed'));}
-function deleteMatch(mid){if(confirm(t('confirm_delete'))){matches=matches.filter(x=>x.id!==mid);closeM();refreshAll();toast(t('match_deleted'));}}
+function confirmM(){const m=matches.find(x=>x.id===currentModal);if(m){m.status='confirmed';m.locked=true;if(m.po)applyPoPending(m);}closeM();refreshAll();toast(t('toast_confirmed'));persist(true);}
+function disputeM(){const m=matches.find(x=>x.id===currentModal);if(m)m.status='disputed';closeM();refreshAll();toast(t('toast_disputed'));persist(true);}
+function deleteMatch(mid){if(confirm(t('confirm_delete'))){matches=matches.filter(x=>x.id!==mid);closeM();refreshAll();toast(t('match_deleted'));persist(true);}}
 function adminEdit(mid){const m=matches.find(x=>x.id===mid);closeM();showSub('cargar');populateForm(m.g,m.aName,m.bName);pickClub(m.club);['s1a','s1b','s2a','s2b','s3a','s3b'].forEach(id=>document.getElementById(id).value='');document.getElementById('s3-row').style.display='none';m.sets.forEach((s,i)=>{const a=document.getElementById(`s${i+1}a`),b=document.getElementById(`s${i+1}b`);if(a)a.value=s[0];if(b)b.value=s[1];if(i===2)document.getElementById('s3-row').style.display='flex';});document.getElementById('f-fecha').value=m.date;}
 
 function renderAdmin(){
@@ -782,8 +794,8 @@ function printPlayoffs() {
 }
 // -----------------------------------
 
-function movePlayerUI(name,fromG,toG){if(!toG)return;movePlayer(name,fromG,+toG);renderAdmin();toast(name+' movido a '+groupName(+toG));}
-function removePlayerUI(name,fromG){removePlayerCycle(name,fromG);renderAdmin();toast(name+' quitado del ciclo.');}
+function movePlayerUI(name,fromG,toG){if(!toG)return;movePlayer(name,fromG,+toG);renderAdmin();toast(name+' movido a '+groupName(+toG));persist(true);}
+function removePlayerUI(name,fromG){removePlayerCycle(name,fromG);renderAdmin();toast(name+' quitado del ciclo.');persist(true);}
 
 function resetCycleUI(n){
   if(!confirm(tf('reset_confirm_cycle',{n})))return;
@@ -801,14 +813,14 @@ function resetCycleUI(n){
     }
   }
   viewCycle=activeN;
-  refreshAll();toast(t('reset_done'));
+  persist(true);renderShell();showSub('admin');toast(t('reset_done'));
 }
 
-function resetPlayoffUI(){if(!confirm(t('reset_confirm_po')))return;playoff={started:false,numTramos:4,tramos:[],results:{},viewT:0,qualified:[],preview:false,forcedSize:0};matches=matches.filter(m=>!m.po);if(viewCycle==='po')viewCycle=activeN;refreshAll();toast(t('reset_done'));}
-function setPoNum(v){playoff.numTramos=+v;if(playoff.started||playoff.preview){setNumTramos(+v);}}
+function resetPlayoffUI(){if(!confirm(t('reset_confirm_po')))return;playoff={started:false,numTramos:4,tramos:[],results:{},viewT:0,qualified:[],preview:false,forcedSize:0};matches=matches.filter(m=>!m.po);if(viewCycle==='po')viewCycle=activeN;persist(true);renderShell();showSub('admin');toast(t('reset_done'));}
+function setPoNum(v){playoff.numTramos=+v;if(playoff.started||playoff.preview){setNumTramos(+v);persist(true);}}
 
-function addPlayerUI(){const nom=(document.getElementById('ap-nom').value||'').trim();const ape=(document.getElementById('ap-ape').value||'').trim();const gid=+document.getElementById('ap-grp').value;const full=(nom+' '+ape).trim();if(!nom||!ape){toast(t('add_fill_both'));return;}if(!gid){toast(t('add_choose_group'));return;}if(USERS[full]){toast(t('add_exists'));return;}addPlayerToCycle(full,gid);initLogin();renderAdmin();toast(tf('add_done',{name:full,g:groupName(gid)}));refreshAll();}
-function setDestino(gid,pos,val){ensureDestino(gid,pos+1);DESTINO[gid][pos]='G'+val;if(subView==='admin')renderAdmin();toast(groupName(gid)+' · '+(pos+1)+'º → '+groupName(+val));refreshAll();}
+function addPlayerUI(){const nom=(document.getElementById('ap-nom').value||'').trim();const ape=(document.getElementById('ap-ape').value||'').trim();const gid=+document.getElementById('ap-grp').value;const full=(nom+' '+ape).trim();if(!nom||!ape){toast(t('add_fill_both'));return;}if(!gid){toast(t('add_choose_group'));return;}if(USERS[full]){toast(t('add_exists'));return;}addPlayerToCycle(full,gid);initLogin();renderAdmin();toast(tf('add_done',{name:full,g:groupName(gid)}));persist(true);}
+function setDestino(gid,pos,val){ensureDestino(gid,pos+1);DESTINO[gid][pos]='G'+val;if(subView==='admin')renderAdmin();toast(groupName(gid)+' · '+(pos+1)+'º → '+groupName(+val));persist(true);}
 function destinoCard(){
   const grps=cycles[activeN-1]?.groups || [];
   if(!grps.length) return '';
@@ -830,23 +842,24 @@ function destinoCard(){
   });
   return html+'</div></div>';
 }
-function setFecha(i,v){FECHAS[i]=v;updateHdr();renderCycleBar();toast('Fecha del Ciclo '+(i+1)+' actualizada.');refreshAll();}
-function previewPlayoffUI(){if(!previewPlayoff()){toast(t('po_need_3cycles'));return;}viewCycle='po';renderShell();showPlayoffView();toast(t('po_preview_toast'));refreshAll();}
-function confirmPlayoffUI(){if(!confirmPlayoff())return;renderShell();showPlayoffView();toast(t('po_confirmed_toast'));refreshAll();}
+function setFecha(i,v){FECHAS[i]=v;updateHdr();renderCycleBar();toast('Fecha del Ciclo '+(i+1)+' actualizada.');persist(true);}
+function previewPlayoffUI(){if(!previewPlayoff()){toast(t('po_need_3cycles'));return;}viewCycle='po';renderShell();showPlayoffView();toast(t('po_preview_toast'));persist(true);}
+function confirmPlayoffUI(){if(!confirmPlayoff())return;renderShell();showPlayoffView();toast(t('po_confirmed_toast'));persist(true);}
 function renderCargarDisputas(){ }
-function resolveD(mid){const m=matches.find(x=>x.id===mid);if(m){m.status='confirmed';m.locked=true;if(m.po)applyPoPending(m);}refreshAll();toast(t('toast_dispute_resolved'));}
 
-// --- FUNCIONES 100% SÍNCRONAS PARA ELIMINAR EL LAG VISUAL ---
+// --- RENDERING 100% SÍNCRONO PARA ELIMINAR EL LAG VISUAL Y FUNCIONES RESTAURADAS ---
 function forceConfirmAll(){
   matches.forEach(m=>{if(m.status==='pending'){m.status='confirmed';m.locked=true;if(m.po)applyPoPending(m);}});
-  refreshAll(); // Refresh all fuerza un renderizado y un persist(true)
+  persist(true);
+  refreshAll();
   toast(t('toast_pending_confirmed'));
 }
 
 function demoFillUI(){
   if(!demoBackup)demoBackup=JSON.stringify({cycles,activeN,playoff});
   demoFill();
-  refreshAll(); // Refresh all fuerza un renderizado y un persist(true)
+  persist(true);
+  refreshAll();
   toast(t('toast_simulated'));
 }
 
@@ -863,7 +876,8 @@ function undoDemoUI(){
       demoBackup=null;
     }catch(e){}
   }
-  refreshAll(); // Refresh all fuerza un renderizado y un persist(true)
+  persist(true);
+  refreshAll();
   toast(t('toast_demo_undone'));
 }
 
@@ -888,19 +902,23 @@ function startNextCycle(){
   
   const ng=[];for(let k=1;k<=12;k++)ng.push({players:buckets[k].sort((a,b)=>b.total-a.total).map(x=>x.name)});
   c.status='finished';
+  let switched = false;
   if(activeN<3){
     const nx=cycles[activeN];
     nx.groups=ng;
     nx.status='active';
     activeN=nx.n;
     viewCycle=nx.n;
+    switched = true;
     if(currentUser.role==='player'){const loc=findLoc(currentUser.name,activeN);if(loc)selGroup=loc.g;}
     toast(tf('cycle_closed_next',{n:c.n,nx:nx.n}));
   }else{
     toast(t('cycle3_closed'));
   }
   
-  refreshAll(); // Renderiza la pantalla (en Admin) y guarda al instante. Sin lag.
+  persist(true); // GUARDADO FORZADO INMEDIATO
+  refreshAll(); // Refresca todo sin delay
+  if(switched) showSub('grupos'); // Va a grupos solo si cambió de ciclo
 }
 
 function finishLastCycle(){
@@ -913,6 +931,7 @@ function finishLastCycle(){
   
   c.status='finished';
   
+  persist(true); // GUARDADO FORZADO INMEDIATO
   refreshAll(); 
   toast(t('toast_confirmed')); 
 }
@@ -944,6 +963,7 @@ function savePuntos(gid,len){
     newPts.push(v);
   }
   PUNTOS[gid]=newPts;
+  persist(true);
   closeM();
   refreshAll();
   toast('Puntos actualizados.');
@@ -1051,7 +1071,7 @@ function savePlayerAdmin(oldName){
       if(m.poNames){if(m.poNames[0]===oldName)m.poNames[0]=newName;if(m.poNames[1]===oldName)m.poNames[1]=newName;}
     });
   }
-  refreshAll();toast(tf('save_done',{name:newName}));
+  persist(true);renderPerfil();toast(tf('save_done',{name:newName}));
 }
 
 function deletePlayerAdmin(name){
@@ -1060,21 +1080,22 @@ function deletePlayerAdmin(name){
   const idx=ALLNAMES.indexOf(name);
   if(idx>=0)ALLNAMES.splice(idx,1);
   cycles.forEach(c=>{if(!c.groups)return;c.groups.forEach(g=>{const pi=g.players.indexOf(name);if(pi>=0)g.players.splice(pi,1);});});
-  refreshAll();toast(name+' ha sido eliminado.');
+  persist(true);renderPerfil();toast(name+' ha sido eliminado.');
 }
 
-function resetPwd(name){const u=USERS[name];if(!u)return;u.pass='tenis';refreshAll();toast(tf('reset_done',{name}));}
-function saveProfile(){const name=(document.getElementById('pf-name').value||'').trim();const email=(document.getElementById('pf-email').value||'').trim();const tel=(document.getElementById('pf-tel').value||'').trim();const a=document.getElementById('edit-profile-alert');if(!name){a.className='alert alert-err';a.textContent=t('name_empty');return;}const u=currentUser;const oldName=u.name;u.email=email;u.tel=tel;if(name!==oldName){if(USERS[name]&&name!==oldName){a.className='alert alert-err';a.textContent=t('name_exists');return;}USERS[name]={...u,name};delete USERS[oldName];const idx=ALLNAMES.indexOf(oldName);if(idx>=0)ALLNAMES[idx]=name;cycles.forEach(c=>{if(!c.groups)return;c.groups.forEach(g=>{const pi=g.players.indexOf(oldName);if(pi>=0)g.players[pi]=name;});});currentUser=USERS[name];}refreshAll();a.className='alert alert-ok';a.textContent=t('profile_saved');}
-function changePw(){const o=document.getElementById('pw-old').value,n=document.getElementById('pw-new').value,n2=document.getElementById('pw-new2').value,a=document.getElementById('pw-alert');function al(m,cl){a.className='alert alert-'+cl;a.textContent=m;}if(o!==currentUser.pass){al(t('pass_wrong'),'err');return;}if(!n||n.length<4){al(t('pass_short'),'err');return;}if(n!==n2){al(t('pass_no_match'),'err');return;}const key=currentUser.role==='admin'?'admin':currentUser.name;USERS[key].pass=n;currentUser.pass=n;al(t('pass_ok'),'ok');['pw-old','pw-new','pw-new2'].forEach(id=>document.getElementById(id).value='');refreshAll();}
+function resetPwd(name){const u=USERS[name];if(!u)return;u.pass='tenis';persist(true);toast(tf('reset_done',{name}));}
+function saveProfile(){const name=(document.getElementById('pf-name').value||'').trim();const email=(document.getElementById('pf-email').value||'').trim();const tel=(document.getElementById('pf-tel').value||'').trim();const a=document.getElementById('edit-profile-alert');if(!name){a.className='alert alert-err';a.textContent=t('name_empty');return;}const u=currentUser;const oldName=u.name;u.email=email;u.tel=tel;if(name!==oldName){if(USERS[name]&&name!==oldName){a.className='alert alert-err';a.textContent=t('name_exists');return;}USERS[name]={...u,name};delete USERS[oldName];const idx=ALLNAMES.indexOf(oldName);if(idx>=0)ALLNAMES[idx]=name;cycles.forEach(c=>{if(!c.groups)return;c.groups.forEach(g=>{const pi=g.players.indexOf(oldName);if(pi>=0)g.players[pi]=name;});});currentUser=USERS[name];}persist(true);a.className='alert alert-ok';a.textContent=t('profile_saved');}
+function changePw(){const o=document.getElementById('pw-old').value,n=document.getElementById('pw-new').value,n2=document.getElementById('pw-new2').value,a=document.getElementById('pw-alert');function al(m,cl){a.className='alert alert-'+cl;a.textContent=m;}if(o!==currentUser.pass){al(t('pass_wrong'),'err');return;}if(!n||n.length<4){al(t('pass_short'),'err');return;}if(n!==n2){al(t('pass_no_match'),'err');return;}const key=currentUser.role==='admin'?'admin':currentUser.name;USERS[key].pass=n;currentUser.pass=n;al(t('pass_ok'),'ok');['pw-old','pw-new','pw-new2'].forEach(id=>document.getElementById(id).value='');persist(true);}
 
+// ===== FUNCIONES FALTANTES DEL PLAYOFF =====
 function poReport(ti,which,ri,mi){const tr=playoff.tramos[ti];const m=(which==='main'?tr.main:tr.cons)[ri][mi];if(!m.a||!m.b){toast(t('po_report_no_players'));return;}if(m.locked&&currentUser.role!=='admin'){toast(t('po_locked'));return;}if(currentUser.role==='player'&&m.a!==currentUser.name&&m.b!==currentUser.name){toast(t('po_not_yours'));return;}poContext={ti,which,ri,mi};openPoForm(m,ti);}
 function openPoForm(m,ti){document.getElementById('modal-title').textContent=t('po_load_result')+' · '+t('po_match').replace('{l}',playoff.tramos[ti].label);document.getElementById('modal-body').innerHTML=`<p class="modal-rep">${m.a} <span class="vs">vs</span> ${m.b}</p><div class="set-row"><label>Set 1</label><input type="number" id="po-s1a" min="0" max="7" class="po-in"><span class="sep">–</span><input type="number" id="po-s1b" min="0" max="7" class="po-in"></div><div class="set-row"><label>Set 2</label><input type="number" id="po-s2a" min="0" max="7" class="po-in"><span class="sep">–</span><input type="number" id="po-s2b" min="0" max="7" class="po-in"></div><div class="set-row" id="po-s3-row" style="display:none"><label>S.Tiebreak</label><input type="number" id="po-s3a" min="0" max="1" class="po-in"><span class="sep">–</span><input type="number" id="po-s3b" min="0" max="1" class="po-in"><span class="set-hint">1-0 o 0-1</span></div><button class="btn btn-sm" onclick="document.getElementById('po-s3-row').style.display='flex'" style="margin-top:4px"><i class="ti ti-plus"></i> Supertiebreak</button><p class="lock-note" id="po-alert" style="margin-top:.5rem"></p>`;document.getElementById('modal-actions').innerHTML=`<button class="btn btn-accent" onclick="submitPo()"><i class="ti ti-send"></i> ${currentUser.role==='admin'?'Guardar y validar':t('send')}</button><button class="btn" onclick="closeM()">${t('close')}</button>`;document.getElementById('modal-bg').classList.add('open');}
-function submitPo(){const s=[[+document.getElementById('po-s1a').value,+document.getElementById('po-s1b').value],[+document.getElementById('po-s2a').value,+document.getElementById('po-s2b').value]];if(document.getElementById('po-s3-row').style.display!=='none')s.push([+document.getElementById('po-s3a').value,+document.getElementById('po-s3b').value]);const v=validMatch(s);if(!v.ok){const a=document.getElementById('po-alert');a.textContent='✕ '+v.msg;a.classList.add('err-txt');return;}const ti=poContext.ti,which=poContext.which,ri=poContext.ri,mi=poContext.mi;const m=(which==='main'?playoff.tramos[ti].main:playoff.tramos[ti].cons)[ri][mi];let w1=0,w2=0;s.forEach(([a,b])=>{if(a>b)w1++;else w2++;});const winner=w1>w2?m.a:m.b;if(currentUser.role==='admin'){storePo(ti,which,m.a,m.b,s,winner);rebuildTramo(ti);closeM();refreshAll();toast(t('po_validated'));}else{matches.push({id:matchId++,po:true,ti,which,tLabel:playoff.tramos[ti].label,poNames:[m.a,m.b],sets:s,status:'pending',reporter:currentUser.name,winner,date:'2026'});closeM();refreshAll();toast(t('po_sent'));}}
+function submitPo(){const s=[[+document.getElementById('po-s1a').value,+document.getElementById('po-s1b').value],[+document.getElementById('po-s2a').value,+document.getElementById('po-s2b').value]];if(document.getElementById('po-s3-row').style.display!=='none')s.push([+document.getElementById('po-s3a').value,+document.getElementById('po-s3b').value]);const v=validMatch(s);if(!v.ok){const a=document.getElementById('po-alert');a.textContent='✕ '+v.msg;a.classList.add('err-txt');return;}const ti=poContext.ti,which=poContext.which,ri=poContext.ri,mi=poContext.mi;const m=(which==='main'?playoff.tramos[ti].main:playoff.tramos[ti].cons)[ri][mi];let w1=0,w2=0;s.forEach(([a,b])=>{if(a>b)w1++;else w2++;});const winner=w1>w2?m.a:m.b;if(currentUser.role==='admin'){storePo(ti,which,m.a,m.b,s,winner);rebuildTramo(ti);closeM();showPlayoffView();toast(t('po_validated'));persist(true);}else{matches.push({id:matchId++,po:true,ti,which,tLabel:playoff.tramos[ti].label,poNames:[m.a,m.b],sets:s,status:'pending',reporter:currentUser.name,winner,date:'2026'});closeM();renderPend();renderCycleBar();showPlayoffView();toast(t('po_sent'));persist(true);}}
 function storePo(ti,which,a,b,sets,w){const k=(which==='main'?ti:ti+'c')+'#'+[a,b].sort().join('|');playoff.results[k]={sets,w};}
 function applyPoPending(rec){storePo(rec.ti,rec.which,rec.poNames[0],rec.poNames[1],rec.sets,rec.winner);rebuildTramo(rec.ti);}
 function toast(m){let t=document.getElementById('_toast');if(!t){t=document.createElement('div');t.id='_toast';t.className='toast';document.body.appendChild(t);}t.textContent=m;t.style.opacity='1';setTimeout(()=>t.style.opacity='0',3800);}
 
-// ===== CONEXIÓN ORIGINAL SUPABASE (100% SEGURA) =====
+// ===== CONEXIÓN A SUPABASE ORIGINAL (cod viejo.html) =====
 let _sb=null,_lastSaved=null,_saving=false;
 function _serialize(){return JSON.stringify({cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,ALLNAMES,users:USERS,PUNTOS,demoBackup});}
 function _hydrate(d){try{
@@ -1096,5 +1117,5 @@ async function persist(force){if(!_sb||_saving)return;const json=_serialize();if
 if(typeof setInterval!=='undefined')setInterval(function(){persist();},3000);
 if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('beforeunload',function(){try{persist(true);}catch(e){}});
 initSupabase();
-(async function(){try{await loadState();}catch(e){console.warn('Supabase load',e);}initLogin();updateLangUI();})();
+(async function(){try{await loadState();}catch(e){console.warn('Supabase load',e);}initLogin();updateLangUI();if(typeof currentUser !== 'undefined' && currentUser){renderAll();}})();
 </script></body></html>
