@@ -697,8 +697,47 @@ var rp=document.getElementById('f-reporter-lbl');if(rp)rp.textContent=t('reporte
 var rv=document.getElementById('f-rival-lbl');if(rv)rv.textContent=t('rival');
 var ss=document.getElementById('sets-section-lbl');if(ss)ss.textContent=t('sets_section');
 var rr=document.getElementById('report-result-lbl');if(rr)rr.textContent=t('report_result');}
-function filterRival(repVal,preselect){const o=document.getElementById('f-rival');o.innerHTML='<option value="">—</option>';if(!repVal)return;const parts=repVal.split('|');if(parts.length<2)return;const gi=+parts[0];const repName=parts[1];const c=getActive();if(!c||!c.groups)return;const g=c.groups[gi];if(!g)return;const og=document.createElement('optgroup');og.label=groupName(gi+1);g.players.slice().sort((a,b)=>a.localeCompare(b,'es')).forEach(j=>{const hasMatch=findMatch(activeN,gi+1,repName,j);if(j!==repName&&(!hasMatch||j===preselect))og.appendChild(new Option(j,`${gi}|${j}`));});o.appendChild(og);if(preselect)o.value=`${gi}|${preselect}`;}
-function prefill(gid,n1,n2){showSub('cargar');if(currentUser.role==='player'){document.getElementById('f-rival').value=(currentUser.name===n1?n2:n1);}else{document.getElementById('f-reporter').value=`${gid-1}|${n1}`;document.getElementById('f-rival').value=`${gid-1}|${n2}`;}}
+function filterRival(repVal,preselect){
+  const o=document.getElementById('f-rival');
+  o.innerHTML='<option value="">—</option>';
+  if(!repVal)return;
+  const parts=repVal.split('|');
+  if(parts.length<2)return;
+  const gi=+parts[0];const repName=parts[1];
+  const c=getActive();if(!c||!c.groups)return;
+  const g=c.groups[gi];if(!g)return;
+  const og=document.createElement('optgroup');
+  og.label=groupName(gi+1);
+  g.players.slice().sort((a,b)=>a.localeCompare(b,'es')).forEach(j=>{
+    if(j===repName)return;
+    // Admin sees all rivals (including those with existing match, to allow re-entry)
+    // Player only sees rivals without a confirmed match
+    const hasMatch=findMatch(activeN,gi+1,repName,j);
+    const showForAdmin=currentUser&&currentUser.role==='admin';
+    if(showForAdmin||!hasMatch||j===preselect){
+      og.appendChild(new Option(j,`${gi}|${j}`));
+    }
+  });
+  o.appendChild(og);
+  if(preselect)o.value=`${gi}|${preselect}`;
+}
+function prefill(gid,n1,n2){
+  showSub('cargar');
+  if(currentUser.role==='player'){
+    // Player: only fill rival (reporter is already fixed to themselves)
+    document.getElementById('f-rival').value=(currentUser.name===n1?n2:n1);
+  }else{
+    // Admin: populateForm with both players pre-selected
+    const gi=gid-1;
+    const repVal=`${gi}|${n1}`;
+    const rivVal=`${gi}|${n2}`;
+    // First set reporter select
+    const r=document.getElementById('f-reporter');
+    r.value=repVal;
+    // Then populate rival dropdown filtered to same group, pre-selecting n2
+    filterRival(repVal, n2);
+  }
+}
 function readSets(){const s=[[+document.getElementById('s1a').value,+document.getElementById('s1b').value],[+document.getElementById('s2a').value,+document.getElementById('s2b').value]];if(document.getElementById('s3-row').style.display!=='none')s.push([+document.getElementById('s3a').value,+document.getElementById('s3b').value]);return s;}
 function parseSel(v){if(v.indexOf('|')>=0){const p=v.split('|');return{g:+p[0]+1,name:p[1]};}return{g:null,name:v};}
 
