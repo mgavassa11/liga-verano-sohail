@@ -344,8 +344,8 @@ pending_match:'Pendiente de juego',
 po_started_toast:'Play Offs iniciados.',po_confirmed_toast:'¡Play Offs iniciados! Ya son visibles para los jugadores.',po_preview_toast:'Previsualización lista. Ajustá los jugadores y confirmá el inicio.',po_need_3cycles:'Primero cerrá los 3 ciclos.',po_seed_removed:'{name} quitado del Cuadro (pasa uno por bye).',po_seed_added:'{name} agregado al Cuadro.',po_choose_add:'Elegí un jugador para agregar.',po_report_no_players:'Ese partido todavía no tiene los dos jugadores.',po_locked:'Resultado ya validado. Solo el admin puede editarlo.',po_not_yours:'Solo los jugadores de ese partido (o el admin) pueden cargarlo.',po_validated:'Resultado de Play Off validado.',po_sent:'Resultado enviado. El rival debe confirmarlo.',
 stage_dates:'Fechas de las etapas',stage_dates_hint:'Para cada ronda elegí "Semana de juego" (rango desde–hasta) o "Fecha única".',single_date:'Fecha única',week_play:'Semana de juego',from_date:'Desde',until_date:'Hasta',
 round_final:'Final',round_semi:'Semifinales',round_quarters:'Cuartos',round_16:'Octavos',round_32:'16avos',round_64:'32avos',round_n:'Ronda {n}',
-my_profile:'My profile',full_name:'Nombre completo',email:'Email',phone:'Teléfono',save_data:'Guardar datos',change_password:'Cambiar contraseña',current_pass:'Contraseña actual',new_pass:'Nueva contraseña',repeat_pass:'Repetir nueva contraseña',save_pass:'Guardar contraseña',pass_wrong:'La contraseña actual no es correcta.',pass_short:'La nueva contraseña debe tener al menos 4 caracteres.',pass_no_match:'Las contraseñas nuevas no coinciden.',pass_ok:'✓ Contraseña actualizada.',profile_saved:'✓ Datos actualizados.',name_empty:'El nombre no puede estar vacío.',name_exists:'Ya existe un jugador con ese nombre.',role_admin:'Administrador',role_player:'Jugador',current_group_label:'Grupo actual',
-admin_profile:'My profile — Administrador',player_mgmt:'Gestión de jugadores',player_mgmt_hint:'Ordenados alfabéticamente. Buscá por nombre. Podés editar nombre, email, teléfono, resetear contraseña, cambiar de grupo o eliminar.',search_player:'Buscar jugador…',refresh_list:'Actualizar lista',no_results:'Sin resultados',save:'Guardar',reset_pass:'Resetear clave',reset_done:'{name}: contraseña reseteada a "tenis".',save_done:'{name}: datos actualizados.',
+my_profile:'Mi perfil',full_name:'Nombre completo',email:'Email',phone:'Teléfono',save_data:'Guardar datos',change_password:'Cambiar contraseña',current_pass:'Contraseña actual',new_pass:'Nueva contraseña',repeat_pass:'Repetir nueva contraseña',save_pass:'Guardar contraseña',pass_wrong:'La contraseña actual no es correcta.',pass_short:'La nueva contraseña debe tener al menos 4 caracteres.',pass_no_match:'Las contraseñas nuevas no coinciden.',pass_ok:'✓ Contraseña actualizada.',profile_saved:'✓ Datos actualizados.',name_empty:'El nombre no puede estar vacío.',name_exists:'Ya existe un jugador con ese nombre.',role_admin:'Administrador',role_player:'Jugador',current_group_label:'Grupo actual',
+admin_profile:'Mi perfil — Administrador',player_mgmt:'Gestión de jugadores',player_mgmt_hint:'Ordenados alfabéticamente. Buscá por nombre. Podés editar nombre, email, teléfono, resetear contraseña, cambiar de grupo o eliminar.',search_player:'Buscar jugador…',refresh_list:'Actualizar lista',no_results:'Sin resultados',save:'Guardar',reset_pass:'Resetear clave',reset_done:'{name}: contraseña reseteada a "tenis".',save_done:'{name}: datos actualizados.',
 toast_confirmed:'¡Resultado confirmado y validado!',toast_disputed:'Resultado disputado. El admin lo revisará.',toast_pending_confirmed:'Pendientes confirmados.',toast_simulated:'Ciclo simulado y validado.',toast_dispute_resolved:'Disputa resuelta.',
 reset_playoffs:'Reiniciar Play Offs',
 reset_cycle:'Reiniciar Ciclo {n}',
@@ -461,6 +461,16 @@ function computeGeneral(){const tot={};cycles.forEach(c=>{if(!c.groups)return;c.
 function demoFill(){const c=getActive();if(!c||!c.groups)return;const opts=[[[6,3],[6,4]],[[6,2],[4,6],[1,0]],[[7,5],[6,4]],[[6,4],[7,6]]];c.groups.forEach((g,gi)=>{const gid=gi+1;const pl=g.players;for(let i=0;i<pl.length;i++)for(let j=i+1;j<pl.length;j++){if(findMatch(activeN,gid,pl[i],pl[j]))continue;const w=Math.random()<0.5;const club=Math.random()<0.6?'Sohail':'Haza';const base=opts[Math.floor(Math.random()*opts.length)];matches.push({id:matchId++,cycle:activeN,g:gid,aName:pl[i],bName:pl[j],sets:w?base:base.map(([a,b])=>[b,a]),date:'2026-07-01',status:'confirmed',reporter:pl[i],club,locked:true,isDemo:true});}});}
 
 function allCyclesDone(){return cycles.every(c=>c.groups&&c.status==='finished');}
+function refreshAll(){
+  try{if(typeof persist==='function')persist(true);}catch(e){}
+  if(viewCycle==='po'){showPlayoffView();renderPend();renderCycleBar();return;}
+  if(subView==='grupos')renderGrupos();
+  if(subView==='general')renderGeneral();
+  if(subView==='pendientes')renderPend();
+  if(subView==='admin')renderAdmin();
+  if(subView==='cargar')renderCargarDisputas();
+  renderPend();renderCycleBar();updateBadge();
+}
 
 function splitTramos(qual,T){const n=qual.length;const base=Math.floor(n/T);let extra=n%T;const out=[];let idx=0;for(let t=0;t<T;t++){const size=base+(t<extra?1:0);out.push(qual.slice(idx,idx+size));idx+=size;}return out;}
 function seedOrder(n){if(n===1)return[0];const prev=seedOrder(n/2);const res=[];prev.forEach(p=>{res.push(p);res.push(n-1-p);});return res;}
@@ -578,9 +588,7 @@ function filterRival(repVal,preselect){const o=document.getElementById('f-rival'
 function prefill(gid,n1,n2){showSub('cargar');if(currentUser.role==='player'){document.getElementById('f-rival').value=(currentUser.name===n1?n2:n1);}else{document.getElementById('f-reporter').value=`${gid-1}|${n1}`;document.getElementById('f-rival').value=`${gid-1}|${n2}`;}}
 function readSets(){const s=[[+document.getElementById('s1a').value,+document.getElementById('s1b').value],[+document.getElementById('s2a').value,+document.getElementById('s2b').value]];if(document.getElementById('s3-row').style.display!=='none')s.push([+document.getElementById('s3a').value,+document.getElementById('s3b').value]);return s;}
 function parseSel(v){if(v.indexOf('|')>=0){const p=v.split('|');return{g:+p[0]+1,name:p[1]};}return{g:null,name:v};}
-function submitResult(){const rv=document.getElementById('f-reporter').value,iv=document.getElementById('f-rival').value,fecha=document.getElementById('f-fecha').value;if(!rv||!iv){fAlert(t('select_two'),'err');return;}let repName,rivName,gid;if(currentUser.role==='player'){repName=currentUser.name;rivName=iv;const loc=findLoc(repName,activeN);gid=loc.g;}else{const a=parseSel(rv),b=parseSel(iv);if(a.g!==b.g){fAlert(t('same_group'),'err');return;}gid=a.g;repName=a.name;rivName=b.name;}if(repName===rivName){fAlert(t('select_two'),'err');return;}if(!formClub){fAlert(t('select_club'),'err');document.getElementById('club-pick').classList.add('req-empty');return;}if(!fecha){fAlert(t('select_date'),'err');document.getElementById('f-fecha').classList.add('req-empty');return;}const ex=findMatch(activeN,gid,repName,rivName);if(ex&&ex.locked&&currentUser.role!=='admin'){fAlert(t('validated_admin_only'),'err');return;}const s=readSets();const v=validMatch(s);if(!v.ok){fAlert('✕ '+v.msg,'err');return;}matches=matches.filter(m=>!(m.cycle===activeN&&m.g===gid&&!m.po&&((m.aName===repName&&m.bName===rivName)||(m.aName===rivName&&m.bName===repName))));const isAdmin=currentUser.role==='admin';matches.push({id:matchId++,cycle:activeN,g:gid,aName:repName,bName:rivName,sets:s,date:fecha,status:isAdmin?'confirmed':'pending',reporter:repName,club:formClub,locked:isAdmin});clearForm();fAlert(isAdmin?t('result_sent_admin'):t('result_sent_player'),'ok');renderPend();renderCycleBar();updateBadge();
-persist(true); // GUARDADO INSTANTANEO
-}
+function submitResult(){const rv=document.getElementById('f-reporter').value,iv=document.getElementById('f-rival').value,fecha=document.getElementById('f-fecha').value;if(!rv||!iv){fAlert(t('select_two'),'err');return;}let repName,rivName,gid;if(currentUser.role==='player'){repName=currentUser.name;rivName=iv;const loc=findLoc(repName,activeN);gid=loc.g;}else{const a=parseSel(rv),b=parseSel(iv);if(a.g!==b.g){fAlert(t('same_group'),'err');return;}gid=a.g;repName=a.name;rivName=b.name;}if(repName===rivName){fAlert(t('select_two'),'err');return;}if(!formClub){fAlert(t('select_club'),'err');document.getElementById('club-pick').classList.add('req-empty');return;}if(!fecha){fAlert(t('select_date'),'err');document.getElementById('f-fecha').classList.add('req-empty');return;}const ex=findMatch(activeN,gid,repName,rivName);if(ex&&ex.locked&&currentUser.role!=='admin'){fAlert(t('validated_admin_only'),'err');return;}const s=readSets();const v=validMatch(s);if(!v.ok){fAlert('✕ '+v.msg,'err');return;}matches=matches.filter(m=>!(m.cycle===activeN&&m.g===gid&&!m.po&&((m.aName===repName&&m.bName===rivName)||(m.aName===rivName&&m.bName===repName))));const isAdmin=currentUser.role==='admin';matches.push({id:matchId++,cycle:activeN,g:gid,aName:repName,bName:rivName,sets:s,date:fecha,status:isAdmin?'confirmed':'pending',reporter:repName,club:formClub,locked:isAdmin});clearForm();fAlert(isAdmin?t('result_sent_admin'):t('result_sent_player'),'ok');renderPend();renderCycleBar();updateBadge();persist(true);}
 function fAlert(m,t){const e=document.getElementById('form-alert');e.className=`alert alert-${t}`;e.textContent=m;setTimeout(()=>{e.textContent='';e.className='';},6000);}
 function clearForm(){if(currentUser.role==='admin')document.getElementById('f-reporter').value='';document.getElementById('f-rival').value='';['s1a','s1b','s2a','s2b','s3a','s3b'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});document.getElementById('s3-row').style.display='none';formClub='';document.getElementById('club-sohail').className='club-opt';document.getElementById('club-haza').className='club-opt';document.getElementById('f-fecha').value='';document.getElementById('club-pick').classList.remove('req-empty');document.getElementById('f-fecha').classList.remove('req-empty');}
 function involvedPend(m){if(currentUser.role==='admin')return true;if(m.po)return m.poNames&&m.poNames.includes(currentUser.name)&&m.reporter!==currentUser.name;return (m.aName===currentUser.name||m.bName===currentUser.name)&&m.reporter!==currentUser.name;}
@@ -654,13 +662,11 @@ function renderAdmin(){
     
     let h=`<div class="card"><div class="section-lbl">${t('admin_cycle_status')}</div><div class="alert ${ready?'alert-ok':'alert-info'}">${t('cycle')} ${activeN}: ${tf('validated_count',{done,need})}${notC>0?` · ${notC} sin validar`:''}. ${ready?t('ready_close'):t('missing_results')}</div><div class="gap-sm mt-sm">${activeN<3?`<button class="btn btn-accent" ${(!ready)?'disabled':''} onclick="startNextCycle()"><i class="ti ti-arrow-right-circle"></i> ${t('close_cycle')}</button>`:`<button class="btn btn-accent" ${(!ready||(c&&c.status==='finished'))?'disabled':''} onclick="finishLastCycle()"><i class="ti ti-flag-check"></i> ${t('finish_last_cycle')}</button>`}<button class="btn" onclick="demoFillUI()"><i class="ti ti-wand"></i> ${t('simulate')}</button><button class="btn btn-danger" onclick="undoDemoUI()"><i class="ti ti-eraser"></i> ${t('undo_demo')}</button><button class="btn" onclick="forceConfirmAll()"><i class="ti ti-checks"></i> ${t('confirm_pending')}</button></div></div>`;
     
-    // --- PDF EXPORT CARD ---
     h+=`<div class="card"><div class="section-lbl">Exportar a PDF</div><p class="legend-txt" style="margin-top:0">Exportá los resultados completos o los Play Offs para compartir.</p><div class="gap-sm mt-sm">`;
     cycles.forEach(cy => {
         h += `<button class="btn" onclick="printCycle(${cy.n})"><i class="ti ti-printer"></i> Ciclo ${cy.n}</button>`;
     });
     h += `<button class="btn" onclick="printPlayoffs()"><i class="ti ti-printer"></i> Play Offs</button></div></div>`;
-    // -----------------------
 
     h+=`<div class="card"><div class="section-lbl">${tf('edit_groups',{n:activeN})}</div><p class="legend-txt" style="margin-top:0">${t('edit_groups_hint')}</p><div class="req-wrap" style="margin-bottom:.7rem"><div class="section-lbl" style="margin-top:0">${t('add_player')}</div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr auto;align-items:end"><div class="form-group"><label>${t('first_name')}</label><input id="ap-nom" placeholder="${t('first_name')}"></div><div class="form-group"><label>${t('last_name')}</label><input id="ap-ape" placeholder="${t('last_name')}"></div><div class="form-group"><label>${t('group')}</label><select id="ap-grp">${grps.map((_,k)=>`<option value="${k+1}">${groupName(k+1)}</option>`).join('')}</select></div><div class="form-group"><button class="btn btn-primary" onclick="addPlayerUI()"><i class="ti ti-user-plus"></i> ${t('add_btn')}</button></div></div></div>`;
 
@@ -675,7 +681,6 @@ function renderAdmin(){
     
     h+=destinoCard();
 
-    // PLAY OFFS CONFIG
     h+='<div class="card"><div class="section-lbl">'+t('playoffs_title')+'</div>'+(cyclesDone?'<div class="alert alert-ok">'+t('playoffs_ready')+'</div>':'<div class="alert alert-info">'+t('playoffs_not_ready')+'</div>');
     h+='<div class="form-row"><div class="form-group"><label>'+t('how_many_playoffs')+'</label><select onchange="setPoNum(this.value)">'+[1,2,3,4,5,6].map(k=>`<option value="${k}" ${playoff.numTramos===k?'selected':''}>${k} ${k>1?t('bracket_plural'):t('bracket_singular')}</option>`).join('')+'</select></div>';
     h+='<div class="form-group"><label>'+t('po_size_label')+'</label><select onchange="setPoSize(this.value)">';
@@ -703,7 +708,6 @@ function renderAdmin(){
   }
 }
 
-// --- FUNCIONES PARA IMPRIMIR PDF ---
 function printCycle(n) {
   const c = cycles[n-1];
   if(!c || !c.groups) { toast('Ciclo sin datos.'); return; }
@@ -712,20 +716,14 @@ function printCycle(n) {
   viewCycle = n;
   c.groups.forEach((g, gi) => { html += groupCardHTML(gi + 1); });
   viewCycle = oldView;
-
   const pa = document.getElementById('print-area');
   pa.innerHTML = html;
-  
-  setTimeout(() => { 
-      window.print(); 
-      setTimeout(() => { pa.innerHTML = ''; }, 500); 
-  }, 200);
+  setTimeout(() => { window.print(); setTimeout(() => { pa.innerHTML = ''; }, 500); }, 200);
 }
 
 function printPlayoffs() {
   if(!playoff.started && !playoff.preview) { toast('Play Offs no disponibles.'); return; }
   let html = `<h2 style="margin-bottom:1rem;color:var(--priD)">Liga de Tenis Sohail - Play Offs</h2>`;
-  
   playoff.tramos.forEach((tr, ti) => {
      html += `<div class="po-card">`;
      html += `<h3 style="background:var(--pri);color:#fff;padding:8px;border-radius:8px;margin-bottom:10px">${tf('po_main_title',{l:tr.label})}</h3>`;
@@ -736,25 +734,14 @@ function printPlayoffs() {
      }
      html += `</div>`;
   });
-
   const pa = document.getElementById('print-area');
   pa.innerHTML = html;
-
   const style = document.createElement('style');
   style.id = 'print-landscape-style';
   style.innerHTML = '@page { size: landscape; }';
   document.head.appendChild(style);
-
-  setTimeout(() => { 
-      window.print(); 
-      setTimeout(() => { 
-          pa.innerHTML = ''; 
-          const sl = document.getElementById('print-landscape-style');
-          if(sl) document.head.removeChild(sl);
-      }, 500); 
-  }, 200);
+  setTimeout(() => { window.print(); setTimeout(() => { pa.innerHTML = ''; const sl = document.getElementById('print-landscape-style'); if(sl) document.head.removeChild(sl); }, 500); }, 200);
 }
-// -----------------------------------
 
 function movePlayerUI(name,fromG,toG){if(!toG)return;movePlayer(name,fromG,+toG);renderAdmin();toast(name+' movido a '+groupName(+toG));}
 function removePlayerUI(name,fromG){removePlayerCycle(name,fromG);renderAdmin();toast(name+' quitado del ciclo.');}
@@ -810,47 +797,40 @@ function confirmPlayoffUI(){if(!confirmPlayoff())return;renderShell();showPlayof
 function renderCargarDisputas(){ }
 function resolveD(mid){const m=matches.find(x=>x.id===mid);if(m){m.status='confirmed';m.locked=true;if(m.po)applyPoPending(m);}refreshAll();toast(t('toast_dispute_resolved'));}
 
-// --- RENDERING 100% SÍNCRONO PARA ELIMINAR EL LAG VISUAL Y FUNCIONES RESTAURADAS ---
 function forceConfirmAll(){
-  try {
-    matches.forEach(m=>{if(m.status==='pending'){m.status='confirmed';m.locked=true;if(m.po)applyPoPending(m);}});
-    renderShell();
-    showSub('admin');
-    toast(t('toast_pending_confirmed'));
-    persist(true);
-  } catch(e) { console.error(e); }
+  matches.forEach(m=>{if(m.status==='pending'){m.status='confirmed';m.locked=true;if(m.po)applyPoPending(m);}});
+  persist(true);
+  renderShell();
+  showSub('admin');
+  toast(t('toast_pending_confirmed'));
 }
 
 function demoFillUI(){
-  try {
-    if(!demoBackup)demoBackup=JSON.stringify({cycles,activeN,playoff});
-    demoFill();
-    renderShell();
-    showSub('admin');
-    toast(t('toast_simulated'));
-    persist(true);
-  } catch(e) { console.error(e); }
+  if(!demoBackup)demoBackup=JSON.stringify({cycles,activeN,playoff});
+  demoFill();
+  persist(true);
+  renderShell();
+  showSub('admin');
+  toast(t('toast_simulated'));
 }
 
 function undoDemoUI(){
-  try {
-    if(!confirm(t('confirm_undo_demo')))return;
-    matches=matches.filter(m=>!m.isDemo);
-    if(demoBackup){
-      try{
-        const b=JSON.parse(demoBackup);
-        cycles=b.cycles;
-        activeN=b.activeN;
-        playoff=b.playoff;
-        viewCycle=activeN;
-        demoBackup=null;
-      }catch(e){}
-    }
-    renderShell();
-    showSub('admin');
-    toast(t('toast_demo_undone'));
-    persist(true);
-  } catch(e) { console.error(e); }
+  if(!confirm(t('confirm_undo_demo')))return;
+  matches=matches.filter(m=>!m.isDemo);
+  if(demoBackup){
+    try{
+      const b=JSON.parse(demoBackup);
+      cycles=b.cycles;
+      activeN=b.activeN;
+      playoff=b.playoff;
+      viewCycle=activeN;
+      demoBackup=null;
+    }catch(e){}
+  }
+  persist(true);
+  renderShell();
+  showSub('admin');
+  toast(t('toast_demo_undone'));
 }
 
 function startNextCycle(){
@@ -889,9 +869,9 @@ function startNextCycle(){
       toast(t('cycle3_closed'));
     }
     
+    persist(true);
     renderShell(); 
     showSub('admin'); 
-    persist(true);
   } catch(err) {
     console.error("Error al cerrar ciclo:", err);
     alert("Error procesando el cierre de ciclo: " + err.message);
@@ -909,13 +889,12 @@ function finishLastCycle(){
     
     c.status='finished';
     
+    persist(true);
     renderShell(); 
     showSub('admin');
     toast(t('toast_confirmed')); 
-    persist(true);
   } catch(e) { console.error(e); }
 }
-// ----------------------------------------------------------------------
 
 function editPuntosUI(gid){
   const c=cycles[viewCycle-1];
@@ -1076,8 +1055,8 @@ function storePo(ti,which,a,b,sets,w){const k=(which==='main'?ti:ti+'c')+'#'+[a,
 function applyPoPending(rec){storePo(rec.ti,rec.which,rec.poNames[0],rec.poNames[1],rec.sets,rec.winner);rebuildTramo(rec.ti);}
 function toast(m){let t=document.getElementById('_toast');if(!t){t=document.createElement('div');t.id='_toast';t.className='toast';document.body.appendChild(t);}t.textContent=m;t.style.opacity='1';setTimeout(()=>t.style.opacity='0',3800);}
 
-// ===== CONEXIÓN ORIGINAL SUPABASE (100% SEGURA Y SINCRO) =====
-let _sb=null,_lastSaved=null,_saving=false,_dataLoaded=false;
+// ===== CONEXIÓN ORIGINAL SUPABASE (100% SEGURA) =====
+let _sb=null,_lastSaved=null,_saving=false;
 function _serialize(){return JSON.stringify({cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,ALLNAMES,users:USERS,PUNTOS,demoBackup});}
 function _hydrate(d){try{
   if(d.cycles)cycles=d.cycles;
@@ -1093,25 +1072,10 @@ function _hydrate(d){try{
   if(d.demoBackup!==undefined)demoBackup=d.demoBackup;
 }catch(e){console.warn('hydrate',e);}}try{const sl=localStorage.getItem('liga_lang');if(sl&&(sl==='es'||sl==='en'))LANG=sl;}catch(e){}
 function initSupabase(){try{if(typeof window!=='undefined'&&window.supabase&&typeof SUPA_URL==='string'&&SUPA_URL&&SUPA_URL.indexOf('PEGA_')<0){_sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);}}catch(e){_sb=null;}}
-async function loadState(){if(!_sb)return;const r=await _sb.from('liga_state').select('data').eq('id',1).maybeSingle();if(r.error)throw r.error;if(r.data&&r.data.data){_hydrate(typeof r.data.data==='string'?JSON.parse(r.data.data):r.data.data);_lastSaved=_serialize();}_dataLoaded=true;}
-async function persist(force){if(!_sb||_saving||!_dataLoaded)return;const json=_serialize();if(!force&&json===_lastSaved)return;_saving=true;try{const r=await _sb.from('liga_state').upsert({id:1,data:json});if(!r.error)_lastSaved=json;else console.warn('persist',r.error);}catch(e){console.warn('persist',e);}_saving=false;}
+async function loadState(){if(!_sb)return;const r=await _sb.from('liga_state').select('data').eq('id',1).maybeSingle();if(r.error)throw r.error;if(r.data&&r.data.data){_hydrate(typeof r.data.data==='string'?JSON.parse(r.data.data):r.data.data);_lastSaved=_serialize();}else{await persist(true);}}
+async function persist(force){if(!_sb||_saving)return;const json=_serialize();if(!force&&json===_lastSaved)return;_saving=true;try{const r=await _sb.from('liga_state').upsert({id:1,data:json});if(!r.error)_lastSaved=json;else console.warn('persist',r.error);}catch(e){console.warn('persist',e);}_saving=false;}
 if(typeof setInterval!=='undefined')setInterval(function(){persist();},3000);
 if(typeof window!=='undefined'&&window.addEventListener)window.addEventListener('beforeunload',function(){try{persist(true);}catch(e){}});
-
-// CARGA INICIAL
 initSupabase();
-initLogin();
-updateLangUI();
-(async function(){
-  try{
-    await loadState();
-  }catch(e){
-    console.warn('Supabase load',e);
-  }finally{
-    _dataLoaded=true; // Libera el candado si o si
-    initLogin();
-    updateLangUI();
-    if(currentUser) renderAll();
-  }
-})();
+(async function(){try{await loadState();}catch(e){console.warn('Supabase load',e);}initLogin();updateLangUI();})();
 </script></body></html>
