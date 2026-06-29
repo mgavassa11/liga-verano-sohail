@@ -1181,8 +1181,8 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
   const sameFirst=m.a&&m.b&&fA===fB;
   const lblA=m.a?(sameFirst?m.a:fA):'';
   const lblB=m.b?(sameFirst?m.b:fB):'';
-  const hA=lblA?'<div style="font-size:10px;font-weight:600;color:var(--pri);padding:4px 10px 1px;line-height:1.2">'+lblA+'</div>':'';
-  const hB=lblB?'<div style="font-size:10px;font-weight:600;color:var(--pri);padding:4px 10px 1px;line-height:1.2">'+lblB+'</div>':'';
+  const hA='';
+  const hB='';
   let bot='';
   if(m.w&&m.a&&m.b){
     const editRow=currentUser&&currentUser.role==='admin'
@@ -1232,7 +1232,8 @@ function bracketHTML(rounds,ti,which){
   const totalW=total*(BW+GX);
   function rName(ri){const fe=total-1-ri;if(fe===0)return t('round_final');if(fe===1)return t('round_semi');if(fe===2)return t('round_quarters');if(fe===3)return t('round_16');if(fe===4)return t('round_32');return tf('round_n',{n:ri+1});}
   function rKey(ri){const fe=total-1-ri;if(fe===0)return 'r2';if(fe===1)return 'r4';if(fe===2)return 'r8';if(fe===3)return 'r16';if(fe===4)return 'r32';return 'r64';}
-  function rDateLabel(ri){const k=rKey(ri);const f=PO_FECHAS[k];if(!f)return '';if(f.type==='range'&&f.from&&f.to)return f.from+' → '+f.to;if(f.type==='single'&&f.date)return f.date;if(typeof f==='string'&&f)return f;return '';}
+  function fmtD(s){if(!s)return '';const p=s.split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:s;}
+  function rDateLabel(ri){const k=rKey(ri);const f=PO_FECHAS[k];if(!f)return '';if(f.type==='range'&&f.from&&f.to)return fmtD(f.from)+' → '+fmtD(f.to);if(f.type==='single'&&f.date)return fmtD(f.date);if(typeof f==='string'&&f)return fmtD(f);return '';}
   let svg='';
   for(let ri=0;ri<total-1;ri++){
     const n=rounds[ri].length;
