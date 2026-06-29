@@ -965,6 +965,54 @@ function setTotalCycles(val){
   toast('Cantidad de ciclos actualizada a ' + newTotal + '.');
 }
 
+function setNumGroups(val){
+  const newNum = parseInt(val);
+  if(!newNum || newNum < 1 || newNum > 50) return;
+  const c = cycles[0];
+  if(!c || !c.groups) return;
+  const cur = c.groups.length;
+  const ppg = c.groups[0] ? c.groups[0].players.length : 5;
+  if(newNum > cur){
+    for(let i = cur; i < newNum; i++){
+      c.groups.push({players: Array.from({length: ppg}, (_,j) => 'Jugador '+(i*ppg+j+1))});
+      ensureDestino(i+1, ppg);
+    }
+  } else if(newNum < cur){
+    if(!confirm('¿Reducir a '+newNum+' grupos? Los jugadores de los grupos eliminados se perderán.')) { renderAdmin(); return; }
+    c.groups.splice(newNum);
+    Object.keys(DESTINO).forEach(k=>{ if(parseInt(k)>newNum) delete DESTINO[k]; });
+    Object.keys(PUNTOS).forEach(k=>{ if(parseInt(k)>newNum) delete PUNTOS[k]; });
+  }
+  ALLNAMES = c.groups.flatMap(g=>g.players);
+  persist(true); renderAdmin();
+  toast(newNum + ' grupos configurados.');
+}
+
+function setPlayersPerGroup(val){
+  const ppg = parseInt(val);
+  if(!ppg || ppg < 2) return;
+  const c = cycles[0];
+  if(!c || !c.groups) return;
+  c.groups.forEach((g, gi) => {
+    const cur = g.players.length;
+    if(ppg > cur){
+      for(let j = cur; j < ppg; j++) g.players.push('Jugador G'+(gi+1)+'-'+(j+1));
+    } else if(ppg < cur){
+      g.players.splice(ppg);
+    }
+    ensureDestino(gi+1, ppg);
+  });
+  ALLNAMES = c.groups.flatMap(g=>g.players);
+  persist(true); renderAdmin();
+  toast('Grupos actualizados a '+ppg+' jugadores.');
+}
+
+function applyGroupsUpdate(){
+  refreshAll();
+  persist(true);
+  toast('Grupos actualizados.');
+}
+
 function setPoFecha(r, field, v) {
   if(!PO_FECHAS[r])PO_FECHAS[r]={type:'single',date:'',from:'',to:''};
   PO_FECHAS[r][field]=v;
@@ -994,16 +1042,30 @@ function renderAdmin(){
     (ready&&activeN===cycles.length&&c.status!=='finished'?`<div class="alert alert-ok" style="margin-top:.4rem;font-weight:600"><i class="ti ti-info-circle"></i> ¡Todos los partidos validados! Presioná "Finalizar último ciclo" para habilitar los Play Offs.</div>`:'')+
     `<div class="gap-sm mt-sm">${activeN<cycles.length?`<button class="btn btn-accent" ${(!ready)?'disabled':''} onclick="startNextCycle()"><i class="ti ti-arrow-right-circle"></i> ${t('close_cycle')}</button>`:`<button class="btn btn-accent" ${(!ready||(c&&c.status==='finished'))?'disabled':''} onclick="finishLastCycle()"><i class="ti ti-flag-check"></i> ${t('finish_last_cycle')}</button>`}<button class="btn" onclick="demoFillUI()"><i class="ti ti-wand"></i> ${t('simulate')}</button><button class="btn btn-danger" onclick="undoDemoUI()"><i class="ti ti-eraser"></i> ${t('undo_demo')}</button></div></div>`;
     
+    const numGrupos = (cycles[0]&&cycles[0].groups)?cycles[0].groups.length:12;
+    const ppg = (cycles[0]&&cycles[0].groups&&cycles[0].groups[0])?cycles[0].groups[0].players.length:5;
     h += `<div class="card"><div class="section-lbl">Configuración de la Liga</div>
-          <div class="form-row">
+          <div class="form-row" style="grid-template-columns:1fr 1fr 1fr">
              <div class="form-group">
-                <label>Total de ciclos en la liga (1 a 8)</label>
+                <label>Total de ciclos (1 a 8)</label>
                 <select onchange="setTotalCycles(this.value)">
                    ${[1,2,3,4,5,6,7,8].map(n=>`<option value="${n}" ${cycles.length===n?'selected':''}>${n} ciclo${n>1?'s':''}</option>`).join('')}
                 </select>
              </div>
+             <div class="form-group">
+                <label>Grupos en la liga (1 a 50)</label>
+                <select onchange="setNumGroups(this.value)">
+                   ${Array.from({length:50},(_,i)=>i+1).map(n=>`<option value="${n}" ${numGrupos===n?'selected':''}>${n} grupo${n>1?'s':''}</option>`).join('')}
+                </select>
+             </div>
+             <div class="form-group">
+                <label>Jugadores por grupo</label>
+                <select onchange="setPlayersPerGroup(this.value)">
+                   ${[2,3,4,5,6,7,8].map(n=>`<option value="${n}" ${ppg===n?'selected':''}>${n} jugadores</option>`).join('')}
+                </select>
+             </div>
           </div>
-          <p class="legend-txt" style="margin-top:0">Podés cambiar la cantidad de ciclos. No podés reducir a menos ciclos de los que ya están jugándose o terminados.</p>
+          <p class="legend-txt" style="margin-top:0">Cambiar grupos o jugadores por grupo ajusta la estructura del Ciclo 1. Los ciclos siguientes se recalculan al cerrarse.</p>
           </div>`;
 
     h+=`<div class="form-row" style="grid-template-columns:1fr 1fr;gap:.625rem;align-items:start">`;
@@ -1035,7 +1097,7 @@ function renderAdmin(){
     });
     h += `<button class="btn" onclick="printPlayoffs()"><i class="ti ti-printer"></i> Play Offs</button></div></div>`;
 
-    h+=`<div class="card"><div class="section-lbl">${tf('edit_groups',{n:activeN})}</div><p class="legend-txt" style="margin-top:0">${t('edit_groups_hint')}</p>`;
+    h+=`<div class="card"><div class="section-lbl">${tf('edit_groups',{n:activeN})}</div><p class="legend-txt" style="margin-top:0">${t('edit_groups_hint')}</p><div style="margin-bottom:.75rem"><button class="btn btn-primary" onclick="applyGroupsUpdate()"><i class="ti ti-refresh"></i> Actualizar grupos</button></div>`;
     h+=`<div class="grpedit">`+grps.map((g,gi)=>{
       const gid=gi+1;
       const players = g.players || [];
