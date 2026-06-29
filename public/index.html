@@ -1169,12 +1169,12 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
   const canLoad=m.a&&m.b&&!m.w&&(currentUser&&currentUser.role==='admin'||m.a===currentUser.name||m.b===currentUser.name);
   const emptyTxt=isFirstRound?'BYE':t('tbd');
   const isBYE_A=!m.a&&m.b;const isBYE_B=!m.b&&m.a;
+  const meA=currentUser&&m.a===currentUser.name;const meB=currentUser&&m.b===currentUser.name;
   const sA=aw?'background:var(--winrow);font-weight:700;color:var(--priD);':meA?'background:#FFF8DC;font-weight:700;':isBYE_A?'background:var(--surface2);':'';
   const sB=bw?'background:var(--winrow);font-weight:700;color:var(--priD);':meB?'background:#FFF8DC;font-weight:700;':isBYE_B?'background:var(--surface2);':'';
   const iA=!m.a?'color:var(--text2);font-style:italic;':'';
   const iB=!m.b&&m.a?'color:var(--text2);font-style:italic;':'';
   const nmA=m.a||emptyTxt;const nmB=m.b||(m.a?'BYE':emptyTxt);
-  const meA=currentUser&&m.a===currentUser.name;const meB=currentUser&&m.b===currentUser.name;
   const seedA=m.sid[0]||'';const seedB=m.sid[1]||'';
   function fn(n){return n?n.split(' ')[0]:'';}
   const fA=fn(m.a),fB=fn(m.b);
