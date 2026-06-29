@@ -1039,14 +1039,12 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
   else if(m.a&&m.b&&!m.w) bot=`<div style="padding:4px 8px;border-top:1px solid var(--border);text-align:center"><span style="font-size:10px;color:var(--text2);font-style:italic">${t('pending_match')}</span></div>`;
   return `<div style="border:1px solid var(--border2);border-radius:10px;overflow:hidden;background:var(--surface);width:${210}px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.06)">
     <div style="display:flex;align-items:center;padding:8px 10px;border-bottom:1px solid var(--border);font-size:12px;min-height:36px;${sA}${iA}">
-      <span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">${seedA||''}</span>
+      <span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">${seedA}</span>
       <span style="flex:1;font-weight:${aw?'700':'400'}">${nmA}</span>
-      ${rankA?`<span style="font-size:9px;color:var(--text2);margin-left:4px">#${rankA}</span>`:''}
     </div>
     <div style="display:flex;align-items:center;padding:8px 10px;font-size:12px;min-height:36px;${sB}${iB}">
-      <span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">${seedB||''}</span>
+      <span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">${seedB}</span>
       <span style="flex:1;font-weight:${bw?'700':'400'}">${nmB}</span>
-      ${rankB?`<span style="font-size:9px;color:var(--text2);margin-left:4px">#${rankB}</span>`:''}
     </div>
     ${bot}
   </div>`;
