@@ -255,6 +255,7 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
       <label id="lbl-user">Seleccioná tu usuario</label><select id="login-user"><option value=""></option></select>
       <label id="lbl-pass">Contraseña</label><input type="password" id="login-pass" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
       <button class="login-btn" id="login-btn" onclick="doLogin()">Entrar</button>
+      <div class="login-hint"><strong>Accesos:</strong><br>• <b>admin</b> / admin123<br>• Jugador: su nombre completo / <b>tenis</b><br>Cada jugador cambia su clave en Perfil.</div>
     </div>
   </div>
 </div>
@@ -369,8 +370,9 @@ reset_cancel:'Cancelar',
 tbd:'A definir',
 mine_label:'tuyo',
 pending_label:'Pendiente',
-po_size_label:'Tamaño del cuadro / Empezar en',
+po_size_label:'¿Desde qué ronda empezar?',
 po_size_auto:'Automático (según jugadores)',
+r_64:'64avos de final (64 jug.)',r_32:'32avos de final (32 jug.)',r_16:'16avos de final (16 jug.)',r_8:'Cuartos de final (8 jug.)',r_4:'Semifinales (4 jug.)',r_2:'Final directa (2 jug.')+'),',
 r_64:'32avos de final (64 jug.)',
 r_32:'16avos de final (32 jug.)',
 r_16:'Octavos de final (16 jug.)',
@@ -429,8 +431,9 @@ reset_cancel:'Cancel',
 tbd:'TBD',
 mine_label:'yours',
 pending_label:'Pending',
-po_size_label:'Bracket Size / Starting Round',
+po_size_label:'Starting round',
 po_size_auto:'Auto (based on players)',
+r_64:'Round of 64',r_32:'Round of 32',r_16:'Round of 16',r_8:'Quarterfinals (8 players)',r_4:'Semifinals (4 players)',r_2:'Final only (2 players)',
 r_64:'Round of 64 (64 players)',
 r_32:'Round of 32 (32 players)',
 r_16:'Round of 16 (16 players)',
@@ -898,7 +901,7 @@ function renderAdmin(){
     h+=`<div class="card" style="margin:0"><div class="section-lbl">${t('playoffs_title')}</div>`;
     h+=(cyclesDone?`<div class="alert alert-ok" style="margin-bottom:.5rem">${t('playoffs_ready')}</div>`:`<div class="alert alert-info" style="margin-bottom:.5rem">${t('playoffs_not_ready')}</div>`);
     h+=`<div class="form-group"><label>${t('how_many_playoffs')}</label><select onchange="setPoNum(this.value)">${[1,2,3,4,5,6].map(k=>`<option value="${k}" ${playoff.numTramos===k?'selected':''}>${k} ${k>1?t('bracket_plural'):t('bracket_singular')}</option>`).join('')}</select></div>`;
-    h+=`<div class="form-group" style="margin-top:.4rem"><label>${t('po_size_label')}</label><select onchange="setPoSize(this.value)"><option value="0" ${!playoff.forcedSize?'selected':''}>${t('po_size_auto')}</option><option value="64" ${playoff.forcedSize===64?'selected':''}>${t('r_64')}</option><option value="32" ${playoff.forcedSize===32?'selected':''}>${t('r_32')}</option><option value="16" ${playoff.forcedSize===16?'selected':''}>${t('r_16')}</option><option value="8" ${playoff.forcedSize===8?'selected':''}>${t('r_8')}</option><option value="4" ${playoff.forcedSize===4?'selected':''}>${t('r_4')}</option><option value="2" ${playoff.forcedSize===2?'selected':''}>${t('r_2')}</option></select></div>`;
+    h+=`<div class="form-group" style="margin-top:.4rem"><label>${t('po_size_label')}</label><select onchange="setPoSize(this.value)"><option value="0" ${!playoff.forcedSize?'selected':''}>${t('po_size_auto')}</option><option value="64" ${playoff.forcedSize===64?'selected':''}>${t('r_64')}</option><option value="32" ${playoff.forcedSize===32?'selected':''}>${t('r_32')}</option><option value="16" ${playoff.forcedSize===16?'selected':''}>${t('r_16')}</option><option value="8" ${playoff.forcedSize===8?'selected':''}>${t('r_8')}</option><option value="4" ${playoff.forcedSize===4?'selected':''}>${t('r_4')}</option><option value="2" ${playoff.forcedSize===2?'selected':''}>${t('r_2')}</option></select><p class="legend-txt" style="margin-top:.3rem">Si hay más jugadores que el tamaño elegido, solo entran los mejores clasificados de ese cuadro.</p></div>`;
     h+=`<div style="margin-top:.5rem"><button class="btn btn-primary" ${cyclesDone&&!playoff.started?'':'disabled'} onclick="previewPlayoffUI()"><i class="ti ti-eye"></i> ${t('preview_po')}</button></div>`;
     h+=(playoff.started?`<p class="legend-txt">${t('po_started')}</p>`:playoff.preview?`<p class="legend-txt">${t('po_preview_active')}</p>`:'');
     h+=`</div>`;
