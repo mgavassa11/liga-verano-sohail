@@ -944,7 +944,88 @@ function printPlayoffs() {
 }
 // -----------------------------------
 
-function movePlayerUI(name,fromG,toG){if(!toG)return;movePlayer(name,fromG,+toG);renderAdmin();toast(name+' movido a '+groupName(+toG));persist(true);}
+function setViewT(i){playoff.viewT=i;showPlayoffView();}
+
+function removeSeedUI(ti,name){removeSeed(ti,name);showPlayoffView();toast(tf('po_seed_removed',{name}));persist(true);}
+function addSeedUI(ti){const sel=document.getElementById('po-add-'+ti);const name=sel?sel.value:'';if(!name){toast(t('po_choose_add'));return;}addSeed(ti,name);showPlayoffView();toast(tf('po_seed_added',{name}));persist(true);}
+
+function matchBox(m,ti,which,ri,mi,isFirstRound){
+  const aw=m.w&&m.w===m.a,bw=m.w&&m.w===m.b;
+  const sc=m.sets?m.sets.map(([a,b])=>a+'-'+b).join(' '):'';
+  const canLoad=m.a&&m.b&&!m.w&&(currentUser.role==='admin'||m.a===currentUser.name||m.b===currentUser.name);
+  const emptyLbl=isFirstRound?'BYE':t('tbd');
+  const nmA=m.a||(m.b?'BYE':emptyLbl);
+  const nmB=m.b||(m.a?'BYE':emptyLbl);
+  const slotA=`<div class="slot ${aw?'winner ':''} ${!m.a?'empty-slot':''}"><span class="seed">${m.sid[0]||''}</span><span class="nm">${nmA}</span></div>`;
+  const slotB=`<div class="slot ${bw?'winner ':''} ${!m.b&&m.a?'empty-slot':''}"><span class="seed">${m.sid[1]||''}</span><span class="nm">${nmB}</span></div>`;
+  let f='';
+  if(m.w&&m.a&&m.b) f=`<div class="slot slot-foot"><span class="slot-score">${sc}</span><span class="slot-win">✓ ${m.w}</span></div>`;
+  else if(m.a&&!m.b&&isFirstRound) f='';
+  else if(!m.a&&!m.b) f='';
+  else if(canLoad) f=`<div class="slot slot-center"><button class="po-load" onclick="poReport(${ti},'${which}',${ri},${mi})"><i class="ti ti-upload"></i> ${t('po_load_result')}</button></div>`;
+  else f=`<div class="slot slot-center"><span class="lock-note">${t('pending_match')}</span></div>`;
+  return `<div class="match-wrap"><div class="match-box">${slotA}${slotB}${f}</div></div>`;
+}
+
+function bracketHTML(rounds,ti,which){
+  if(!rounds||!rounds.length)return'';
+  const total=rounds.length;
+  let h='<div class="bracket">';
+  rounds.forEach((rd,ri)=>{
+    const isFirst=ri===0;
+    const rName=ri===total-1?t('round_final'):ri===total-2?t('round_semi'):ri===total-3?t('round_quarters'):ri===total-4?t('round_16'):ri===total-5?t('round_32'):tf('round_n',{n:ri+1});
+    h+=`<div class="round"><div class="round-name">${rName}</div>`;
+    rd.forEach((m,mi)=>{ h+=matchBox(m,ti,which,ri,mi,isFirst); });
+    h+='</div>';
+  });
+  return h+'</div>';
+}
+
+function showPlayoffView(){
+  const pv=document.getElementById('view-playoff');
+  if(!pv)return;
+  if(!playoff.started&&!playoff.preview){
+    pv.innerHTML=`<div class="card"><div class="empty">${t('po_not_yet')}</div></div>`;
+    return;
+  }
+  const isAdmin=currentUser.role==='admin';
+  let html='';
+
+  // Preview banner
+  if(playoff.preview&&!playoff.started){
+    html+=`<div class="card" style="background:var(--soft);border-color:var(--pri)"><p style="color:var(--priD);font-weight:600;margin-bottom:.4rem"><i class="ti ti-eye"></i> ${t('po_preview_banner')}</p><p class="legend-txt" style="margin-top:0">${t('po_preview_hint')}</p>${isAdmin?`<button class="btn btn-accent" onclick="confirmPlayoffUI()"><i class="ti ti-check"></i> ${t('po_confirm_start')}</button>`:''}</div>`;
+  }
+
+  // Tramo tabs
+  html+=`<div class="po-tramos">${playoff.tramos.map((tr,i)=>`<button class="po-tab ${playoff.viewT===i?'active':''}" onclick="setViewT(${i})">${tf('po_match',{l:tr.label})}<br><span class="po-rng">${tr.seeds.length} ${t('po_tab_players')}</span></button>`).join('')}</div>`;
+
+  const ti=playoff.viewT;
+  const tr=playoff.tramos[ti];
+  if(!tr){pv.innerHTML=html+`<div class="card"><div class="empty">${t('po_no_bracket')}</div></div>`;return;}
+
+  // Admin seed editor
+  if(isAdmin){
+    const inPo={};playoff.tramos.forEach(tr2=>tr2.seeds.forEach(n=>inPo[n]=1));
+    const avail=ALLNAMES.filter(n=>!inPo[n]);
+    html+=`<div class="card"><div class="section-lbl">${tf('po_seeds_title',{l:tr.label})}</div>
+    <div class="seed-list">${tr.seeds.map(n=>`<span class="seed-chip">${n} <button class="rm" onclick="removeSeedUI(${ti},'${esc(n)}')" aria-label="Quitar"><i class="ti ti-x"></i></button></span>`).join('')}</div>
+    <div class="form-row" style="margin-top:.6rem"><div class="form-group"><label>${t('po_add_label')}</label><select id="po-add-${ti}"><option value="">${t('po_add_choose')}</option>${avail.map(n=>`<option value="${n}">${n}</option>`).join('')}</select></div><div class="form-group" style="align-self:end"><button class="btn btn-primary btn-sm" onclick="addSeedUI(${ti})"><i class="ti ti-plus"></i> ${t('po_add_btn')}</button></div></div>
+    <p class="legend-txt">${t('po_bye_note')}</p></div>`;
+  }
+
+  // Main bracket
+  const finalM=tr.main&&tr.main.length?tr.main[tr.main.length-1][0]:null;
+  html+=`<div class="card"><div class="po-section-title"><i class="ti ti-trophy"></i> ${tf('po_main_title',{l:tr.label})}</div>${bracketHTML(tr.main,ti,'main')}${finalM&&finalM.w?`<div class="champ-card"><div class="lbl">${tf('po_champ',{l:tr.label})}</div><div class="who"><i class="ti ti-crown"></i> ${finalM.w}</div></div>`:''}</div>`;
+
+  // Consolation bracket
+  if(tr.cons){
+    const cf=tr.cons[tr.cons.length-1][0];
+    html+=`<div class="card"><div class="po-section-title po-cons-title"><i class="ti ti-shield"></i> ${tf('po_cons_title',{l:tr.label})}</div>${bracketHTML(tr.cons,ti,'cons')}${cf&&cf.w?`<div class="champ-card champ-cons"><div class="lbl">${tf('po_champ_cons',{l:tr.label})}</div><div class="who">${cf.w}</div></div>`:''}</div>`;
+  }
+
+  html+=`<div class="card legend-card"><p class="legend-txt">${t('po_legend')}</p></div>`;
+  pv.innerHTML=html;
+}
 function removePlayerUI(name,fromG){removePlayerCycle(name,fromG);renderAdmin();toast(name+' quitado del ciclo.');persist(true);}
 
 function resetCycleUI(n){
