@@ -281,7 +281,7 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
       <div class="section-lbl" id="sets-section-lbl">Resultado por sets</div>
       <div class="set-row"><label id="lbl-set1-field">Set 1</label><input type="number" id="s1a" min="0" max="7" oninput="checkAutoSTB()" placeholder="0"><span class="sep">–</span><input type="number" id="s1b" min="0" max="7" oninput="checkAutoSTB()" placeholder="0"><span class="set-hint">6-0 a 6-4, 7-5 o 7-6</span></div>
       <div class="set-row"><label>Set 2</label><input type="number" id="s2a" min="0" max="7" oninput="checkAutoSTB()" placeholder="0"><span class="sep">–</span><input type="number" id="s2b" min="0" max="7" oninput="checkAutoSTB()" placeholder="0"></div>
-      <div class="set-row" id="s3-row" style="display:none"><label>S.Tiebreak</label><input type="number" id="s3a" min="0" max="1" placeholder="0"><span class="sep">–</span><input type="number" id="s3b" min="0" max="1" placeholder="0"><span class="set-hint">solo 1-0 o 0-1</span></div>
+      <div class="set-row" id="s3-row" style="display:none"><label>S.Tiebreak</label><input type="number" id="s3a" min="0" max="1" placeholder="0"><span class="sep">–</span><input type="number" id="s3b" min="0" max="1" placeholder="0"><span class="set-hint" id="stb-hint">solo 1-0 o 0-1</span></div>
       
       <div class="gap-sm mt-sm">
         <button class="btn" id="stb-toggle-btn" onclick="toggleSTB()"><i class="ti ti-plus"></i> Supertiebreak (1-1)</button>
@@ -319,7 +319,7 @@ function updateLangUI(){
   const ls=document.getElementById('login-sub');if(ls)ls.textContent=t('app_subtitle');
   const bEnv=document.getElementById('btn-enviar');if(bEnv)bEnv.innerHTML='<i class="ti ti-send"></i> '+t('send');
   const bLim=document.getElementById('btn-limpiar');if(bLim)bLim.textContent=t('clear');
-  const lbtn=document.getElementById('login-btn');if(lbtn){lbtn.textContent=t('enter');}
+  const lbtn=document.getElementById('login-btn');if(lbtn){lbtn.textContent=t('enter');}const sh=document.getElementById('stb-hint');if(sh)sh.textContent=t('stb_hint');
 }
 
 const TRANSLATIONS={
@@ -335,7 +335,8 @@ general_title:'Clasificación general acumulada (todos los ciclos)',
 current_group:'Grupo actual',you:'Vos',
 report_result:'Reportar resultado',reporter:'Jugador (quien reporta)',rival:'Rival',club_label:'Club',date_label:'Fecha',
 reqmark_label:'OBLIGATORIO',set:'Set',
-sets_section:'Resultado por sets',supertiebreak:'S.Tiebreak',stb_hint:'solo 1-0 o 0-1',add_stb:'Supertiebreak (1-1)',send:'Enviar',clear:'Limpiar',set_hint:'6-0 a 6-4, 7-5 o 7-6',
+sets_section:'Resultado por sets',supertiebreak:'S.Tiebreak',stb_hint:'solo 1-0 o 0-1',add_stb:'Supertiebreak (1-1)',
+remove_stb:'Quitar supertiebreak',send:'Enviar',clear:'Limpiar',set_hint:'6-0 a 6-4, 7-5 o 7-6',
 not_in_cycle:'No estás en el ciclo activo.',load_note_player:'Cargás partidos tuyos del {g}. Solo aparecen los rivales con los que aún no tenés partido cargado. Tu rival debe confirmarlo.',load_note_admin:'Admin: cargás/editás cualquier partido. Lo que cargás queda validado.',
 select_two:'Seleccioná los dos jugadores.',same_group:'Ambos deben ser del mismo grupo.',validated_admin_only:'Ese resultado ya fue validado. Solo el admin puede editarlo.',result_sent_admin:'✓ Resultado válido y validado (admin).',result_sent_player:'✓ Resultado válido enviado. El rival debe confirmarlo.',select_club:'Elegí el club (Sohail o Haza).',select_date:'Completá la fecha del partido.',
 disputes_title:'Disputas activas (resuelve el admin)',no_disputes:'No hay disputas',validate:'Validar',
@@ -395,7 +396,8 @@ general_title:'Cumulative general standings (all cycles)',
 current_group:'Current group',you:'You',
 report_result:'Report Result',reporter:'Player (Who Reports)',rival:'Opponent',club_label:'Club',date_label:'Date',
 reqmark_label:'MANDATORY',set:'Set',
-sets_section:'Results by set',supertiebreak:'S.Tiebreak',stb_hint:'only 1-0 or 0-1',add_stb:'Super tiebreak (1-1)',send:'Send',clear:'Clear',set_hint:'6-0 to 6-4, 7-5 or 7-6',
+sets_section:'Results by set',supertiebreak:'S.Tiebreak',stb_hint:'only 1-0 or 0-1',add_stb:'Super tiebreak (1-1)',
+remove_stb:'Remove super tiebreak',send:'Send',clear:'Clear',set_hint:'6-0 to 6-4, 7-5 or 7-6',
 not_in_cycle:'You are not in the active cycle.',load_note_player:'Upload your matches in {g}. Only opponents you haven\'t played yet are shown. Opponent must confirm.',load_note_admin:'Admin: upload/edit any match. Immediately validated.',
 select_two:'Please select two players.',same_group:'Both players must be in the same group.',validated_admin_only:'That result is already validated. Only the admin can edit it.',result_sent_admin:'✓ Valid result — validated (admin).',result_sent_player:'✓ Valid result submitted. Opponent must confirm.',select_club:'Please choose a club (Sohail or Haza).',select_date:'Please fill in the match date.',
 disputes_title:'Active disputes (resolved by admin)',no_disputes:'No disputes',validate:'Validate',
@@ -462,7 +464,7 @@ const USERS=buildUsers();let currentUser=null;
 function groupName(g){return (typeof t==='function'?t('group'):'Grupo')+' '+g;}
 function validSet(a,b){if(a==null||b==null||isNaN(a)||isNaN(b))return false;const hi=Math.max(a,b),lo=Math.min(a,b);if(hi===6&&lo<=4)return true;if(hi===7&&(lo===5||lo===6))return true;return false;}
 function validSTB(a,b){return (a===1&&b===0)||(a===0&&b===1);}
-function validMatch(s){if(s.length<2)return{ok:false,msg:'Un partido necesita al menos 2 sets.'};if(!validSet(s[0][0],s[0][1]))return{ok:false,msg:'Set 1 inválido (6-0 a 6-4, 7-5 o 7-6).'};if(!validSet(s[1][0],s[1][1]))return{ok:false,msg:'Set 2 inválido (6-0 a 6-4, 7-5 o 7-6).'};let w1=0,w2=0;[s[0],s[1]].forEach(([a,b])=>{if(a>b)w1++;else w2++;});if(w1===w2){if(s.length!==3)return{ok:false,msg:'Sets 1-1: falta el supertiebreak (1-0 o 0-1).'};if(!validSTB(s[2][0],s[2][1]))return{ok:false,msg:'El supertiebreak solo puede ser 1-0 o 0-1.'};}else if(s.length===3)return{ok:false,msg:'Ya hay ganador en 2 sets: no corresponde tercer set.'};return{ok:true};}
+function validMatch(s){if(s.length<2)return{ok:false,msg:t('valid_need2sets')};if(!validSet(s[0][0],s[0][1]))return{ok:false,msg:t('valid_set1')};if(!validSet(s[1][0],s[1][1]))return{ok:false,msg:t('valid_set2')};let w1=0,w2=0;[s[0],s[1]].forEach(([a,b])=>{if(a>b)w1++;else w2++;});if(w1===w2){if(s.length!==3)return{ok:false,msg:t('valid_need_stb')};if(!validSTB(s[2][0],s[2][1]))return{ok:false,msg:t('valid_stb_only')};}else if(s.length===3)return{ok:false,msg:t('valid_no_stb')};return{ok:true};}
 function findLoc(name,cycN){const c=cycles[cycN-1];if(!c||!c.groups)return null;for(let gi=0;gi<c.groups.length;gi++){if(c.groups[gi].players.indexOf(name)>=0)return{g:gi+1};}return null;}
 function getActive(){return cycles[activeN-1];}
 function getInitials(n){if(!n)return'?';return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();}
@@ -683,8 +685,8 @@ function initLogin(){
   });
   if(prev) s.value = prev;
 }
-function doLogin(){const u=document.getElementById('login-user').value,p=document.getElementById('login-pass').value,e=document.getElementById('login-err');if(!u||!USERS[u]){e.textContent=t('invalid_user');e.style.display='block';return;}if(USERS[u].pass!==p){e.textContent=t('wrong_pass');e.style.display='block';return;}currentUser=USERS[u];e.style.display='none';document.getElementById('login-screen').style.display='none';document.getElementById('main-app').style.display='block';document.getElementById('cur-name').textContent=currentUser.name;document.getElementById('cur-role').innerHTML=currentUser.role==='admin'?'<span class="role-badge">' + t('role_admin') + '</span>':t('role_player');if(currentUser.role==='player'){const loc=findLoc(currentUser.name,activeN);if(loc)selGroup=loc.g;}viewCycle=activeN;renderShell();showSub('grupos');}
-function doLogout(){currentUser=null;document.getElementById('main-app').style.display='none';document.getElementById('login-screen').style.display='block';document.getElementById('login-pass').value='';initLogin();}
+function doLogin(){const u=document.getElementById('login-user').value,p=document.getElementById('login-pass').value,e=document.getElementById('login-err');if(!u||!USERS[u]){e.textContent=t('invalid_user');e.style.display='block';return;}if(USERS[u].pass!==p){e.textContent=t('wrong_pass');e.style.display='block';return;}currentUser=USERS[u];e.style.display='none';document.getElementById('login-screen').style.display='none';document.getElementById('main-app').style.display='block';document.getElementById('cur-name').textContent=currentUser.name;document.getElementById('cur-role').innerHTML=currentUser.role==='admin'?'<span class="role-badge">' + t('role_admin') + '</span>':t('role_player');if(currentUser.role==='player'){const loc=findLoc(currentUser.name,activeN);if(loc)selGroup=loc.g;}viewCycle=activeN;renderShell();showSub('grupos');clearForm();}
+function doLogout(){currentUser=null;clearForm();document.getElementById('main-app').style.display='none';document.getElementById('login-screen').style.display='block';document.getElementById('login-pass').value='';initLogin();}
 function renderShell(){renderCycleBar();renderSubTabs();updateBadge();}
 function renderCycleBar(){const bar=document.getElementById('cycle-bar');let html='';cycles.forEach(c=>{const playable=!!c.groups;const isView=viewCycle===c.n;const icon=c.status==='finished'?'<i class="ti ti-circle-check st"></i>':c.status==='active'?'<i class="ti ti-player-play st"></i>':'<i class="ti ti-lock st"></i>';html+=`<button class="cycle-tab ${playable?'':'locked'} ${isView?'active':''}" onclick="${playable?`viewCyc(${c.n})`:''}">${icon} ${t('cycle')} ${c.n}</button>`;});const showPO=playoff.started||(playoff.preview&&currentUser.role==='admin');const poLabel=showPO?(playoff.preview&&!playoff.started?`<i class="ti ti-eye st"></i> ${t('playoffs_prev')}`:`<i class="ti ti-tournament st"></i> ${t('playoffs')}`):`<i class="ti ti-lock st"></i> ${t('playoffs')}`;html+=`<button class="cycle-tab ${showPO?'':'locked'} ${viewCycle==='po'?'active':''}" onclick="${showPO?`viewCyc('po')`:''}">${poLabel}</button>`;bar.innerHTML=html;}
 function renderSubTabs(){const tabs=document.getElementById('tabs');tabs.style.display='flex';const showPO=playoff.started||(playoff.preview&&currentUser.role==='admin');const inPO=viewCycle==='po';let tabs_def=[];if(showPO){tabs_def.push({id:'po',i:'ti-tournament',l:t('playoffs'),po:true});}else{tabs_def.push({id:'grupos',i:'ti-layout-grid',l:t('tab_grupos')});}tabs_def.push({id:'general',i:'ti-chart-bar',l:t('tab_general')});tabs_def.push({id:'cargar',i:'ti-upload',l:currentUser.role==='admin'?t('tab_cargar_admin'):t('tab_cargar')});tabs_def.push({id:'pendientes',i:'ti-bell',l:currentUser.role==='admin'?t('tab_pendientes_admin'):t('tab_pendientes'),b:true});tabs_def.push({id:'perfil',i:'ti-user',l:t('tab_perfil')});if(currentUser.role==='admin')tabs_def.push({id:'admin',i:'ti-settings',l:t('tab_admin')});tabs.innerHTML=tabs_def.map(x=>{if(x.po){const active=inPO;return '<button class="tab'+(active?' active':'')+'" id="tab-po" onclick="viewCyc(\'po\')"><i class="ti ti-tournament" aria-hidden="true"></i> '+x.l+'</button>';}const active=!inPO&&subView===x.id;return '<button class="tab'+(active?' active':'')+'" id="tab-'+x.id+'" onclick="showSub(\''+x.id+'\')" ><i class="ti '+x.i+'" aria-hidden="true"></i> '+x.l+(x.b?' <span class="tab-n" id="pend-n" style="display:none">0</span>':'')+'</button>';}).join('');}
@@ -777,9 +779,9 @@ function prefill(gid,n1,n2){
   }
 }
 
-function toggleSTB(){const row=document.getElementById('s3-row');const btn=document.getElementById('stb-toggle-btn');if(row.style.display==='none'||row.style.display===''){row.style.display='flex';btn.innerHTML='<i class="ti ti-x"></i> Quitar supertiebreak';['s3a','s3b'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});}else{row.style.display='none';btn.innerHTML='<i class="ti ti-plus"></i> Supertiebreak (1-1)';['s3a','s3b'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});}}
+function toggleSTB(){const row=document.getElementById('s3-row');const btn=document.getElementById('stb-toggle-btn');if(row.style.display==='none'||row.style.display===''){row.style.display='flex';btn.innerHTML='<i class="ti ti-x"></i> '+t('remove_stb');['s3a','s3b'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});}else{row.style.display='none';btn.innerHTML='<i class="ti ti-plus"></i> Supertiebreak (1-1)';['s3a','s3b'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});}}
 function checkAutoSTB(){const s1a=+document.getElementById('s1a').value,s1b=+document.getElementById('s1b').value;const s2a=+document.getElementById('s2a').value,s2b=+document.getElementById('s2b').value;if(!s1a&&!s1b&&!s2a&&!s2b)return;let w1=0,w2=0;if(validSet(s1a,s1b)){if(s1a>s1b)w1++;else w2++;}if(validSet(s2a,s2b)){if(s2a>s2b)w1++;else w2++;}const row=document.getElementById('s3-row');const btn=document.getElementById('stb-toggle-btn');if(w1===1&&w2===1){// 1-1: auto-show STB
-if(row.style.display==='none'||row.style.display===''){row.style.display='flex';if(btn)btn.innerHTML='<i class="ti ti-x"></i> Quitar supertiebreak';}}else if(w1===2||w2===2){// 2-0 or 0-2: hide STB
+if(row.style.display==='none'||row.style.display===''){row.style.display='flex';if(btn)btn.innerHTML='<i class="ti ti-x"></i> '+t('remove_stb');}}else if(w1===2||w2===2){// 2-0 or 0-2: hide STB
 row.style.display='none';if(btn)btn.innerHTML='<i class="ti ti-plus"></i> Supertiebreak (1-1)';['s3a','s3b'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});}}
 function readSets(){const s=[[+document.getElementById('s1a').value,+document.getElementById('s1b').value],[+document.getElementById('s2a').value,+document.getElementById('s2b').value]];let w1=0,w2=0;[s[0],s[1]].forEach(([a,b])=>{if(a>b)w1++;else w2++;});if(document.getElementById('s3-row').style.display!=='none'&&w1===1&&w2===1)s.push([+document.getElementById('s3a').value,+document.getElementById('s3b').value]);return s;}
 function parseSel(v){if(v.indexOf('|')>=0){const p=v.split('|');return{g:+p[0]+1,name:p[1]};}return{g:null,name:v};}
@@ -1057,11 +1059,12 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
     bot=currentUser.role==='admin'?'<div style="height:56px"></div>':'<div style="height:22px"></div>';
   }
   return `<div style="border:1px solid var(--border2);border-radius:10px;overflow:hidden;background:var(--surface);width:${220}px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.08)">
-    <div style="display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;min-height:40px;${sA}${iA}">
+    <div style="background:var(--soft);padding:3px 10px;font-size:9px;font-weight:700;color:var(--text2);border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.a&&m.b?'<span style="color:var(--pri);font-weight:700">'+nmA+'</span> <span style="color:var(--text2)">vs</span> '+nmB:(m.a?'<span style="color:var(--pri)">'+nmA+'</span>':m.b?'<span style="color:var(--pri)">'+nmB+'</span>':"&nbsp;")}</div>
+    <div style="display:flex;align-items:center;padding:8px 12px;border-bottom:1px solid var(--border);font-size:13px;min-height:38px;${sA}${iA}">
       <span style="font-size:11px;color:var(--text2);min-width:24px;font-weight:600">${seedA}</span>
       <span style="flex:1;font-weight:${aw?'700':'400'}">${nmA}</span>
     </div>
-    <div style="display:flex;align-items:center;padding:10px 12px;font-size:13px;min-height:40px;${sB}${iB}">
+    <div style="display:flex;align-items:center;padding:8px 12px;font-size:13px;min-height:38px;${sB}${iB}">
       <span style="font-size:11px;color:var(--text2);min-width:24px;font-weight:600">${seedB}</span>
       <span style="flex:1;font-weight:${bw?'700':'400'}">${nmB}</span>
     </div>
@@ -1075,7 +1078,7 @@ function bracketHTML(rounds,ti,which){
   // BH must match actual box height:
   // 2 slots (40px each) + result row (22px) + edit buttons row (34px) = 136px max
   // Use 136 so SVG lines always center correctly even with edit buttons
-  const BW=220, BH=136, GAP=20, GX=72, LABEL_H=36;
+  const BW=220, BH=156, GAP=20, GX=72, LABEL_H=36;
   // Key insight: slot spacing doubles each round
   // Round 0: spacing = BH+GAP between match centers
   // Round 1: spacing = 2*(BH+GAP)
@@ -1124,7 +1127,7 @@ function bracketHTML(rounds,ti,which){
     cols+=`<div style="position:absolute;left:${cx}px;top:0;width:${BW}px">`;
     cols+=`<div style="text-align:center;font-size:11px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:.06em;height:${LABEL_H}px;line-height:${LABEL_H}px">${rName(ri)}</div>`;
     rd.forEach((m,mi)=>{
-      const yc=matchY(ri,mi); // center of this match
+      const yc=matchY(ri,mi);
       const yTop=yc-BH/2;
       cols+=`<div style="position:absolute;top:${LABEL_H+yTop}px;left:0;width:${BW}px">${matchBox(m,ti,which,ri,mi,isFirst)}</div>`;
     });
