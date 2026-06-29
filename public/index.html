@@ -488,7 +488,7 @@ function updateCycleDate(i, type, val) {
   updateHdr(); renderCycleBar(); persist(true);
 }
 
-function ensureDestino(gid,len){if(!DESTINO)DESTINO={};if(!DESTINO[gid]||!Array.isArray(DESTINO[gid]))DESTINO[gid]=[];while(DESTINO[gid].length<len)DESTINO[gid].push('G'+Math.min(gid+1,12));return DESTINO[gid];}
+function ensureDestino(gid,len){if(!DESTINO)DESTINO={};if(!DESTINO[gid]||!Array.isArray(DESTINO[gid]))DESTINO[gid]=[];const maxG=(cycles[0]&&cycles[0].groups)?cycles[0].groups.length:12;while(DESTINO[gid].length<len)DESTINO[gid].push('G'+Math.min(gid+1,maxG));return DESTINO[gid];}
 function addPlayerToCycle(name,gid){if(!name||!cycles[activeN-1].groups||!cycles[activeN-1].groups[gid-1])return false;if(ALLNAMES.indexOf(name)<0)ALLNAMES.push(name);if(!USERS[name])USERS[name]={role:'player',pass:'tenis',name};cycles[activeN-1].groups[gid-1].players.push(name);ensureDestino(gid,cycles[activeN-1].groups[gid-1].players.length);return true;}
 function buildUsers(){const u={admin:{role:'admin',pass:'admin123',name:'Organización',email:'',tel:''}};ALLNAMES.forEach(n=>u[n]={role:'player',pass:'tenis',name:n,email:'',tel:''});return u;}
 const USERS=buildUsers();let currentUser=null;
@@ -1433,7 +1433,23 @@ function setPoSize(v){
   playoff.forcedSize=newV;
   if(playoff.started||playoff.preview){rebuildAll();showPlayoffView();toast('Tamaño del cuadro actualizado.');}
 }
-function addPlayerUI(){const nom=(document.getElementById('ap-nom').value||'').trim();const ape=(document.getElementById('ap-ape').value||'').trim();const gid=+document.getElementById('ap-grp').value;const full=(nom+' '+ape).trim();if(!nom||!ape){toast(t('add_fill_both'));return;}if(!gid){toast(t('add_choose_group'));return;}if(USERS[full]){toast(t('add_exists'));return;}addPlayerToCycle(full,gid);initLogin();renderPerfil();toast(tf('add_done',{name:full,g:groupName(gid)}));persist(true);}
+function addPlayerUI(){
+  const nom=(document.getElementById('ap-nom').value||'').trim();
+  const ape=(document.getElementById('ap-ape').value||'').trim();
+  const gid=+document.getElementById('ap-grp').value;
+  const full=(nom+' '+ape).trim();
+  if(!nom||!ape){toast(t('add_fill_both'));return;}
+  if(!gid){toast(t('add_choose_group'));return;}
+  // Verificar si ya está en algún grupo activo (no solo en USERS/ALLNAMES)
+  const inAnyGroup = cycles.some(c=>c.groups&&c.groups.some(g=>(g.players||[]).includes(full)));
+  if(inAnyGroup){toast(t('add_exists'));return;}
+  // Si existe en USERS pero no en ningún grupo, limpiarlo y re-agregar
+  if(USERS[full]) delete USERS[full];
+  const idxA = ALLNAMES.indexOf(full);
+  if(idxA>=0) ALLNAMES.splice(idxA,1);
+  addPlayerToCycle(full,gid);
+  initLogin();renderPerfil();toast(tf('add_done',{name:full,g:groupName(gid)}));persist(true);
+}
 function setDestino(gid,pos,val){ensureDestino(gid,pos+1);DESTINO[gid][pos]='G'+val;if(subView==='admin')renderAdmin();toast(groupName(gid)+' · '+(pos+1)+'º → '+groupName(+val));persist(true);}
 function destinoCard(){
   const grps=cycles[activeN-1]?.groups || [];
@@ -1583,7 +1599,7 @@ function savePuntos(gid,len){
 function renderPerfil(){
   const u = currentUser;
   if(u.role === 'admin') {
-    const players = ALLNAMES.slice().sort((a,b) => a.localeCompare(b,'es')).map(n => USERS[n]).filter(Boolean);
+    const players = Object.values(USERS).filter(u=>u&&u.role!=='admin').sort((a,b)=>(a.name||'').localeCompare(b.name||'','es'));
     let h = `<div class="card"><div class="section-lbl">${t('admin_profile')}</div>`;
     h += `<div class="prof-row"><span>${t('full_name')}</span><span>${u.name}</span></div>`;
     h += `<div class="prof-row"><span>${t('role_admin')}</span><span>${t('role_admin')}</span></div></div>`;
@@ -1665,7 +1681,7 @@ function renderPlayerList(players, filter) {
     </div>`;
   }).join('');
 }
-function filterPlayerList(){const f=document.getElementById('player-search').value;const players=ALLNAMES.map(n=>USERS[n]).filter(Boolean);document.getElementById('player-list').innerHTML=renderPlayerList(players,f);}
+function filterPlayerList(){const f=document.getElementById('player-search').value;const players=Object.values(USERS).filter(u=>u&&u.role!=='admin').sort((a,b)=>(a.name||'').localeCompare(b.name||'','es'));document.getElementById('player-list').innerHTML=renderPlayerList(players,f);}
 function togglePlayerEdit(name){const el=document.getElementById('pe-'+name);if(el)el.style.display=el.style.display==='none'?'block':'none';}
 
 function savePlayerAdmin(oldName){
