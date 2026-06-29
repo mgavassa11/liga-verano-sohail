@@ -315,7 +315,7 @@ const TRANSLATIONS={
 es:{
 app_title:'Liga de Tenis Sohail',app_subtitle:'Verano 2026',select_user:'Seleccione su usuario',admin_org:'admin (Organización)',password:'Contraseña',enter:'Entrar',invalid_user:'Seleccioná un usuario válido.',wrong_pass:'Contraseña incorrecta.',
 exit:'Salir',cycle:'Ciclo',playoffs:'Play Offs',playoffs_prev:'Play Offs (previa)',
-tab_grupos:'Grupos',tab_general:'Clasificación',tab_cargar:'Cargar',tab_cargar_admin:'Cargar',tab_pendientes:'Pendientes',tab_pendientes_admin:'Pendientes / Disputas',tab_perfil:'Perfil',tab_admin:'Admin',
+tab_grupos:'Grupos',tab_general:'Clasificación',tab_cargar:'Cargar',tab_cargar_admin:'Cargar',tab_pendientes:'Pendientes',tab_pendientes_admin:'Pendientes / Disputas',tab_perfil:'Perfil & Jugadores',tab_admin:'Admin',
 choose_group:'Elegí el grupo',group:'Grupo',destination:'Destino',player:'Jugador',won:'G',lost:'P',not_played:'NJ',sets_won:'SG',sets_lost:'SP',balance:'Bal',pts_pos:'P.puesto',extra:'Extra',total:'Total',pts_classif:'Puntos para la Clasificación General',players_col:'Jugadores',edit:'Editar',
 legend_pts:'<strong>Tabla de posiciones:</strong> Pts: puntos (3 victoria · 1 derrota · 0 no jugado) · G: partidos ganados · P: perdidos · NJ: no jugados · SG: sets ganados · SP: sets perdidos · Bal: balance de sets (SG−SP) · P.puesto: puntos por posición en el grupo · Extra: +2 al ganador del grupo · Total: P.puesto + Extra (suma a la Clasificación General) · Destino: grupo al que sube (↑), baja (↓) o se mantiene (=).<br><strong>Desempate (en orden):</strong> 1º Puntos · 2º Partidos jugados · 3º Cara a cara · 4º Balance de sets · 5º Cara a cara 2º (entre los aún empatados) · 6º Balance de juegos.',
 legend_matrix:'El marcador se lee en la fila del jugador (sus juegos primero). Celeste = jugado en Sohail · naranja = jugado en Haza.',
@@ -375,7 +375,7 @@ toast_demo_undone:'Simulaciones borradas.',
 en:{
 app_title:'Sohail Tennis League',app_subtitle:'Summer 2026',select_user:'Select User',admin_org:'admin (Organisation)',password:'Password',enter:'Log in',invalid_user:'Please select a valid user.',wrong_pass:'Incorrect password.',
 exit:'Log out',cycle:'Cycle',playoffs:'Play Offs',playoffs_prev:'Play Offs (preview)',
-tab_grupos:'Groups',tab_general:'Standings',tab_cargar:'Upload',tab_cargar_admin:'Upload',tab_pendientes:'Pending',tab_pendientes_admin:'Pending / Disputes',tab_perfil:'Profile',tab_admin:'Admin',
+tab_grupos:'Groups',tab_general:'Standings',tab_cargar:'Upload',tab_cargar_admin:'Upload',tab_pendientes:'Pending',tab_pendientes_admin:'Pending / Disputes',tab_perfil:'Profile & Players',tab_admin:'Admin',
 choose_group:'Choose group',group:'Group',destination:'Dest.',player:'Player',won:'W',lost:'L',not_played:'NP',sets_won:'SW',sets_lost:'SL',balance:'Bal',pts_pos:'Pos.pts',extra:'Extra',total:'Total',pts_classif:'Points for the General Standings',players_col:'Players',edit:'Edit',
 legend_pts:'<strong>Standings table:</strong> Pts: points (3 win · 1 loss · 0 not played) · W: wins · L: losses · NP: not played · SW: sets won · SL: sets lost · Bal: set balance (SW−SL) · Pos.pts: points for group position · Extra: +2 to group winner · Total: Pos.pts + Extra (adds to General Standings) · Dest.: group player moves to: up (↑), down (↓) or stays (=).<br><strong>Tiebreakers (in order):</strong> 1st Points · 2nd Matches played · 3rd Head-to-head · 4th Set balance · 5th H2H 2nd (among still-tied players) · 6th Game balance.',
 legend_matrix:"Score is read in the player's row (their games first). Blue = played at Sohail · orange = played at Haza.",
@@ -850,8 +850,22 @@ function renderAdmin(){
     });
     h += `<button class="btn" onclick="printPlayoffs()"><i class="ti ti-printer"></i> Play Offs</button></div></div>`;
     // -----------------------
+    // FECHAS + PLAYOFFS — side by side at top
+    h+=`<div class="form-row" style="grid-template-columns:1fr 1fr;gap:.625rem;align-items:start">`;
+    // Left: cycle dates
+    h+=`<div class="card" style="margin:0"><div class="section-lbl">${t('cycle_dates')}</div>${[0,1,2].map(i=>`<div class="form-group"><label>${t('cycle')} ${i+1}</label><input type="text" value="${(FECHAS[i]||'').replace(/"/g,'&quot;')}" onchange="setFecha(${i},this.value)"></div>`).join('')}<p class="legend-txt" style="margin-top:.4rem">${t('cycle_date_hint')}</p></div>`;
+    // Right: playoffs config
+    h+=`<div class="card" style="margin:0"><div class="section-lbl">${t('playoffs_title')}</div>`;
+    h+=(cyclesDone?`<div class="alert alert-ok" style="margin-bottom:.5rem">${t('playoffs_ready')}</div>`:`<div class="alert alert-info" style="margin-bottom:.5rem">${t('playoffs_not_ready')}</div>`);
+    h+=`<div class="form-group"><label>${t('how_many_playoffs')}</label><select onchange="setPoNum(this.value)">${[1,2,3,4,5,6].map(k=>`<option value="${k}" ${playoff.numTramos===k?'selected':''}>${k} ${k>1?t('bracket_plural'):t('bracket_singular')}</option>`).join('')}</select></div>`;
+    h+=`<div class="form-group" style="margin-top:.4rem"><label>${t('po_size_label')}</label><select onchange="setPoSize(this.value)"><option value="0" ${!playoff.forcedSize?'selected':''}>${t('po_size_auto')}</option><option value="64" ${playoff.forcedSize===64?'selected':''}>${t('r_64')}</option><option value="32" ${playoff.forcedSize===32?'selected':''}>${t('r_32')}</option><option value="16" ${playoff.forcedSize===16?'selected':''}>${t('r_16')}</option><option value="8" ${playoff.forcedSize===8?'selected':''}>${t('r_8')}</option><option value="4" ${playoff.forcedSize===4?'selected':''}>${t('r_4')}</option><option value="2" ${playoff.forcedSize===2?'selected':''}>${t('r_2')}</option></select></div>`;
+    h+=`<div style="margin-top:.5rem"><button class="btn btn-primary" ${cyclesDone&&!playoff.started?'':'disabled'} onclick="previewPlayoffUI()"><i class="ti ti-eye"></i> ${t('preview_po')}</button></div>`;
+    h+=(playoff.started?`<p class="legend-txt">${t('po_started')}</p>`:playoff.preview?`<p class="legend-txt">${t('po_preview_active')}</p>`:'');
+    h+=`</div>`;
+    h+=`</div>`;
 
-    h+=`<div class="card"><div class="section-lbl">${tf('edit_groups',{n:activeN})}</div><p class="legend-txt" style="margin-top:0">${t('edit_groups_hint')}</p><div class="req-wrap" style="margin-bottom:.7rem"><div class="section-lbl" style="margin-top:0">${t('add_player')}</div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr auto;align-items:end"><div class="form-group"><label>${t('first_name')}</label><input id="ap-nom" placeholder="${t('first_name')}"></div><div class="form-group"><label>${t('last_name')}</label><input id="ap-ape" placeholder="${t('last_name')}"></div><div class="form-group"><label>${t('group')}</label><select id="ap-grp">${grps.map((_,k)=>`<option value="${k+1}">${groupName(k+1)}</option>`).join('')}</select></div><div class="form-group"><button class="btn btn-primary" onclick="addPlayerUI()"><i class="ti ti-user-plus"></i> ${t('add_btn')}</button></div></div></div>`;
+
+    h+=`<div class="card"><div class="section-lbl">${tf('edit_groups',{n:activeN})}</div><p class="legend-txt" style="margin-top:0">${t('edit_groups_hint')}</p>`;
 
     h+=`<div class="grpedit">`+grps.map((g,gi)=>{
       const gid=gi+1;
@@ -860,24 +874,9 @@ function renderAdmin(){
       players.map(n=>`<div class="ge-row"><span class="ge-nm">${n}</span><select class="ge-sel" onchange="movePlayerUI('${esc(n)}',${gid},this.value)"><option value="">${t('move_to')}</option>${grps.map((_,k)=>k+1!==gid?`<option value="${k+1}">${groupName(k+1)}</option>`:'').join('')}</select><button class="btn btn-danger btn-sm" onclick="removePlayerUI('${esc(n)}',${gid})">${t('remove')}</button></div>`).join('')+`</div>`;
     }).join('')+`</div></div>`;
 
-    h+=`<div class="card"><div class="section-lbl">${t('cycle_dates')}</div><div class="form-row" style="grid-template-columns:1fr 1fr 1fr">${[0,1,2].map(i=>`<div class="form-group"><label>${t('cycle')} ${i+1}</label><input type="text" value="${(FECHAS[i]||'').replace(/"/g,'&quot;')}" onchange="setFecha(${i},this.value)"></div>`).join('')}</div><p class="legend-txt" style="margin-top:0">${t('cycle_date_hint')}</p></div>`;
     
     h+=destinoCard();
 
-    // PLAY OFFS CONFIG
-    h+='<div class="card"><div class="section-lbl">'+t('playoffs_title')+'</div>'+(cyclesDone?'<div class="alert alert-ok">'+t('playoffs_ready')+'</div>':'<div class="alert alert-info">'+t('playoffs_not_ready')+'</div>');
-    h+='<div class="form-row"><div class="form-group"><label>'+t('how_many_playoffs')+'</label><select onchange="setPoNum(this.value)">'+[1,2,3,4,5,6].map(k=>`<option value="${k}" ${playoff.numTramos===k?'selected':''}>${k} ${k>1?t('bracket_plural'):t('bracket_singular')}</option>`).join('')+'</select></div>';
-    h+='<div class="form-group"><label>'+t('po_size_label')+'</label><select onchange="setPoSize(this.value)">';
-    h+=`<option value="0" ${!playoff.forcedSize?'selected':''}>${t('po_size_auto')}</option>`;
-    h+=`<option value="64" ${playoff.forcedSize===64?'selected':''}>${t('r_64')}</option>`;
-    h+=`<option value="32" ${playoff.forcedSize===32?'selected':''}>${t('r_32')}</option>`;
-    h+=`<option value="16" ${playoff.forcedSize===16?'selected':''}>${t('r_16')}</option>`;
-    h+=`<option value="8" ${playoff.forcedSize===8?'selected':''}>${t('r_8')}</option>`;
-    h+=`<option value="4" ${playoff.forcedSize===4?'selected':''}>${t('r_4')}</option>`;
-    h+=`<option value="2" ${playoff.forcedSize===2?'selected':''}>${t('r_2')}</option>`;
-    h+='</select></div></div>';
-    h+=`<div class="form-row"><div class="form-group" style="align-self:end"><button class="btn btn-primary" ${cyclesDone&&!playoff.started?'':'disabled'} onclick="previewPlayoffUI()"><i class="ti ti-eye"></i> ${t('preview_po')}</button></div></div>`;
-    h+=(playoff.started?`<p class="legend-txt">${t('po_started')}</p>`:playoff.preview?`<p class="legend-txt">${t('po_preview_active')}</p>`:'')+'</div>';
 
     h+='<div class="card"><div class="section-lbl">Reiniciar datos (¡Cuidado!)</div>';
     h+='<p class="legend-txt" style="margin-top:0">Estas acciones borran datos permanentemente y no se pueden deshacer.</p>';
@@ -970,7 +969,7 @@ function resetCycleUI(n){
 function resetPlayoffUI(){if(!confirm(t('reset_confirm_po')))return;playoff={started:false,numTramos:4,tramos:[],results:{},viewT:0,qualified:[],preview:false,forcedSize:0};matches=matches.filter(m=>!m.po);if(viewCycle==='po')viewCycle=activeN;persist(true);renderShell();showSub('admin');toast(t('reset_done'));}
 function setPoNum(v){playoff.numTramos=+v;if(playoff.started||playoff.preview){setNumTramos(+v);persist(true);}}
 
-function addPlayerUI(){const nom=(document.getElementById('ap-nom').value||'').trim();const ape=(document.getElementById('ap-ape').value||'').trim();const gid=+document.getElementById('ap-grp').value;const full=(nom+' '+ape).trim();if(!nom||!ape){toast(t('add_fill_both'));return;}if(!gid){toast(t('add_choose_group'));return;}if(USERS[full]){toast(t('add_exists'));return;}addPlayerToCycle(full,gid);initLogin();renderAdmin();toast(tf('add_done',{name:full,g:groupName(gid)}));persist(true);}
+function addPlayerUI(){const nom=(document.getElementById('ap-nom').value||'').trim();const ape=(document.getElementById('ap-ape').value||'').trim();const gid=+document.getElementById('ap-grp').value;const full=(nom+' '+ape).trim();if(!nom||!ape){toast(t('add_fill_both'));return;}if(!gid){toast(t('add_choose_group'));return;}if(USERS[full]){toast(t('add_exists'));return;}addPlayerToCycle(full,gid);initLogin();renderPerfil();toast(tf('add_done',{name:full,g:groupName(gid)}));persist(true);}
 function setDestino(gid,pos,val){ensureDestino(gid,pos+1);DESTINO[gid][pos]='G'+val;if(subView==='admin')renderAdmin();toast(groupName(gid)+' · '+(pos+1)+'º → '+groupName(+val));persist(true);}
 function destinoCard(){
   const grps=cycles[activeN-1]?.groups || [];
@@ -1134,6 +1133,16 @@ function renderPerfil(){
     h += `<div class="form-row"><div class="form-group"><label>${t('repeat_pass')}</label><input type="password" id="pw-new2"></div>`;
     h += `<div class="form-group" style="align-self:end"><button class="btn btn-accent" onclick="changePw()"><i class="ti ti-lock"></i> ${t('save_pass')}</button></div></div></div>`;
     
+    // Agregar jugador card
+    const grps = (getActive() && getActive().groups) ? getActive().groups : [];
+    h += `<div class="card"><div class="section-lbl">${t('add_player')}</div>`;
+    h += `<div class="form-row" style="grid-template-columns:1fr 1fr 1fr auto;align-items:end">`;
+    h += `<div class="form-group"><label>${t('first_name')}</label><input id="ap-nom" placeholder="${t('first_name')}"></div>`;
+    h += `<div class="form-group"><label>${t('last_name')}</label><input id="ap-ape" placeholder="${t('last_name')}"></div>`;
+    h += `<div class="form-group"><label>${t('group')}</label><select id="ap-grp">${grps.map((_,k)=>`<option value="${k+1}">${groupName(k+1)}</option>`).join('')}</select></div>`;
+    h += `<div class="form-group"><button class="btn btn-primary" onclick="addPlayerUI()"><i class="ti ti-user-plus"></i> ${t('add_btn')}</button></div>`;
+    h += `</div></div>`;
+
     h += `<div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">`;
     h += `<div class="section-lbl" style="margin:0">${t('player_mgmt')}</div>`;
     h += `<button class="btn btn-sm" onclick="renderPerfil()"><i class="ti ti-refresh"></i> ${t('refresh_list')}</button></div>`;
