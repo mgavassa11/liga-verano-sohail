@@ -1279,7 +1279,8 @@ function bracketHTML(rounds,ti,which){
 
 function showPlayoffView(){
   const pv=document.getElementById('view-playoff');
-  if(!pv)return;
+  console.log('showPlayoffView called. playoff.started=',playoff.started,'playoff.preview=',playoff.preview,'tramos=',playoff.tramos?.length,'pv=',!!pv);
+  if(!pv){console.error('view-playoff element NOT FOUND');return;}
   pv.style.display='block';
   ['grupos','general','cargar','pendientes','admin','perfil'].forEach(v=>{
     const el=document.getElementById('view-'+v);
@@ -1287,8 +1288,10 @@ function showPlayoffView(){
   });
   if(!playoff.started&&!playoff.preview){
     pv.innerHTML=`<div class="card"><div class="empty">${t('po_not_yet')}</div></div>`;
+    console.log('Playoff not started/preview');
     return;
   }
+  try{
   const isAdmin=currentUser&&currentUser.role==='admin';
   let html='';
 
@@ -1340,6 +1343,10 @@ function showPlayoffView(){
 
   html+=`<div class="card legend-card"><p class="legend-txt">${t('po_legend')}</p></div>`;
   pv.innerHTML=html;
+  }catch(err){
+    console.error('showPlayoffView ERROR:',err);
+    pv.innerHTML='<div class="card"><div class="empty" style="color:red">Error al mostrar playoffs: '+err.message+'</div></div>';
+  }
 }
 function removePlayerUI(name,fromG){removePlayerCycle(name,fromG);renderAdmin();toast(name+' quitado del ciclo.');persist(true);}
 
