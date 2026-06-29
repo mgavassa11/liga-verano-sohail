@@ -1028,22 +1028,30 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
   let bot='';
   if(m.w&&m.a&&m.b){
     const editRow=currentUser.role==='admin'
-      ?`<div style="display:flex;gap:6px;padding:4px 8px;border-top:1px solid var(--border);background:var(--surface)">
-          <button onclick="poReport(${ti},'${which}',${ri},${mi})" style="flex:1;padding:3px 0;font-size:11px;border:1px solid var(--border2);border-radius:6px;background:var(--soft);color:var(--pri);cursor:pointer;font-weight:500"><i class="ti ti-edit"></i> Editar</button>
-          <button onclick="deletePoDirect(${ti},'${which}',${ri},${mi})" style="flex:1;padding:3px 0;font-size:11px;border:1px solid #fca5a5;border-radius:6px;background:#fff5f5;color:#dc2626;cursor:pointer;font-weight:500"><i class="ti ti-trash"></i> Eliminar</button>
+      ?`<div style="display:flex;gap:6px;padding:5px 8px;border-top:1px solid var(--border);background:var(--surface)">
+          <button onclick="poReport(${ti},'${which}',${ri},${mi})" style="flex:1;padding:4px 0;font-size:11px;border:1px solid var(--border2);border-radius:6px;background:var(--soft);color:var(--pri);cursor:pointer;font-weight:500"><i class="ti ti-edit"></i> Editar</button>
+          <button onclick="deletePoDirect(${ti},'${which}',${ri},${mi})" style="flex:1;padding:4px 0;font-size:11px;border:1px solid #fca5a5;border-radius:6px;background:#fff5f5;color:#dc2626;cursor:pointer;font-weight:500"><i class="ti ti-trash"></i> Eliminar</button>
         </div>`
-      :'';
-    bot=`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 8px;background:var(--surface2);font-size:10px;border-top:1px solid var(--border)"><span style="color:var(--text2)">${sc}</span><span style="color:#085041;font-weight:700">✓ ${m.w}</span></div>${editRow}`;
+      :'<div style="height:0"></div>';
+    bot=`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 12px;background:var(--surface2);font-size:11px;border-top:1px solid var(--border)"><span style="color:var(--text2)">${sc}</span><span style="color:#085041;font-weight:700">✓ ${m.w}</span></div>${editRow}`;
+  } else if(canLoad){
+    // Fixed height placeholder + load button + empty edit row space
+    bot=`<div style="padding:6px 8px;border-top:1px solid var(--border);text-align:center"><button class="po-load" onclick="poReport(${ti},'${which}',${ri},${mi})"><i class="ti ti-upload"></i> ${m.locked&&currentUser.role==='admin'?'Editar resultado':t('po_load_result')}</button></div>`
+      +(currentUser.role==='admin'?'<div style="height:34px"></div>':'');
+  } else if(m.a&&m.b&&!m.w){
+    bot=`<div style="padding:5px 8px;border-top:1px solid var(--border);text-align:center"><span style="font-size:11px;color:var(--text2);font-style:italic">${t('pending_match')}</span></div>`
+      +(currentUser.role==='admin'?'<div style="height:34px"></div>':'');
+  } else {
+    // No players yet — placeholder to keep height consistent for admin
+    bot=currentUser.role==='admin'?'<div style="height:56px"></div>':'<div style="height:22px"></div>';
   }
-  else if(canLoad) bot=`<div style="padding:5px 8px;border-top:1px solid var(--border);text-align:center"><button class="po-load" onclick="poReport(${ti},'${which}',${ri},${mi})"><i class="ti ti-upload"></i> ${m.locked&&currentUser.role==='admin'?'Editar resultado':t('po_load_result')}</button></div>`;
-  else if(m.a&&m.b&&!m.w) bot=`<div style="padding:4px 8px;border-top:1px solid var(--border);text-align:center"><span style="font-size:10px;color:var(--text2);font-style:italic">${t('pending_match')}</span></div>`;
-  return `<div style="border:1px solid var(--border2);border-radius:10px;overflow:hidden;background:var(--surface);width:${210}px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.06)">
-    <div style="display:flex;align-items:center;padding:8px 10px;border-bottom:1px solid var(--border);font-size:12px;min-height:36px;${sA}${iA}">
-      <span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">${seedA}</span>
+  return `<div style="border:1px solid var(--border2);border-radius:10px;overflow:hidden;background:var(--surface);width:${220}px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+    <div style="display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;min-height:40px;${sA}${iA}">
+      <span style="font-size:11px;color:var(--text2);min-width:24px;font-weight:600">${seedA}</span>
       <span style="flex:1;font-weight:${aw?'700':'400'}">${nmA}</span>
     </div>
-    <div style="display:flex;align-items:center;padding:8px 10px;font-size:12px;min-height:36px;${sB}${iB}">
-      <span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">${seedB}</span>
+    <div style="display:flex;align-items:center;padding:10px 12px;font-size:13px;min-height:40px;${sB}${iB}">
+      <span style="font-size:11px;color:var(--text2);min-width:24px;font-weight:600">${seedB}</span>
       <span style="flex:1;font-weight:${bw?'700':'400'}">${nmB}</span>
     </div>
     ${bot}
@@ -1053,7 +1061,10 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
 function bracketHTML(rounds,ti,which){
   if(!rounds||!rounds.length)return'';
   const total=rounds.length;
-  const BW=210, BH=96, GAP=24, GX=64, LABEL_H=32;
+  // BH must match actual box height:
+  // 2 slots (40px each) + result row (22px) + edit buttons row (34px) = 136px max
+  // Use 136 so SVG lines always center correctly even with edit buttons
+  const BW=220, BH=136, GAP=20, GX=72, LABEL_H=36;
   // Key insight: slot spacing doubles each round
   // Round 0: spacing = BH+GAP between match centers
   // Round 1: spacing = 2*(BH+GAP)
