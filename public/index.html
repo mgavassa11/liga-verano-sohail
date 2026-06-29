@@ -290,6 +290,8 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 
 <div class="modal-bg" id="modal-bg"><div class="modal"><h3 id="modal-title">Resultado</h3><div id="modal-body"></div><div class="gap-sm" style="margin-top:1rem" id="modal-actions"></div></div></div>
 <script>
+const SUPA_URL = "https://lhiglzrttnltsxaqyhtx.supabase.co";
+const SUPA_KEY = "sb_publishable_usn0DucHGt5s2Am_c8M1CA_dLFwIAq7";
 // ===== TRADUCCIONES & ESTADO =====
 let demoBackup=null;
 let LANG='es';
@@ -1122,31 +1124,40 @@ function initSupabase(){
   try{
     if(typeof window!=='undefined'&&window.supabase&&typeof SUPA_URL==='string'&&SUPA_URL&&SUPA_URL.indexOf('PEGA_')<0){
       _sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
+      console.log('✅ Supabase conectado a:',SUPA_URL);
+    }else{
+      console.warn('⚠️ Supabase NO conectado — revisá SUPA_URL y SUPA_KEY');
     }
-  }catch(e){_sb=null;}
+  }catch(e){_sb=null;console.error('❌ Error al conectar Supabase:',e);}
 }
 
 async function loadState(){
-  if(!_sb)return;
+  if(!_sb){console.warn('⚠️ loadState: sin conexión a Supabase');return;}
+  console.log('🔄 Cargando estado desde Supabase...');
   const r=await _sb.from('liga_state').select('data').eq('id',1).maybeSingle();
-  if(r.error)throw r.error;
+  if(r.error){console.error('❌ Error al cargar estado:',r.error);throw r.error;}
   if(r.data&&r.data.data){
     _hydrate(typeof r.data.data==='string'?JSON.parse(r.data.data):r.data.data);
     _lastSaved=_serialize();
+    console.log('✅ Estado cargado correctamente desde Supabase');
   }else{
+    console.log('ℹ️ No hay datos en Supabase todavía — guardando estado inicial...');
     await _doPersist();
   }
 }
 
-// Core save — always executes, returns a Promise
 async function _doPersist(){
   if(!_sb)return;
   const json=_serialize();
   try{
     const r=await _sb.from('liga_state').upsert({id:1,data:json});
-    if(!r.error){_lastSaved=json;}
-    else{console.warn('Supabase save error:',r.error);}
-  }catch(e){console.warn('Supabase save exception:',e);}
+    if(!r.error){
+      _lastSaved=json;
+      console.log('✅ Guardado en Supabase OK ('+ new Date().toLocaleTimeString()+')');
+    }else{
+      console.error('❌ Error al guardar en Supabase:',r.error);
+    }
+  }catch(e){console.error('❌ Excepción al guardar:',e);}
 }
 
 // Public persist — called everywhere in the app
