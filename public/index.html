@@ -603,7 +603,8 @@ function refreshAll(){
   renderPend();renderCycleBar();updateBadge();
 }
 
-function splitTramos(qual,T){const n=qual.length;const base=Math.floor(n/T);let extra=n%T;const out=[];let idx=0;for(let t=0;t<T;t++){const size=base+(t<extra?1:0);out.push(qual.slice(idx,idx+size));idx+=size;}return out;}
+function splitTramos(qual,T){const n=qual.length;const base=Math.floor(n/T);const extra=n%T;const out=[];let idx=0;for(let t=0;t<T;t++){// extra players go to LAST brackets (D,C,B...) not first
+const size=base+(t>=(T-extra)?1:0);out.push(qual.slice(idx,idx+size));idx+=size;}return out;}
 function seedOrder(n){if(n===1)return[0];const prev=seedOrder(n/2);const res=[];prev.forEach(p=>{res.push(p);res.push(n-1-p);});return res;}
 function buildRounds(seeds){
   let size=1;
@@ -1167,11 +1168,13 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
   const sc=m.sets?m.sets.map(([a,b])=>a+'-'+b).join(' '):'';
   const canLoad=m.a&&m.b&&!m.w&&(currentUser&&currentUser.role==='admin'||m.a===currentUser.name||m.b===currentUser.name);
   const emptyTxt=isFirstRound?'BYE':t('tbd');
-  const sA=aw?'background:var(--winrow);font-weight:700;color:var(--priD);':'';
-  const sB=bw?'background:var(--winrow);font-weight:700;color:var(--priD);':'';
+  const sA=aw?'background:var(--winrow);font-weight:700;color:var(--priD);':(isBYE_A?'background:var(--surface2);':'');
+  const sB=bw?'background:var(--winrow);font-weight:700;color:var(--priD);':(isBYE_B?'background:var(--surface2);':'');
   const iA=!m.a?'color:var(--text2);font-style:italic;':'';
   const iB=!m.b&&m.a?'color:var(--text2);font-style:italic;':'';
   const nmA=m.a||emptyTxt;const nmB=m.b||(m.a?'BYE':emptyTxt);
+  const meA=currentUser&&m.a===currentUser.name;const meB=currentUser&&m.b===currentUser.name;
+  const isBYE_A=!m.a&&m.b;const isBYE_B=!m.b&&m.a;
   const seedA=m.sid[0]||'';const seedB=m.sid[1]||'';
   function fn(n){return n?n.split(' ')[0]:'';}
   const fA=fn(m.a),fB=fn(m.b);
@@ -1199,8 +1202,8 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
     bot=currentUser&&currentUser.role==='admin'?'<div style="height:56px"></div>':'<div style="height:22px"></div>';
   }
   return '<div style="border:1px solid var(--border2);border-radius:10px;overflow:hidden;background:var(--surface);width:220px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.08)">'
-    +hA+'<div style="display:flex;align-items:center;padding:5px 10px 8px;border-bottom:1px solid var(--border);font-size:12px;min-height:32px;'+sA+iA+'"><span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">'+seedA+'</span><span style="flex:1;font-weight:'+(aw?'700':'400')+'">'+nmA+'</span></div>'
-    +hB+'<div style="display:flex;align-items:center;padding:5px 10px 8px;font-size:12px;min-height:32px;'+sB+iB+'"><span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">'+seedB+'</span><span style="flex:1;font-weight:'+(bw?'700':'400')+'">'+nmB+'</span></div>'
+    +hA+'<div style="display:flex;align-items:center;padding:5px 10px 8px;border-bottom:1px solid var(--border);font-size:12px;min-height:32px;'+sA+iA+'"><span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">'+seedA+'</span><span style="flex:1;font-weight:'+(aw?'700':'400')+'">'+nmA+(meA?' <span style="font-size:9px;background:#F5C518;color:#1a2540;border-radius:4px;padding:1px 4px;font-weight:700">'+t('you')+'</span>':'')+'</span></div>'
+    +hB+'<div style="display:flex;align-items:center;padding:5px 10px 8px;font-size:12px;min-height:32px;'+sB+iB+'"><span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">'+seedB+'</span><span style="flex:1;font-weight:'+(bw?'700':'400')+'">'+nmB+(meB?' <span style="font-size:9px;background:#F5C518;color:#1a2540;border-radius:4px;padding:1px 4px;font-weight:700">'+t('you')+'</span>':'')+'</span></div>'
     +bot+'</div>';
 }
 
@@ -1251,19 +1254,22 @@ function bracketHTML(rounds,ti,which){
   for(let ri=0;ri<total;ri++){
     const rd=rounds[ri];const isFirst=ri===0;
     const cx=ri*(BW+GX);
+    // Single column div - header at top, matches absolutely positioned below
     cols+=`<div style="position:absolute;left:${cx}px;top:0;width:${BW}px">`;
-    cols+=`<div style="position:absolute;left:${cx}px;top:0;width:${BW}px;text-align:center;height:${LABEL_H}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+    // Round name + date
+    const dateStr=rDateLabel(ri);
+    cols+=`<div style="text-align:center;height:${LABEL_H}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px">
       <span style="font-size:11px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:.06em">${rName(ri)}</span>
-      ${rDateLabel(ri)
-        ? `<span style="font-size:11px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:.04em">${rDateLabel(ri)}</span>`
+      ${dateStr
+        ? `<span style="font-size:11px;font-weight:700;color:var(--pri);letter-spacing:.03em">${dateStr}</span>`
         : (currentUser&&currentUser.role==='admin'
-            ? `<span style="font-size:10px;color:var(--border2);font-style:italic;cursor:pointer" onclick="showSub('admin')" title="Configurar fecha">+ fecha</span>`
-            : '')
+            ? `<span style="font-size:10px;color:var(--border2);font-style:italic;cursor:pointer" onclick="showSub('admin')">+ fecha</span>`
+            : '<span style="font-size:10px;color:transparent">·</span>')
       }
     </div>`;
     rd.forEach((m,mi)=>{
       const yc=matchY(ri,mi);
-      const yTop=yc-BOX_CONNECT; // align SVG line to slot visual center
+      const yTop=yc-BOX_CONNECT;
       cols+=`<div style="position:absolute;top:${LABEL_H+yTop}px;left:0;width:${BW}px">${matchBox(m,ti,which,ri,mi,isFirst)}</div>`;
     });
     cols+='</div>';
@@ -1290,7 +1296,17 @@ function showPlayoffView(){
     html+=`<div class="card" style="background:var(--soft);border-color:var(--pri)"><p style="color:var(--priD);font-weight:600;margin-bottom:.4rem"><i class="ti ti-eye"></i> ${t('po_preview_banner')}</p><p class="legend-txt" style="margin-top:0">${t('po_preview_hint')}</p>${isAdmin?`<button class="btn btn-accent" onclick="confirmPlayoffUI()"><i class="ti ti-check"></i> ${t('po_confirm_start')}</button>`:''}</div>`;
   }
 
-  html+=`<div class="po-tramos">${playoff.tramos.map((tr,i)=>`<button class="po-tab ${playoff.viewT===i?'active':''}" onclick="setViewT(${i})">${tf('po_match',{l:tr.label})}<br><span class="po-rng">${tr.seeds.length} ${t('po_tab_players')}</span></button>`).join('')}</div>`;
+  // Auto-jump to own bracket when player first enters
+  if(currentUser.role==='player'){
+    const myTi=playoff.tramos.findIndex(tr=>tr.seeds.includes(currentUser.name));
+    if(myTi>=0&&playoff.viewT!==myTi)playoff.viewT=myTi;
+  }
+
+  html+=`<div class="po-tramos">${playoff.tramos.map((tr,i)=>{
+    const hasMe=currentUser.role==='player'&&tr.seeds.includes(currentUser.name);
+    return `<button class="po-tab ${playoff.viewT===i?'active':''}" onclick="setViewT(${i})">${tf('po_match',{l:tr.label})}${hasMe?` <span style="font-size:9px;background:#F5C518;color:#1a2540;border-radius:4px;padding:1px 4px;font-weight:700">✓</span>`:''}
+      <br><span class="po-rng">${tr.seeds.length} ${t('po_tab_players')}</span></button>`;
+  }).join('')}</div>`;
 
   const ti=playoff.viewT;
   const tr=playoff.tramos[ti];
