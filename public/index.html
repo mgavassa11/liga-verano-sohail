@@ -507,18 +507,25 @@ function computeStats(cycN,gid){
   function tiebreakSort(group){
     if(group.length<=1)return group;
 
-    // Sort by overall pts first, then partition into tied subgroups
-    group.sort((x,y)=>y.pts-x.pts||(x.g+x.p)-(y.g+y.p));
+    // Primary sort: 1º pts desc, 2º partidos jugados desc
+    group.sort((x,y)=>{
+      if(y.pts!==x.pts)return y.pts-x.pts;               // 1º Puntos
+      const mpX=x.g+x.p, mpY=y.g+y.p;
+      if(mpY!==mpX)return mpY-mpX;                        // 2º Partidos jugados (más = mejor)
+      return 0;
+    });
 
-    // Find groups with same pts AND same matches played
+    // Partition into sub-groups where BOTH pts AND partidos jugados are equal
+    // Only those need H2H/tiebreak — the rest are already ordered correctly
     const result=[];let i=0;
     while(i<group.length){
       let j=i+1;
-      while(j<group.length&&group[j].pts===group[i].pts&&(group[j].g+group[j].p)===(group[i].g+group[i].p))j++;
+      while(j<group.length
+        && group[j].pts===(group[i].pts)
+        && (group[j].g+group[j].p)===(group[i].g+group[i].p)){j++;}
       const tied=group.slice(i,j);
       if(tied.length===1){result.push(tied[0]);i=j;continue;}
-
-      // Break ties within 'tied' group
+      // Multiple players with same pts AND same matches played → apply H2H
       result.push(...breakTies(tied));
       i=j;
     }
