@@ -1207,7 +1207,14 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
 function bracketHTML(rounds,ti,which){
   if(!rounds||!rounds.length)return'';
   const total=rounds.length;
-  const BW=220, BH=156, GAP=20, GX=72, LABEL_H=58;
+  // BH = actual rendered box height (must match CSS)
+  // 2 name headers (~15px each) + 2 slots (34px each) + result row (22px) + edit row (34px admin) = ~154px
+  // Use consistent 160px so SVG always centers correctly
+  const BW=220, BH=160, GAP=24, GX=72, LABEL_H=58;
+  // Slot connect offset: name header(14) + slot(34)/2 = 14+17 = 31 from top (first player slot center)
+  // Second player slot center: 14+34+14+17 = 79
+  // Mid-box connect point: (31+79)/2 = 55 from top of box
+  const BOX_CONNECT=55;
   function slotSpacing(ri){ return Math.pow(2,ri)*(BH+GAP); }
   function matchCount(ri){ return rounds[ri].length; }
   function matchY(ri,mi){
@@ -1230,7 +1237,7 @@ function bracketHTML(rounds,ti,which){
     const x2=(ri+1)*(BW+GX);
     const xm=x1+GX/2;
     for(let mi=0;mi<n;mi+=2){
-      const yA=matchY(ri,mi);
+      const yA=matchY(ri,mi);// yA/yB are box centers; adjust to slot centers
       const yB=matchY(ri,mi+1);
       const yM=(yA+yB)/2;
       const yN=matchY(ri+1,mi/2);
@@ -1245,10 +1252,10 @@ function bracketHTML(rounds,ti,which){
     const rd=rounds[ri];const isFirst=ri===0;
     const cx=ri*(BW+GX);
     cols+=`<div style="position:absolute;left:${cx}px;top:0;width:${BW}px">`;
-    cols+=`<div style="position:absolute;left:${cx}px;top:0;width:${BW}px;text-align:center;height:${LABEL_H}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px">
+    cols+=`<div style="position:absolute;left:${cx}px;top:0;width:${BW}px;text-align:center;height:${LABEL_H}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
       <span style="font-size:11px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:.06em">${rName(ri)}</span>
       ${rDateLabel(ri)
-        ? `<span style="font-size:11px;color:var(--text2);font-weight:500;background:var(--soft);border-radius:5px;padding:1px 7px">${rDateLabel(ri)}</span>`
+        ? `<span style="font-size:11px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:.04em">${rDateLabel(ri)}</span>`
         : (currentUser&&currentUser.role==='admin'
             ? `<span style="font-size:10px;color:var(--border2);font-style:italic;cursor:pointer" onclick="showSub('admin')" title="Configurar fecha">+ fecha</span>`
             : '')
@@ -1256,7 +1263,7 @@ function bracketHTML(rounds,ti,which){
     </div>`;
     rd.forEach((m,mi)=>{
       const yc=matchY(ri,mi);
-      const yTop=yc-BH/2;
+      const yTop=yc-BOX_CONNECT; // align SVG line to slot visual center
       cols+=`<div style="position:absolute;top:${LABEL_H+yTop}px;left:0;width:${BW}px">${matchBox(m,ti,which,ri,mi,isFirst)}</div>`;
     });
     cols+='</div>';
