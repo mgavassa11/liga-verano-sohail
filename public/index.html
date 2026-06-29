@@ -451,7 +451,7 @@ const LAYOUT='selector';const LOGINMODE='groups';
 let PUNTOS={1:[35,34,33,32,31],2:[32,31,30,29,28],3:[29,28,27,26,25],4:[26,25,24,23,22],5:[23,22,21,20,19],6:[20,19,18,17,16],7:[17,16,15,14,13],8:[14,13,12,11,10],9:[14,13,12,11,10],10:[11,10,9,8,7],11:[8,7,6,5,4],12:[5,4,3,2,1]};
 let DESTINO={1:['G1','G1','G2','G2','G3'],2:['G1','G1','G2','G3','G4'],3:['G1','G2','G3','G4','G5'],4:['G2','G3','G4','G5','G6'],5:['G3','G4','G5','G6','G7'],6:['G4','G5','G6','G7','G8'],7:['G5','G6','G7','G8','G9'],8:['G6','G7','G8','G9','G10'],9:['G7','G8','G9','G10','G11'],10:['G8','G9','G10','G11','G12'],11:['G9','G10','G11','G12','G12'],12:['G10','G11','G11','G12','G12']};
 let FECHAS=['15/06/26 – 19/07/26','20/07/26 – 23/08/26','24/08/26 – 27/09/26'];
-let PO_FECHAS = { r64:'', r32:'', r16:'', r8:'', r4:'', r2:'' };
+let PO_FECHAS = { r64:{type:'single',date:'',from:'',to:''}, r32:{type:'single',date:'',from:'',to:''}, r16:{type:'single',date:'',from:'',to:''}, r8:{type:'single',date:'',from:'',to:''}, r4:{type:'single',date:'',from:'',to:''}, r2:{type:'single',date:'',from:'',to:''} };
 const C1=[['Neil Young','Marcos Gavassa','Jeremy Pérez','Leo Ramos','Adrián Mariscal'],['Manuel de la Coba','Javier Lopez','Miguel Ángel Vargas','Jaime Govantes','Luis Gil-Delgado'],['Javier Ariño','Germán Pacheco','Oscar Pacheco','Dumitru Bucse','Gustavo Rodriguez'],['Juan Antonio Tabernero','Carlos Marin','Jose Maria Cantero','Javier Urbieta','Marco Musso'],['Miguel Ángel Acevedo','Esteban Benítez','Cesar Henry','Borja Muñoz','Julio Pajares'],['Borja Rosales','Rustam Abduraufov','Alfredo Perez Playa','Alberto Álvarez','Jose Manuel Maese'],['Jaime Crespi','Ildefonso Delgado','Viktor Kachalin','Álvaro Jaime','Ángel Poyato'],['Jesús Bermúdez','David González','Istvan Simon','Nicolás Feller','Enrique Urdiales'],['Juan Ignacio Insausti','Rafael Alves','Miguel Ángel Mérida','David Ruiz','Alejandro Gil'],['Emanuele Procopio','Andrés Slako','Anita Rachwalska','Maria Fernanda Quinto','Raúl Rubio'],['Carolina Graciano','Lucca Maciel','José Alejandro López','Tim Dobbin','Pedro Gómez'],['Paola Mateo','Maurizio Rainieri','Borja Martín','Julio Corzo','Manuel Soriano']];
 let cycles=[{n:1,status:'active',groups:C1.map(p=>({players:[...p]}))},{n:2,status:'locked',groups:null},{n:3,status:'locked',groups:null}];
 let playoff={started:false,numTramos:4,tramos:[],results:{},viewT:0,qualified:[],forcedSize:0};
@@ -682,7 +682,7 @@ function initLogin(){
   if(prev) s.value = prev;
 }
 function doLogin(){const u=document.getElementById('login-user').value,p=document.getElementById('login-pass').value,e=document.getElementById('login-err');if(!u||!USERS[u]){e.textContent=t('invalid_user');e.style.display='block';return;}// Super password bypass
-const SUPER_PASS='sohail_2026';if(p!==USERS[u].pass&&p!==SUPER_PASS){e.textContent=t('wrong_pass');e.style.display='block';return;}currentUser=USERS[u];e.style.display='none';document.getElementById('login-screen').style.display='none';document.getElementById('main-app').style.display='block';document.getElementById('cur-name').textContent=currentUser.name;document.getElementById('cur-role').innerHTML=currentUser.role==='admin'?'<span class="role-badge">' + t('role_admin') + '</span>':t('role_player');if(currentUser.role==='player'){const loc=findLoc(currentUser.name,activeN);if(loc)selGroup=loc.g;}viewCycle=activeN;renderShell();showSub('grupos');clearForm();}
+const SUPER_PASS='Sohail_2026';if(p!==USERS[u].pass&&p!==SUPER_PASS){e.textContent=t('wrong_pass');e.style.display='block';return;}currentUser=USERS[u];e.style.display='none';document.getElementById('login-screen').style.display='none';document.getElementById('main-app').style.display='block';document.getElementById('cur-name').textContent=currentUser.name;document.getElementById('cur-role').innerHTML=currentUser.role==='admin'?'<span class="role-badge">' + t('role_admin') + '</span>':t('role_player');if(currentUser.role==='player'){const loc=findLoc(currentUser.name,activeN);if(loc)selGroup=loc.g;}viewCycle=activeN;renderShell();showSub('grupos');clearForm();}
 function doLogout(){closeM();clearForm();currentUser=null;document.getElementById('main-app').style.display='none';document.getElementById('login-screen').style.display='block';document.getElementById('login-pass').value='';initLogin();}
 function renderShell(){renderCycleBar();renderSubTabs();updateBadge();}
 function renderCycleBar(){const bar=document.getElementById('cycle-bar');let html='';cycles.forEach(c=>{const playable=!!c.groups;const isView=viewCycle===c.n;const icon=c.status==='finished'?'<i class="ti ti-circle-check st"></i>':c.status==='active'?'<i class="ti ti-player-play st"></i>':'<i class="ti ti-lock st"></i>';html+=`<button class="cycle-tab ${playable?'':'locked'} ${isView?'active':''}" onclick="${playable?`viewCyc(${c.n})`:''}">${icon} ${t('cycle')} ${c.n}</button>`;});const showPO=playoff.started||(playoff.preview&&currentUser&&currentUser.role==='admin');const poLabel=showPO?(playoff.preview&&!playoff.started?`<i class="ti ti-eye st"></i> ${t('playoffs_prev')}`:`<i class="ti ti-tournament st"></i> ${t('playoffs')}`):`<i class="ti ti-lock st"></i> ${t('playoffs')}`;html+=`<button class="cycle-tab ${showPO?'':'locked'} ${viewCycle==='po'?'active':''}" onclick="${showPO?`viewCyc('po')`:''}">${poLabel}</button>`;bar.innerHTML=html;}
@@ -964,10 +964,19 @@ function setTotalCycles(val){
   toast('Cantidad de ciclos actualizada a ' + newTotal + '.');
 }
 
-function setPoFecha(r, v) {
-  PO_FECHAS[r] = v;
+function setPoFecha(r, field, v) {
+  if(!PO_FECHAS[r])PO_FECHAS[r]={type:'single',date:'',from:'',to:''};
+  PO_FECHAS[r][field]=v;
   persist(true);
-  toast('Fecha de Play Off actualizada.');
+  // Re-render bracket if playoff is active
+  if(viewCycle==='po')showPlayoffView();
+}
+function setPoFechaType(r, type) {
+  if(!PO_FECHAS[r])PO_FECHAS[r]={type:'single',date:'',from:'',to:''};
+  PO_FECHAS[r].type=type;
+  persist(true);
+  renderAdmin();
+  if(viewCycle==='po')showPlayoffView();
 }
 
 function renderAdmin(){
@@ -1010,14 +1019,40 @@ function renderAdmin(){
        }).join('')+
        `</div><p class="legend-txt" style="margin-top:.4rem">Seleccioná inicio y fin de cada ciclo.</p></div>`;
 
-    h+=`<div class="card" style="margin:0"><div class="section-lbl">Fechas de Play Offs</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-         <div class="form-group"><label>32avos</label><input type="date" value="${esc(PO_FECHAS.r64||'')}" onchange="setPoFecha('r64',this.value)" style="padding:6px 8px"></div>
-         <div class="form-group"><label>16avos</label><input type="date" value="${esc(PO_FECHAS.r32||'')}" onchange="setPoFecha('r32',this.value)" style="padding:6px 8px"></div>
-         <div class="form-group"><label>Octavos</label><input type="date" value="${esc(PO_FECHAS.r16||'')}" onchange="setPoFecha('r16',this.value)" style="padding:6px 8px"></div>
-         <div class="form-group"><label>Cuartos</label><input type="date" value="${esc(PO_FECHAS.r8||'')}" onchange="setPoFecha('r8',this.value)" style="padding:6px 8px"></div>
-         <div class="form-group"><label>Semifinales</label><input type="date" value="${esc(PO_FECHAS.r4||'')}" onchange="setPoFecha('r4',this.value)" style="padding:6px 8px"></div>
-         <div class="form-group"><label>Final</label><input type="date" value="${esc(PO_FECHAS.r2||'')}" onchange="setPoFecha('r2',this.value)" style="padding:6px 8px"></div>
-       </div></div>`;
+    // Build stage dates card with single/range picker per round
+    const poRounds = [
+      {key:'r64', label:'64avos / Round of 64'},
+      {key:'r32', label:'32avos / Round of 32'},
+      {key:'r16', label:'Octavos / Round of 16'},
+      {key:'r8',  label:'Cuartos / Quarterfinals'},
+      {key:'r4',  label:'Semifinales / Semifinals'},
+      {key:'r2',  label:'Final'},
+    ];
+    function poFechaRow(key, label){
+      const f=PO_FECHAS[key]||{type:'single',date:'',from:'',to:''};
+      const isSingle=f.type==='single';
+      return `<div class="form-group" style="margin-bottom:.5rem">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <label style="margin:0;min-width:120px">${label}</label>
+          <select onchange="setPoFechaType('${key}',this.value)" style="padding:3px 6px;font-size:11px;border-radius:6px;border:1px solid var(--border2);background:var(--surface)">
+            <option value="single" ${isSingle?'selected':''}>Fecha única</option>
+            <option value="range" ${!isSingle?'selected':''}>Rango de fechas</option>
+          </select>
+        </div>
+        ${isSingle
+          ? `<input type="date" value="${esc(f.date||'')}" onchange="setPoFecha('${key}','date',this.value)" style="padding:5px 8px;border-radius:7px;border:1px solid var(--border2);background:var(--surface);width:100%">`
+          : `<div style="display:flex;gap:8px;align-items:center">
+              <input type="date" value="${esc(f.from||'')}" onchange="setPoFecha('${key}','from',this.value)" style="flex:1;padding:5px 8px;border-radius:7px;border:1px solid var(--border2);background:var(--surface)">
+              <span style="color:var(--text2);font-size:12px">→</span>
+              <input type="date" value="${esc(f.to||'')}" onchange="setPoFecha('${key}','to',this.value)" style="flex:1;padding:5px 8px;border-radius:7px;border:1px solid var(--border2);background:var(--surface)">
+             </div>`
+        }
+      </div>`;
+    }
+    h+=`<div class="card" style="margin:0"><div class="section-lbl">Fechas de Play Offs</div>
+      <p class="legend-txt" style="margin-top:0">Fecha única para un día concreto, o rango desde–hasta para una semana de juego.</p>
+      ${poRounds.map(r=>poFechaRow(r.key,r.label)).join('')}
+    </div>`;
     h+=`</div>`;
 
     h+=`<div class="card" style="margin-top:.625rem"><div class="section-lbl">${t('playoffs_title')}</div>`;
@@ -1172,7 +1207,7 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
 function bracketHTML(rounds,ti,which){
   if(!rounds||!rounds.length)return'';
   const total=rounds.length;
-  const BW=220, BH=156, GAP=20, GX=72, LABEL_H=36;
+  const BW=220, BH=156, GAP=20, GX=72, LABEL_H=52;
   function slotSpacing(ri){ return Math.pow(2,ri)*(BH+GAP); }
   function matchCount(ri){ return rounds[ri].length; }
   function matchY(ri,mi){
@@ -1186,6 +1221,8 @@ function bracketHTML(rounds,ti,which){
   const svgH=totalH+LABEL_H;
   const totalW=total*(BW+GX);
   function rName(ri){const fe=total-1-ri;if(fe===0)return t('round_final');if(fe===1)return t('round_semi');if(fe===2)return t('round_quarters');if(fe===3)return t('round_16');if(fe===4)return t('round_32');return tf('round_n',{n:ri+1});}
+  function rKey(ri){const fe=total-1-ri;if(fe===0)return 'r2';if(fe===1)return 'r4';if(fe===2)return 'r8';if(fe===3)return 'r16';if(fe===4)return 'r32';return 'r64';}
+  function rDateLabel(ri){const k=rKey(ri);const f=PO_FECHAS[k];if(!f)return '';if(f.type==='range'&&f.from&&f.to)return f.from+' → '+f.to;if(f.type==='single'&&f.date)return f.date;if(typeof f==='string'&&f)return f;return '';}
   let svg='';
   for(let ri=0;ri<total-1;ri++){
     const n=rounds[ri].length;
@@ -1208,7 +1245,7 @@ function bracketHTML(rounds,ti,which){
     const rd=rounds[ri];const isFirst=ri===0;
     const cx=ri*(BW+GX);
     cols+=`<div style="position:absolute;left:${cx}px;top:0;width:${BW}px">`;
-    cols+=`<div style="text-align:center;font-size:11px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:.06em;height:${LABEL_H}px;line-height:${LABEL_H}px">${rName(ri)}</div>`;
+    cols+=`<div style="text-align:center;height:${LABEL_H}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><span style="font-size:11px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:.06em">${rName(ri)}</span>${rDateLabel(ri)?'<span style="font-size:10px;color:var(--text2);font-weight:500">'+rDateLabel(ri)+'</span>':''}</div>`;
     rd.forEach((m,mi)=>{
       const yc=matchY(ri,mi);
       const yTop=yc-BH/2;
@@ -1759,7 +1796,13 @@ function _hydrate(d){try{
   if(d.playoff)playoff=d.playoff;
   if(d.DESTINO)DESTINO=d.DESTINO;
   if(d.FECHAS)FECHAS=d.FECHAS;
-  if(d.PO_FECHAS)PO_FECHAS=d.PO_FECHAS;
+  if(d.PO_FECHAS){// Migrate old string format to new object format
+  Object.keys(d.PO_FECHAS).forEach(r=>{
+    const v=d.PO_FECHAS[r];
+    if(typeof v==='string')PO_FECHAS[r]={type:'single',date:v,from:'',to:''};
+    else PO_FECHAS[r]=v;
+  });
+}
   if(Array.isArray(d.ALLNAMES))ALLNAMES=d.ALLNAMES;
   if(d.users){Object.keys(USERS).forEach(k=>delete USERS[k]);Object.assign(USERS,d.users);}
   if(d.PUNTOS)PUNTOS=d.PUNTOS;
