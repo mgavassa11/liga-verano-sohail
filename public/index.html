@@ -1176,12 +1176,25 @@ function submitResult(){
     const isAdmin=currentUser.role==='admin';
     // Guardar resultado en matches igual que submitPo
     matches=matches.filter(x=>!(x.po&&x.ti===ti&&x.which===which&&x.poNames&&x.poNames.includes(m.a)&&x.poNames.includes(m.b)));
-    const newM={id:matchId++,po:true,ti,which,ri,mi,poNames:[m.a,m.b],sets:s,date:fecha,club:formClub||'',status:isAdmin?'confirmed':'pending',reporter:currentUser.name,locked:isAdmin};
+    // Calcular ganador igual que submitPo
+    let w1=0,w2=0;s.forEach(([a,b])=>{if(a>b)w1++;else w2++;});
+    const winner=w1>w2?m.a:m.b;
+    const newM={id:matchId++,po:true,ti,which,ri,mi,tLabel:playoff.tramos[ti].label,poNames:[m.a,m.b],sets:s,date:fecha,club:formClub||'',status:isAdmin?'confirmed':'pending',reporter:currentUser.name,winner,locked:isAdmin};
     matches.push(newM);
-    if(isAdmin)applyPoPending(newM);
+    if(isAdmin){
+      storePo(ti,which,m.a,m.b,s,winner); // actualizar bracket directamente
+      rebuildTramo(ti);                     // avanzar al siguiente round
+    } else {
+      applyPoPending(newM);
+    }
     clearForm();poContext=null;
     fAlert(isAdmin?t('result_sent_admin'):t('result_sent_player'),'ok');
-    persist(true);refreshAll();
+    persist(true);
+    // Forzar actualización del bracket en todos los casos
+    if(typeof showPlayoffView==='function')showPlayoffView();
+    refreshAll();
+    // Admin: repoblar el form para siguiente resultado
+    if(isAdmin)setTimeout(()=>populateForm(),50);
     return;
   }
   let repName,rivName,gid;
@@ -1314,6 +1327,7 @@ function setNumGroups(val){
   const cur = c.groups.length;
   const ppg = c.groups[0] ? c.groups[0].players.length : 5;
   if(newNum > cur){
+    if(!confirm('¿Agregar '+(newNum-cur)+' grupo'+(newNum-cur>1?'s':'')+' a la liga? Se crearán con jugadores placeholder que deberás renombrar desde Perfil & Jugadores.')) { renderAdmin(); return; }
     for(let i = cur; i < newNum; i++){
       const newPlayers = [];
       for(let j = 0; j < ppg; j++){
