@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Liga de Tenis Sohail</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Liga de Tenis Sohail</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#EEF2F7;--surface:#ffffff;--surface2:#EDF1F6;--text:#1b2433;--text2:#5b6675;--border:#e2e7ef;--border2:#c8d0dc;
 --pri:#1B4F9C;--priD:#0E3470;--soft:#E6F1FB;--acc:#F5C518;--accD:#D9A800;--accT:#0E3470;--winrow:#FAEEDA;
@@ -1098,7 +1098,8 @@ function renderAdmin(){
     cycles.forEach(cy => {
         h += `<button class="btn" onclick="printCycle(${cy.n})"><i class="ti ti-printer"></i> Ciclo ${cy.n}</button>`;
     });
-    h += `<button class="btn" onclick="printPlayoffs()"><i class="ti ti-printer"></i> Play Offs</button></div></div>`;
+    h += `<button class="btn" onclick="printPlayoffs()"><i class="ti ti-printer"></i> Play Offs</button>`;
+    h += `<button class="btn btn-success" onclick="exportExcel()"><i class="ti ti-file-spreadsheet"></i> Exportar Excel</button></div></div>`;
 
     h+=`<div class="card"><div class="section-lbl">${tf('edit_groups',{n:activeN})}</div><p class="legend-txt" style="margin-top:0">${t('edit_groups_hint')}</p><div style="margin-bottom:.75rem"><button class="btn btn-primary" onclick="applyGroupsUpdate()"><i class="ti ti-refresh"></i> Actualizar grupos</button></div>`;
     h+=`<div class="grpedit">`+grps.map((g,gi)=>{
@@ -1171,6 +1172,89 @@ function printPlayoffs() {
   }, 200);
 }
 
+function exportExcel(){
+  if(typeof XLSX==='undefined'){toast('Error: librería Excel no cargada.');return;}
+  const wb=XLSX.utils.book_new();
+
+  // ===== HOJA: GRUPOS (todos los ciclos, todos los grupos en una sola pestaña) =====
+  const gAOA=[];
+  cycles.forEach(cy=>{
+    if(!cy.groups)return;
+    gAOA.push(['CICLO '+cy.n]);
+    gAOA.push([]);
+    cy.groups.forEach((g,gi)=>{
+      const gid=gi+1;
+      gAOA.push([groupName(gid)]);
+      gAOA.push(['Destino','Jugador','Pts','G','P','NJ','SG','SP','Bal','P.Puesto','Extra','Total']);
+      const st=computeStats(cy.n,gid);
+      const dest=DESTINO[gid]||[];
+      st.forEach((s,i)=>{
+        const d=dest[i]||'';
+        const base=ptsForPos(gid,i);
+        const ex=i===0?2:0;
+        const isInactive=USERS[s.name]&&USERS[s.name].inactive;
+        gAOA.push([d, s.name+(isInactive?' (INACTIVO)':''), s.pts, s.g, s.p, s.nj, s.sg, s.sp, s.sg-s.sp, isInactive?'':base, ex>0?ex:'', isInactive?'':base+ex]);
+      });
+      gAOA.push([]);
+      // Matriz de resultados
+      const players=(g.players||[]).filter(Boolean);
+      gAOA.push(['Resultados '+groupName(gid)]);
+      gAOA.push(['Jugador',...players]);
+      players.forEach(p=>{
+        const row=[p];
+        players.forEach(q=>{
+          if(p===q){row.push('');return;}
+          const m=findMatch(cy.n,gid,p,q);
+          if(m&&m.status==='confirmed'){
+            const sc=m.aName===p?m.sets.map(([a,b])=>a+'-'+b).join(' '):m.sets.map(([a,b])=>b+'-'+a).join(' ');
+            row.push(sc);
+          } else row.push('');
+        });
+        gAOA.push(row);
+      });
+      gAOA.push([]);
+    });
+    gAOA.push([]);
+  });
+  const wsG=XLSX.utils.aoa_to_sheet(gAOA);
+  wsG['!cols']=[{wch:10},{wch:24},{wch:6},{wch:5},{wch:5},{wch:5},{wch:5},{wch:5},{wch:6},{wch:9},{wch:7},{wch:7}];
+  XLSX.utils.book_append_sheet(wb,wsG,'Grupos');
+
+  // ===== HOJA: PLAY OFFS =====
+  if(playoff.started||playoff.preview){
+    const pAOA=[];
+    playoff.tramos.forEach(tr=>{
+      pAOA.push(['CUADRO '+tr.label+' - Principal']);
+      pAOA.push(['Ronda','Jugador A','Jugador B','Resultado','Ganador']);
+      tr.main.forEach((round,ri)=>{
+        round.forEach(m=>{
+          const sc=m.sets?m.sets.map(([a,b])=>a+'-'+b).join(' '):'';
+          pAOA.push([rName_export(ri,tr.main.length), m.a||'BYE', m.b||(m.a?'BYE':''), sc, m.w||'']);
+        });
+      });
+      pAOA.push([]);
+      if(tr.cons){
+        pAOA.push(['CUADRO '+tr.label+' - Consolación']);
+        pAOA.push(['Ronda','Jugador A','Jugador B','Resultado','Ganador']);
+        tr.cons.forEach((round,ri)=>{
+          round.forEach(m=>{
+            const sc=m.sets?m.sets.map(([a,b])=>a+'-'+b).join(' '):'';
+            pAOA.push([rName_export(ri,tr.cons.length), m.a||'BYE', m.b||(m.a?'BYE':''), sc, m.w||'']);
+          });
+        });
+        pAOA.push([]);
+      }
+    });
+    const wsP=XLSX.utils.aoa_to_sheet(pAOA);
+    wsP['!cols']=[{wch:14},{wch:24},{wch:24},{wch:16},{wch:24}];
+    XLSX.utils.book_append_sheet(wb,wsP,'Play Offs');
+  }
+
+  const fname='Liga_Sohail_'+new Date().toISOString().slice(0,10)+'.xlsx';
+  XLSX.writeFile(wb,fname);
+  toast('Excel exportado: '+fname);
+}
+function rName_export(ri,total){const fe=total-1-ri;if(fe===0)return 'Final';if(fe===1)return 'Semifinal';if(fe===2)return 'Cuartos';if(fe===3)return 'Octavos';if(fe===4)return '16avos';return 'Ronda '+(ri+1);}
 function setViewT(i){playoff.viewT=i;showPlayoffView();}
 
 function moveSeedUI(toTi){
