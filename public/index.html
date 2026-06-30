@@ -1089,7 +1089,19 @@ if(_fw)_fw.style.display=(currentUser&&currentUser.role==='admin')?'flex':'none'
     noteEl.parentNode.insertBefore(fw,noteEl);
   } else {
     const sel=document.getElementById('admin-grp-filter-sel');
-    if(sel){sel.innerHTML=buildFilterOptions();sel.value='';}
+    if(sel){
+      sel.innerHTML=buildFilterOptions();
+      sel.value='';
+      // Actualizar el onchange con el closure fresco (nuevos grupos incluidos)
+      sel.onchange=function(){
+        const v=this.value;
+        o.innerHTML='<option value="">—</option>';o.disabled=false;poContext=null;r.value='';
+        if(v===''){fillReporterAll();r.onchange=function(){filterRival(this.value,null);};note.textContent=t('load_note_admin');}
+        else if(v.startsWith('po:')){
+          const parts=v.split(':');fillReporterByPoSection(+parts[1],parts[2]);
+        }else{fillReporterByGroup(+v);r.onchange=function(){filterRival(this.value,null);};note.textContent=t('load_note_admin');}
+      };
+    }
     filterWrap.style.display='flex';
   }
   fillReporterAll();
@@ -1197,7 +1209,9 @@ function submitResult(){
   clearForm();
   fAlert(isAdmin?t('result_sent_admin'):t('result_sent_player'),'ok');
   persist(true);
-  renderPend();renderCycleBar();updateBadge();
+  refreshAll();
+  // Admin: repoblar el formulario para que el par ya cargado desaparezca del dropdown
+  if(isAdmin) setTimeout(()=>populateForm(),50);
 }
 
 function fAlert(m,t){const e=document.getElementById('form-alert');e.className=`alert alert-${t}`;e.textContent=m;setTimeout(()=>{e.textContent='';e.className='';},6000);}
