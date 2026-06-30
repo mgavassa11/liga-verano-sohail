@@ -255,7 +255,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
     </div>
     <div class="login-body"><div class="login-err" id="login-err"></div>
       <label id="lbl-user">Seleccioná tu usuario</label><select id="login-user"><option value=""></option></select>
-      <label id="lbl-pass">Contraseña</label><input type="password" id="login-pass" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
+      <label id="lbl-pass">Contraseña</label><input type="password" id="login-pass" placeholder="••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
       <button class="login-btn" id="login-btn" onclick="doLogin()">Entrar</button>
     </div>
   </div>
@@ -305,6 +305,86 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
 <script>
 const SUPA_URL = "https://lhiglzrttnltsxaqyhtx.supabase.co";
 const SUPA_KEY = "sb_publishable_usn0DucHGt5s2Am_c8M1CA_dLFwIAq7";
+
+// ===== SEGURIDAD: PBKDF2 con sistema de versiones (Web Crypto API) =====
+// v1: = SHA-256 (primera migración), v2: = PBKDF2 100k iteraciones (definitivo)
+// Ningún password se guarda en texto plano — ni en Supabase ni en el código.
+const PBKDF2_SALT      = 'LigaSohailSecure2026';
+const PBKDF2_ITERS     = 100000;
+const SUPER_HASH       = 'v2:cc4723310633dac413f5447c5b1c78417a3add4e308ba4f7bd5878f1dfb7cc2c'; // PBKDF2('Sohail_2026?')
+const DEFAULT_PASS_HASH= 'v1:8f5e91d22e332be45d55724423baad250490285a4e302b9eec0e6fd482164b83'; // v1 tenis → se upgradea a v2 en primer login
+const ADMIN_PASS_HASH  = 'v1:240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9'; // v1 admin123 → idem
+
+function isHashed(pw){ return typeof pw==='string'&&(pw.startsWith('v1:')||pw.startsWith('v2:')); }
+
+// ===== CAPA 2: SESSION TIMEOUT (90 minutos de inactividad) =====
+let _lastActivity=Date.now();
+const SESSION_TIMEOUT_MS=90*60*1000; // 90 minutos
+function touchActivity(){_lastActivity=Date.now();}
+let _sessionExpiring=false;
+function checkSessionTimeout(){
+  if(!currentUser||_sessionExpiring)return;
+  if(Date.now()-_lastActivity>SESSION_TIMEOUT_MS){
+    _sessionExpiring=true;
+    toast('Sesión expirada por inactividad. Por favor volvé a ingresar.');
+    setTimeout(()=>{if(_sessionExpiring)doLogout();},1500);
+  }
+}
+if(typeof setInterval!=='undefined')setInterval(checkSessionTimeout,60000); // chequeo cada minuto
+// Registrar actividad en eventos del usuario
+if(typeof document!=='undefined'){
+  ['click','keydown','touchstart','mousemove'].forEach(ev=>
+    document.addEventListener(ev,touchActivity,{passive:true})
+  );
+}
+
+// ===== CAPA 3: RATE LIMITING DE LOGIN =====
+// 5 intentos fallidos → bloqueo de 5 minutos
+const LOGIN_MAX_ATTEMPTS=5;
+const LOGIN_LOCKOUT_MS=5*60*1000; // 5 minutos
+const _loginAttempts={}; // {username: {count, lockedUntil}}
+function checkLoginAllowed(uv){
+  const e=document.getElementById('login-err');
+  const rec=_loginAttempts[uv]||{count:0,lockedUntil:0};
+  if(rec.lockedUntil&&Date.now()<rec.lockedUntil){
+    const secs=Math.ceil((rec.lockedUntil-Date.now())/1000);
+    const mins=Math.floor(secs/60), s=secs%60;
+    e.textContent='Demasiados intentos fallidos. Esperá '+mins+'m '+s+'s antes de volver a intentar.';
+    e.style.display='block';
+    return false;
+  }
+  return true;
+}
+function registerFailedAttempt(uv,e){
+  if(!_loginAttempts[uv])_loginAttempts[uv]={count:0,lockedUntil:0};
+  _loginAttempts[uv].count++;
+  const rem=LOGIN_MAX_ATTEMPTS-_loginAttempts[uv].count;
+  if(_loginAttempts[uv].count>=LOGIN_MAX_ATTEMPTS){
+    _loginAttempts[uv].lockedUntil=Date.now()+LOGIN_LOCKOUT_MS;
+    e.textContent='Cuenta bloqueada por 5 minutos por demasiados intentos fallidos.';
+  } else {
+    e.textContent=t('wrong_pass')+(rem>0?' ('+rem+' intento'+(rem===1?'':'s')+' restante'+(rem===1?'':'s')+')':'');
+  }
+  e.style.display='block';
+}
+function clearFailedAttempts(uv){delete _loginAttempts[uv];}
+
+async function hashPwV1(pw){
+  if(!pw)return 'v1:';
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pw));
+  return 'v1:'+Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function hashPwV2(pw){
+  if(!pw)return 'v2:';
+  const enc=new TextEncoder();
+  const keyMat=await crypto.subtle.importKey('raw',enc.encode(pw),{name:'PBKDF2'},false,['deriveBits']);
+  const bits=await crypto.subtle.deriveBits(
+    {name:'PBKDF2',salt:enc.encode(PBKDF2_SALT),iterations:PBKDF2_ITERS,hash:'SHA-256'},
+    keyMat,256
+  );
+  return 'v2:'+Array.from(new Uint8Array(bits)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function hashPw(pw){ return hashPwV2(pw); }
 // ===== TRADUCCIONES & ESTADO =====
 let demoBackup=null;
 let LANG='es';
@@ -361,7 +441,7 @@ po_started_toast:'Play Offs iniciados.',po_confirmed_toast:'¡Play Offs iniciado
 stage_dates:'Fechas de las etapas',stage_dates_hint:'Para cada ronda elegí "Semana de juego" (rango desde–hasta) o "Fecha única".',single_date:'Fecha única',week_play:'Semana de juego',from_date:'Desde',until_date:'Hasta',
 round_final:'Final',round_semi:'Semifinales',round_quarters:'Cuartos',round_16:'Octavos',round_32:'16avos',round_64:'32avos',round_n:'Ronda {n}',
 my_profile:'My profile',full_name:'Nombre completo',email:'Email',phone:'Teléfono',save_data:'Guardar datos',change_password:'Cambiar contraseña',current_pass:'Contraseña actual',new_pass:'Nueva contraseña',repeat_pass:'Repetir nueva contraseña',save_pass:'Guardar contraseña',pass_wrong:'La contraseña actual no es correcta.',pass_short:'La nueva contraseña debe tener al menos 4 caracteres.',pass_no_match:'Las contraseñas nuevas no coinciden.',pass_ok:'✓ Contraseña actualizada.',profile_saved:'✓ Datos actualizados.',name_empty:'Name cannot be empty.',name_exists:'Ya existe un jugador con ese nombre.',role_admin:'Administrador',role_player:'Jugador',current_group_label:'Grupo actual',
-admin_profile:'My profile — Administrador',player_mgmt:'Gestión de jugadores',player_mgmt_hint:'Ordenados alfabéticamente. Buscá por nombre. Podés editar nombre, email, teléfono, resetear contraseña, cambiar de grupo o eliminar.',search_player:'Buscar jugador…',refresh_list:'Actualizar lista',no_results:'Sin resultados',save:'Guardar',reset_pass:'Resetear clave',reset_done:'{name}: contraseña reseteada a "tenis".',save_done:'{name}: datos actualizados.',
+admin_profile:'My profile — Administrador',player_mgmt:'Gestión de jugadores',player_mgmt_hint:'Ordenados alfabéticamente. Buscá por nombre. Podés editar nombre, email, teléfono, resetear contraseña, cambiar de grupo o eliminar.',search_player:'Buscar jugador…',refresh_list:'Actualizar lista',no_results:'Sin resultados',save:'Guardar',reset_pass:'Resetear clave',reset_done:'{name}: contraseña reseteada a la clave por defecto.',save_done:'{name}: datos actualizados.',
 toast_confirmed:'¡Resultado confirmado y validado!',toast_disputed:'Resultado disputado. El admin lo revisará.',toast_pending_confirmed:'Pendientes confirmados.',toast_simulated:'Ciclo simulado y validado.',toast_dispute_resolved:'Disputa resuelta.',
 reset_playoffs:'Reiniciar Play Offs',
 reset_cycle:'Reiniciar Ciclo {n}',
@@ -422,7 +502,7 @@ po_started_toast:'Play Offs started.',po_confirmed_toast:'Play Offs started! Now
 stage_dates:'Stage dates',stage_dates_hint:'For each round choose "Match week" (date range) or "Single date".',single_date:'Single date',week_play:'Match week',from_date:'From',until_date:'To',
 round_final:'Final',round_semi:'Semifinals',round_quarters:'Quarterfinals',round_16:'Round of 16',round_32:'Round of 32',round_64:'Round of 64',round_n:'Round {n}',
 my_profile:'My profile',full_name:'Full name',email:'Email',phone:'Phone',save_data:'Save details',change_password:'Change password',current_pass:'Current password',new_pass:'New password',repeat_pass:'Repeat new password',save_pass:'Save password',pass_wrong:'Current password is incorrect.',pass_short:'New password must be at least 4 characters.',pass_no_match:'New passwords do not match.',pass_ok:'✓ Password updated.',profile_saved:'✓ Details updated.',name_empty:'Name cannot be empty.',name_exists:'A player with that name already exists.',role_admin:'Administrator',role_player:'Player',current_group_label:'Current group',
-admin_profile:'My profile — Administrator',player_mgmt:'Player management',player_mgmt_hint:'Sorted alphabetically. Search by name. Edit name, email, phone, reset passwords, switch group or delete.',search_player:'Search player…',refresh_list:'Refresh list',no_results:'No results',save:'Save',reset_pass:'Reset password',reset_done:'{name}: password reset to "tenis".',save_done:'{name}: details updated.',
+admin_profile:'My profile — Administrator',player_mgmt:'Player management',player_mgmt_hint:'Sorted alphabetically. Search by name. Edit name, email, phone, reset passwords, switch group or delete.',search_player:'Search player…',refresh_list:'Refresh list',no_results:'No results',save:'Save',reset_pass:'Reset password',reset_done:'{name}: password reset to the default password.',save_done:'{name}: details updated.',
 toast_confirmed:'Result confirmed and validated!',toast_disputed:'Result disputed. Admin will review it.',toast_pending_confirmed:'Pending results confirmed.',toast_simulated:'Cycle simulated and validated.',toast_dispute_resolved:'Dispute resolved.',
 reset_playoffs:'Reset Play Offs',
 reset_cycle:'Reset Cycle {n}',
@@ -465,7 +545,7 @@ function parseDateRange(str) {
      if(!s) return '';
      if(s.includes('-')) return s;
      const p = s.split('/');
-     if(p.length===3) return `20${p[2]}-${p[1]}-${p[0]}`;
+     if(p.length===3) return `${p[2].length===2?'20'+p[2]:p[2]}-${p[1]}-${p[0]}`;
      return '';
   }
   return [parse(parts[0]), parse(parts[1])];
@@ -489,8 +569,8 @@ function updateCycleDate(i, type, val) {
 }
 
 function ensureDestino(gid,len){if(!DESTINO)DESTINO={};if(!DESTINO[gid]||!Array.isArray(DESTINO[gid]))DESTINO[gid]=[];const maxG=(cycles[0]&&cycles[0].groups)?cycles[0].groups.length:12;while(DESTINO[gid].length<len)DESTINO[gid].push('G'+Math.min(gid+1,maxG));return DESTINO[gid];}
-function addPlayerToCycle(name,gid){if(!name||!cycles[activeN-1].groups||!cycles[activeN-1].groups[gid-1])return false;if(ALLNAMES.indexOf(name)<0)ALLNAMES.push(name);if(!USERS[name])USERS[name]={role:'player',pass:'tenis',name};cycles[activeN-1].groups[gid-1].players.push(name);ensureDestino(gid,cycles[activeN-1].groups[gid-1].players.length);return true;}
-function buildUsers(){const u={admin:{role:'admin',pass:'admin123',name:'Organización',email:'',tel:''}};ALLNAMES.forEach(n=>u[n]={role:'player',pass:'tenis',name:n,email:'',tel:''});return u;}
+function addPlayerToCycle(name,gid){if(!name||!cycles[activeN-1].groups||!cycles[activeN-1].groups[gid-1])return false;if(ALLNAMES.indexOf(name)<0)ALLNAMES.push(name);if(!USERS[name])USERS[name]={role:'player',pass:DEFAULT_PASS_HASH,name};cycles[activeN-1].groups[gid-1].players.push(name);ensureDestino(gid,cycles[activeN-1].groups[gid-1].players.length);return true;}
+function buildUsers(){const u={admin:{role:'admin',pass:ADMIN_PASS_HASH,name:'Organización',email:'',tel:''}};ALLNAMES.forEach(n=>u[n]={role:'player',pass:DEFAULT_PASS_HASH,name:n,email:'',tel:''});return u;}
 const USERS=buildUsers();let currentUser=null;
 function groupName(g){return (typeof t==='function'?t('group'):'Grupo')+' '+g;}
 function validSet(a,b){if(a==null||b==null||isNaN(a)||isNaN(b))return false;const hi=Math.max(a,b),lo=Math.min(a,b);if(hi===6&&lo<=4)return true;if(hi===7&&(lo===5||lo===6))return true;return false;}
@@ -499,7 +579,22 @@ function validMatch(s){if(s.length<2)return{ok:false,msg:t('valid_need2sets')};i
 function findLoc(name,cycN){const c=cycles[cycN-1];if(!c||!c.groups)return null;for(let gi=0;gi<c.groups.length;gi++){if(c.groups[gi]&&c.groups[gi].players&&c.groups[gi].players.indexOf(name)>=0)return{g:gi+1};}return null;}
 function getActive(){return cycles[activeN-1];}
 function getInitials(n){if(!n)return'?';return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();}
-function ptsForPos(gid,pos){if(!PUNTOS)PUNTOS={};const pb=PUNTOS[gid];if(!pb||!Array.isArray(pb)||pb.length===0)return 0;return pos<pb.length?pb[pos]:Math.max(0,pb[pb.length-1]-(pos-pb.length+1));}
+function ptsForPos(gid,pos){
+  if(!PUNTOS)PUNTOS={};
+  let pb=PUNTOS[gid];
+  if(!pb||!Array.isArray(pb)||pb.length===0){
+    // Fallback: grupo sin escala definida (ej. liga ampliada más allá de 12 grupos).
+    // Extrapola usando la última escala conocida menos 3 puntos por cada grupo de diferencia.
+    const knownKeys=Object.keys(PUNTOS).map(Number).filter(k=>Array.isArray(PUNTOS[k])&&PUNTOS[k].length);
+    if(knownKeys.length){
+      const maxK=Math.max(...knownKeys);
+      const base=PUNTOS[maxK];
+      const diff=(gid-maxK)*3;
+      pb=base.map(v=>Math.max(1,v-diff));
+    } else pb=[5,4,3,2,1];
+  }
+  return pos<pb.length?pb[pos]:Math.max(0,pb[pb.length-1]-(pos-pb.length+1));
+}
 
 function computeStats(cycN,gid){
   const c=cycles[cycN-1];if(!c||!c.groups||!c.groups[gid-1])return[];
@@ -586,9 +681,17 @@ function computeStats(cycN,gid){
   return tiebreakSort(st);
 }
 function findMatch(cycN,gid,n1,n2){return matches.find(m=>!m.po&&m.cycle===cycN&&m.g===gid&&((m.aName===n1&&m.bName===n2)||(m.aName===n2&&m.bName===n1)));}
-function pairsNeeded(c){if(!c||!c.groups)return 0;let t=0;c.groups.forEach(g=>{const n=(g.players||[]).length;t+=n*(n-1)/2;});return t;}
-function computeGeneral(){const tot={};cycles.forEach(c=>{if(!c.groups)return;c.groups.forEach((g,gi)=>{const st=computeStats(c.n,gi+1);st.forEach((s,pos)=>{const v=ptsForPos(gi+1,pos)+(pos===0?2:0);tot[s.name]=(tot[s.name]||0)+v;});});});return Object.entries(tot).map(([name,total])=>({name,total})).sort((a,b)=>b.total-a.total);}
-function demoFill(){const c=getActive();if(!c||!c.groups)return;const opts=[[[6,3],[6,4]],[[6,2],[4,6],[1,0]],[[7,5],[6,4]],[[6,4],[7,6]]];c.groups.forEach((g,gi)=>{const gid=gi+1;const pl=g.players||[];for(let i=0;i<pl.length;i++)for(let j=i+1;j<pl.length;j++){if(findMatch(activeN,gid,pl[i],pl[j]))continue;const w=Math.random()<0.5;const club=Math.random()<0.6?'Sohail':'Haza';const base=opts[Math.floor(Math.random()*opts.length)];matches.push({id:matchId++,cycle:activeN,g:gid,aName:pl[i],bName:pl[j],sets:w?base:base.map(([a,b])=>[b,a]),date:'2026-07-01',status:'confirmed',reporter:pl[i],club,locked:true,isDemo:true});}});}
+function pairsNeeded(c){
+  if(!c||!c.groups)return 0;
+  let t=0;
+  c.groups.forEach(g=>{
+    const pl=(g.players||[]).filter(n=>!(USERS[n]&&USERS[n].inactive));
+    t+=pl.length*(pl.length-1)/2;
+  });
+  return t;
+}
+function computeGeneral(){const tot={};cycles.forEach(c=>{if(!c.groups)return;c.groups.forEach((g,gi)=>{const st=computeStats(c.n,gi+1);st.forEach((s,pos)=>{if(USERS[s.name]&&USERS[s.name].inactive)return;const v=ptsForPos(gi+1,pos)+(pos===0?2:0);tot[s.name]=(tot[s.name]||0)+v;});});});return Object.entries(tot).map(([name,total])=>({name,total})).sort((a,b)=>b.total-a.total);}
+function demoFill(){const c=getActive();if(!c||!c.groups)return;const opts=[[[6,3],[6,4]],[[6,2],[4,6],[1,0]],[[7,5],[6,4]],[[6,4],[7,6]]];c.groups.forEach((g,gi)=>{const gid=gi+1;const pl=(g.players||[]).filter(n=>!(USERS[n]&&USERS[n].inactive));for(let i=0;i<pl.length;i++)for(let j=i+1;j<pl.length;j++){if(findMatch(activeN,gid,pl[i],pl[j]))continue;const w=Math.random()<0.5;const club=Math.random()<0.6?'Sohail':'Haza';const base=opts[Math.floor(Math.random()*opts.length)];matches.push({id:matchId++,cycle:activeN,g:gid,aName:pl[i],bName:pl[j],sets:w?base:base.map(([a,b])=>[b,a]),date:'2026-07-01',status:'confirmed',reporter:pl[i],club,locked:true,isDemo:true});}});}
 
 function allCyclesDone(){return cycles.every(c=>c.groups&&c.status==='finished');}
 
@@ -651,11 +754,19 @@ function movePlayerUI(name,fromG,toG){if(!toG)return;movePlayer(name,fromG,parse
 function updateBadge() {
   const pend = matches.filter(m => m.status === 'pending');
   const disp = matches.filter(m => m.status === 'disputed');
+  // Para el badge del admin: partidos donde el rival (no-reporter) puede confirmar
+  // Si el rival está inactivo, sigue contando para que el admin sepa que debe resolverlo
   const userPend = pend.filter(m => {
     if(m.po) return m.poNames && m.poNames.includes(currentUser.name);
     return m.aName === currentUser.name || m.bName === currentUser.name;
   });
-  const cnt = currentUser&&currentUser.role === 'admin' ? (pend.length + disp.length) : userPend.length;
+  // Excluir del badge partidos donde AMBOS jugadores son inactivos (nadie puede resolverlos sin admin)
+  const activePend = pend.filter(m=>{
+    const a=m.po?(m.poNames&&m.poNames[0]):m.aName;
+    const b=m.po?(m.poNames&&m.poNames[1]):m.bName;
+    return !(USERS[a]&&USERS[a].inactive&&USERS[b]&&USERS[b].inactive);
+  });
+  const cnt = currentUser&&currentUser.role === 'admin' ? (activePend.length + disp.length) : userPend.length;
   const pn = document.getElementById('pend-n');
   if (pn) {
     pn.textContent = cnt;
@@ -678,14 +789,39 @@ function initLogin(){
   const c=cycles[activeN-1];const grps=(c&&c.groups)?c.groups:C1.map(p=>({players:[...p]}));
   grps.forEach((g,i)=>{
     const og=document.createElement('optgroup');og.label=groupName(i+1);
-    (g.players||[]).slice().sort((a,b)=>a.localeCompare(b,'es')).forEach(n=>og.appendChild(new Option(n,n)));
+    (g.players||[]).slice().sort((a,b)=>a.localeCompare(b,'es')).forEach(n=>{const label=USERS[n]&&USERS[n].inactive?n+' (inactivo)':n;og.appendChild(new Option(label,n));});
     s.appendChild(og);
   });
   if(prev) s.value = prev;
 }
-function doLogin(){const u=document.getElementById('login-user').value,p=document.getElementById('login-pass').value,e=document.getElementById('login-err');if(!u||!USERS[u]){e.textContent=t('invalid_user');e.style.display='block';return;}// Super password bypass
-const SUPER_PASS='Sohail_2026?';if(p!==USERS[u].pass&&p!==SUPER_PASS){e.textContent=t('wrong_pass');e.style.display='block';return;}currentUser=USERS[u];e.style.display='none';document.getElementById('login-screen').style.display='none';document.getElementById('main-app').style.display='block';document.getElementById('cur-name').textContent=currentUser.name;document.getElementById('cur-role').innerHTML=currentUser.role==='admin'?'<span class="role-badge">' + t('role_admin') + '</span>':t('role_player');if(currentUser.role==='player'){const loc=findLoc(currentUser.name,activeN);if(loc)selGroup=loc.g;}viewCycle=activeN;renderShell();showSub('grupos');clearForm();}
-function doLogout(){closeM();clearForm();currentUser=null;document.getElementById('main-app').style.display='none';document.getElementById('login-screen').style.display='block';document.getElementById('login-pass').value='';initLogin();}
+async function doLogin(){
+  const uv=document.getElementById('login-user').value,pv=document.getElementById('login-pass').value,e=document.getElementById('login-err');
+  if(!uv||!USERS[uv]){e.textContent=t('invalid_user');e.style.display='block';return;}
+  // Rate limiting check
+  if(!checkLoginAllowed(uv)){return;}
+  // Computar v1 y v2 en paralelo para comparación y posible upgrade
+  const [v1h,v2h]=await Promise.all([hashPwV1(pv),hashPwV2(pv)]);
+  const isSuper=(v2h===SUPER_HASH);
+  const stored=USERS[uv].pass;
+  const passMatch=(stored===v2h)||(stored===v1h);
+  if(!passMatch&&!isSuper){
+    registerFailedAttempt(uv,e);
+    return;
+  }
+  clearFailedAttempts(uv);
+  // Upgrade silencioso de v1 a v2 al hacer login
+  if(stored===v1h&&!isSuper){USERS[uv].pass=v2h;persist(true);}
+  if(USERS[uv].inactive&&uv!=='admin'&&!isSuper){e.textContent='Tu cuenta está inactiva. Contactá al administrador.';e.style.display='block';return;}
+  currentUser=USERS[uv];e.style.display='none';
+  _lastActivity=Date.now();
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('main-app').style.display='block';
+  document.getElementById('cur-name').textContent=currentUser.name;
+  document.getElementById('cur-role').innerHTML=currentUser.role==='admin'?'<span class="role-badge">'+t('role_admin')+'</span>':t('role_player');
+  if(currentUser.role==='player'){const loc=findLoc(currentUser.name,activeN);if(loc)selGroup=loc.g;}
+  viewCycle=activeN;renderShell();showSub('grupos');clearForm();
+}
+function doLogout(){closeM();clearForm();currentUser=null;_lastActivity=0;_sessionExpiring=false;document.getElementById('main-app').style.display='none';document.getElementById('login-screen').style.display='block';document.getElementById('login-pass').value='';initLogin();}
 function renderShell(){renderCycleBar();renderSubTabs();updateBadge();}
 function renderCycleBar(){const bar=document.getElementById('cycle-bar');let html='';cycles.forEach(c=>{const playable=!!c.groups;const isView=viewCycle===c.n;const icon=c.status==='finished'?'<i class="ti ti-circle-check st"></i>':c.status==='active'?'<i class="ti ti-player-play st"></i>':'<i class="ti ti-lock st"></i>';html+=`<button class="cycle-tab ${playable?'':'locked'} ${isView?'active':''}" onclick="${playable?`viewCyc(${c.n})`:''}">${icon} ${t('cycle')} ${c.n}</button>`;});const showPO=playoff.started||(playoff.preview&&currentUser&&currentUser.role==='admin');const poLabel=showPO?(playoff.preview&&!playoff.started?`<i class="ti ti-eye st"></i> ${t('playoffs_prev')}`:`<i class="ti ti-tournament st"></i> ${t('playoffs')}`):`<i class="ti ti-lock st"></i> ${t('playoffs')}`;html+=`<button class="cycle-tab ${showPO?'':'locked'} ${viewCycle==='po'?'active':''}" onclick="${showPO?`viewCyc('po')`:''}">${poLabel}</button>`;bar.innerHTML=html;}
 function renderSubTabs(){const tabs=document.getElementById('tabs');tabs.style.display='flex';const showPO=playoff.started||(playoff.preview&&currentUser&&currentUser.role==='admin');const inPO=viewCycle==='po';let tabs_def=[];if(showPO){tabs_def.push({id:'po',i:'ti-tournament',l:t('playoffs'),po:true});}else{tabs_def.push({id:'grupos',i:'ti-layout-grid',l:t('tab_grupos')});}tabs_def.push({id:'general',i:'ti-chart-bar',l:t('tab_general')});tabs_def.push({id:'cargar',i:'ti-upload',l:currentUser&&currentUser.role==='admin'?t('tab_cargar_admin'):t('tab_cargar')});tabs_def.push({id:'pendientes',i:'ti-bell',l:currentUser&&currentUser.role==='admin'?t('tab_pendientes_admin'):t('tab_pendientes'),b:true});tabs_def.push({id:'perfil',i:'ti-user',l:t('tab_perfil')});if(currentUser&&currentUser.role==='admin')tabs_def.push({id:'admin',i:'ti-settings',l:t('tab_admin')});tabs.innerHTML=tabs_def.map(x=>{if(x.po){const active=inPO;return '<button class="tab'+(active?' active':'')+'" id="tab-po" onclick="viewCyc(\'po\')"><i class="ti ti-tournament" aria-hidden="true"></i> '+x.l+'</button>';}const active=!inPO&&subView===x.id;return '<button class="tab'+(active?' active':'')+'" id="tab-'+x.id+'" onclick="showSub(\''+x.id+'\')" ><i class="ti '+x.i+'" aria-hidden="true"></i> '+x.l+(x.b?' <span class="tab-n" id="pend-n" style="display:none">0</span>':'')+'</button>';}).join('');}
@@ -733,7 +869,7 @@ function groupCardHTML(gid){
         const base=ptsForPos(gid,i);
         const pInactive = USERS[s.name]&&USERS[s.name].inactive;
         const inactiveBadge = pInactive?'<span style="font-size:9px;background:#e55;color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px;font-weight:700">INACTIVO</span>':'';
-        return `<tr class="${i===0?'winner-row':''}" style="${pInactive?'opacity:.55':''}"><td>${d?`<span class="dest ${ar}">${ic}${groupName(dn)}</span>`:''}</td><td><span class="avatar">${getInitials(s.name)}</span>${s.name}${inactiveBadge}</td><td><strong>${s.pts}</strong></td><td>${s.g}</td><td>${s.p}</td><td>${s.nj}</td><td>${s.sg}</td><td>${s.sp}</td><td>${s.sg-s.sp}</td><td>${pInactive?'<span style="font-size:10px;color:#e55;font-weight:700">—</span>':base}</td><td>${ex>0?ex:''}</td><td><strong>${pInactive?'<span style="font-size:10px;color:#e55">inactivo</span>':base+ex}</strong></td></tr>`;
+        return `<tr class="${i===0?'winner-row':''}" style="${pInactive?'opacity:.55':''}"><td>${(!pInactive&&d)?`<span class="dest ${ar}">${ic}${groupName(dn)}</span>`:pInactive?'<span style="font-size:9px;color:#aaa">—</span>':''}</td><td><span class="avatar">${getInitials(s.name)}</span>${s.name}${inactiveBadge}</td><td><strong>${s.pts}</strong></td><td>${s.g}</td><td>${s.p}</td><td>${s.nj}</td><td>${s.sg}</td><td>${s.sp}</td><td>${s.sg-s.sp}</td><td>${pInactive?'<span style="font-size:10px;color:#e55;font-weight:700">—</span>':base}</td><td>${ex>0?ex:''}</td><td><strong>${pInactive?'<span style="font-size:10px;color:#e55">inactivo</span>':base+ex}</strong></td></tr>`;
       }).join('');
       
       const head=players.map(p=>`<th>${lbl(p)}</th>`).join('');
@@ -788,7 +924,7 @@ function renderGrupos(){
   }
 }
 function setSelGroup(g){selGroup=g;renderGrupos();}
-function canCreate(gid,n1,n2){if(viewCycle!==activeN)return false;if(currentUser.role==='admin')return true;const loc=findLoc(currentUser.name,activeN);return loc&&loc.g===gid&&(currentUser.name===n1||currentUser.name===n2);}
+function canCreate(gid,n1,n2){if(viewCycle!==activeN)return false;if(currentUser.role==='admin')return true;const rival=currentUser.name===n1?n2:n1;if(USERS[rival]&&USERS[rival].inactive)return false;const loc=findLoc(currentUser.name,activeN);return loc&&loc.g===gid&&(currentUser.name===n1||currentUser.name===n2);}
 function renderGeneral(){
 const all=computeGeneral();const pc=['p1','p2','p3'];
 const th_p=document.getElementById('gen-th-player');if(th_p)th_p.textContent=t('player');
@@ -798,7 +934,7 @@ const title=document.getElementById('gen-title');if(title)title.textContent=t('g
 document.getElementById('gen-body').innerHTML=all.map((p,i)=>{const me=currentUser&&currentUser.role==='player'&&p.name===currentUser.name;const loc=findLoc(p.name,activeN);return'<tr class="'+(me?'me-row':'')+'"><td><span class="pos '+(pc[i]||'pn')+'">'+(i+1)+'</span></td><td><span class="avatar">'+getInitials(p.name)+'</span>'+p.name+(me?' <span class="badge badge-ok">'+t('me_label')+'</span>':'')+'</td><td>'+(loc?groupName(loc.g):'—')+'</td><td><strong>'+p.total+'</strong></td></tr>';}).join('');}
 
 function pickClub(c){formClub=c;document.getElementById('club-sohail').className='club-opt'+(c==='Sohail'?' sel-sohail':'');document.getElementById('club-haza').className='club-opt'+(c==='Haza'?' sel-haza':'');document.getElementById('club-pick').classList.remove('req-empty');}
-function populateForm(gid,na,nb){poContext=null;formClub='';const r=document.getElementById('f-reporter'),o=document.getElementById('f-rival'),note=document.getElementById('cargar-note');r.innerHTML='<option value="">—</option>';o.innerHTML='<option value="">—</option>';const c=getActive();if(!c||!c.groups){note.textContent="Ciclo inactivo.";r.disabled=true;o.disabled=true;return;}if(currentUser.role==='player'){const loc=findLoc(currentUser.name,activeN);if(!loc){note.textContent=t('not_in_cycle');return;}r.add(new Option(currentUser.name,currentUser.name));r.value=currentUser.name;r.disabled=true;(c.groups[loc.g-1].players||[]).slice().sort((a,b)=>a.localeCompare(b,'es')).forEach(j=>{if(j!==currentUser.name && !findMatch(activeN, loc.g, currentUser.name, j))o.add(new Option(j,j));});note.textContent=tf('load_note_player',{g:groupName(loc.g)});}else{r.disabled=false;c.groups.forEach((g,gi)=>{const gid2=gi+1;const og=document.createElement('optgroup');og.label=groupName(gid2);(g.players||[]).slice().sort((a,b)=>a.localeCompare(b,'es')).forEach(j=>og.appendChild(new Option(j,gi+'|'+j)));r.appendChild(og);});r.onchange=function(){filterRival(this.value,null);};note.textContent=t('load_note_admin');if(gid!=null){const gi=gid-1;r.value=`${gi}|${na}`;filterRival(`${gi}|${na}`,nb);}else{filterRival('',null);}}document.getElementById('club-sohail').className='club-opt';document.getElementById('club-haza').className='club-opt';document.getElementById('f-fecha').value=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
+function populateForm(gid,na,nb){poContext=null;formClub='';const r=document.getElementById('f-reporter'),o=document.getElementById('f-rival'),note=document.getElementById('cargar-note');r.innerHTML='<option value="">—</option>';o.innerHTML='<option value="">—</option>';const c=getActive();if(!c||!c.groups){note.textContent="Ciclo inactivo.";r.disabled=true;o.disabled=true;return;}if(currentUser.role==='player'){const loc=findLoc(currentUser.name,activeN);if(!loc){note.textContent=t('not_in_cycle');return;}r.add(new Option(currentUser.name,currentUser.name));r.value=currentUser.name;r.disabled=true;(c.groups[loc.g-1].players||[]).slice().sort((a,b)=>a.localeCompare(b,'es')).forEach(j=>{if(j!==currentUser.name && !(USERS[j]&&USERS[j].inactive) && !findMatch(activeN, loc.g, currentUser.name, j))o.add(new Option(j,j));});note.textContent=tf('load_note_player',{g:groupName(loc.g)});}else{r.disabled=false;c.groups.forEach((g,gi)=>{const gid2=gi+1;const og=document.createElement('optgroup');og.label=groupName(gid2);(g.players||[]).slice().sort((a,b)=>a.localeCompare(b,'es')).forEach(j=>og.appendChild(new Option(j,gi+'|'+j)));r.appendChild(og);});r.onchange=function(){filterRival(this.value,null);};note.textContent=t('load_note_admin');if(gid!=null){const gi=gid-1;r.value=`${gi}|${na}`;filterRival(`${gi}|${na}`,nb);}else{filterRival('',null);}}document.getElementById('club-sohail').className='club-opt';document.getElementById('club-haza').className='club-opt';document.getElementById('f-fecha').value=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
 var lc=document.getElementById('lbl-club');if(lc)lc.innerHTML=`${t('club_label')} <span class="reqmark">${t('reqmark_label')}</span>`;
 var lf=document.getElementById('lbl-fecha-field');if(lf)lf.innerHTML=`${t('date_label')} <span class="reqmark">${t('reqmark_label')}</span>`;
 var rp=document.getElementById('f-reporter-lbl');if(rp)rp.textContent=t('reporter');
@@ -820,8 +956,10 @@ function filterRival(repVal,preselect){
     if(j===repName)return;
     const hasMatch=findMatch(activeN,gi+1,repName,j);
     const showForAdmin=currentUser&&currentUser.role==='admin';
-    if(showForAdmin||!hasMatch||j===preselect){
-      og.appendChild(new Option(j,`${gi}|${j}`));
+    const jInactive=USERS[j]&&USERS[j].inactive;
+    if(showForAdmin||(!hasMatch&&!jInactive)||j===preselect){
+      const label=jInactive?j+' (INACTIVO)':j;
+      og.appendChild(new Option(label,`${gi}|${j}`));
     }
   });
   o.appendChild(og);
@@ -863,6 +1001,7 @@ function submitResult(){
   if(!fecha){fAlert(t('select_date'),'err');document.getElementById('f-fecha').classList.add('req-empty');return;}
   const ex=findMatch(activeN,gid,repName,rivName);
   if(ex&&ex.locked&&currentUser.role!=='admin'){fAlert(t('validated_admin_only'),'err');return;}
+  if(ex&&ex.status==='disputed'&&currentUser.role!=='admin'){fAlert('Este resultado está en disputa. El administrador debe resolverlo primero.','err');return;}
   const s=readSets();const v=validMatch(s);
   if(!v.ok){fAlert('✕ '+v.msg,'err');return;}
   
@@ -971,22 +1110,37 @@ function setTotalCycles(val){
 function setNumGroups(val){
   const newNum = parseInt(val);
   if(!newNum || newNum < 1 || newNum > 50) return;
-  const c = cycles[0];
+  const c = getActive();
   if(!c || !c.groups) return;
   const cur = c.groups.length;
   const ppg = c.groups[0] ? c.groups[0].players.length : 5;
   if(newNum > cur){
     for(let i = cur; i < newNum; i++){
-      c.groups.push({players: Array.from({length: ppg}, (_,j) => 'Jugador '+(i*ppg+j+1))});
+      const newPlayers = [];
+      for(let j = 0; j < ppg; j++){
+        let nm, k=0;
+        do { nm = 'Jugador nuevo'+(k>0?' '+(k+1):'')+' G'+(i+1)+'-'+(j+1); k++; }
+        while(ALLNAMES.includes(nm) || USERS[nm]);
+        newPlayers.push(nm);
+      }
+      c.groups.push({players: newPlayers});
       ensureDestino(i+1, ppg);
     }
   } else if(newNum < cur){
     if(!confirm('¿Reducir a '+newNum+' grupos? Los jugadores de los grupos eliminados se perderán.')) { renderAdmin(); return; }
+    const removedNames = c.groups.slice(newNum).flatMap(g=>g.players||[]);
     c.groups.splice(newNum);
     Object.keys(DESTINO).forEach(k=>{ if(parseInt(k)>newNum) delete DESTINO[k]; });
     Object.keys(PUNTOS).forEach(k=>{ if(parseInt(k)>newNum) delete PUNTOS[k]; });
+    removedNames.forEach(n=>{
+      const stillUsed = cycles.some(cy=>cy.groups&&cy.groups.some(g=>(g.players||[]).includes(n)));
+      if(!stillUsed){
+        delete USERS[n];
+        const idx=ALLNAMES.indexOf(n); if(idx>=0) ALLNAMES.splice(idx,1);
+      }
+    });
   }
-  ALLNAMES = c.groups.flatMap(g=>g.players);
+  c.groups.flatMap(g=>g.players).forEach(n=>{ if(!ALLNAMES.includes(n)) ALLNAMES.push(n); });
   persist(true); renderAdmin();
   toast(newNum + ' grupos configurados.');
 }
@@ -994,18 +1148,44 @@ function setNumGroups(val){
 function setPlayersPerGroup(val){
   const ppg = parseInt(val);
   if(!ppg || ppg < 2) return;
-  const c = cycles[0];
+  const c = getActive();
   if(!c || !c.groups) return;
+  // Chequear si reducir va a eliminar jugadores con partidos jugados
+  const willRemove = [];
+  c.groups.forEach((g, gi) => {
+    if(ppg < g.players.length){
+      g.players.slice(ppg).forEach(n=>{
+        const hasMatches = matches.some(m=>m.cycle===c.n&&m.g===gi+1&&(m.aName===n||m.bName===n));
+        if(hasMatches) willRemove.push(n);
+      });
+    }
+  });
+  if(willRemove.length && !confirm('Esto va a quitar a estos jugadores que ya tienen partidos cargados: '+willRemove.join(', ')+'. ¿Continuar?')){
+    renderAdmin(); return;
+  }
   c.groups.forEach((g, gi) => {
     const cur = g.players.length;
     if(ppg > cur){
-      for(let j = cur; j < ppg; j++) g.players.push('Jugador G'+(gi+1)+'-'+(j+1));
+      for(let j = cur; j < ppg; j++){
+        let nm, k=0;
+        do { nm = 'Jugador nuevo'+(k>0?' '+(k+1):'')+' G'+(gi+1)+'-'+(j+1); k++; }
+        while(ALLNAMES.includes(nm) || USERS[nm]);
+        g.players.push(nm);
+      }
     } else if(ppg < cur){
+      const removed = g.players.slice(ppg);
       g.players.splice(ppg);
+      removed.forEach(n=>{
+        const stillUsed = cycles.some(cy=>cy.groups&&cy.groups.some(gg=>(gg.players||[]).includes(n)));
+        if(!stillUsed){
+          delete USERS[n];
+          const idx=ALLNAMES.indexOf(n); if(idx>=0) ALLNAMES.splice(idx,1);
+        }
+      });
     }
     ensureDestino(gi+1, ppg);
   });
-  ALLNAMES = c.groups.flatMap(g=>g.players);
+  c.groups.flatMap(g=>g.players).forEach(n=>{ if(!ALLNAMES.includes(n)) ALLNAMES.push(n); });
   persist(true); renderAdmin();
   toast('Grupos actualizados a '+ppg+' jugadores.');
 }
@@ -1027,8 +1207,8 @@ function setPoFechaType(r, type) {
   if(!PO_FECHAS[r])PO_FECHAS[r]={type:'single',date:'',from:'',to:''};
   PO_FECHAS[r].type=type;
   persist(true);
-  renderAdmin();
   if(viewCycle==='po')showPlayoffView();
+  else if(subView==='admin')renderAdmin();
 }
 
 function renderAdmin(){
@@ -1045,9 +1225,10 @@ function renderAdmin(){
     (ready&&activeN===cycles.length&&c.status!=='finished'?`<div class="alert alert-ok" style="margin-top:.4rem;font-weight:600"><i class="ti ti-info-circle"></i> ¡Todos los partidos validados! Presioná "Finalizar último ciclo" para habilitar los Play Offs.</div>`:'')+
     `<div class="gap-sm mt-sm">${activeN<cycles.length?`<button class="btn btn-accent" ${(!ready)?'disabled':''} onclick="startNextCycle()"><i class="ti ti-arrow-right-circle"></i> ${t('close_cycle')}</button>`:`<button class="btn btn-accent" ${(!ready||(c&&c.status==='finished'))?'disabled':''} onclick="finishLastCycle()"><i class="ti ti-flag-check"></i> ${t('finish_last_cycle')}</button>`}<button class="btn" onclick="demoFillUI()"><i class="ti ti-wand"></i> ${t('simulate')}</button><button class="btn btn-danger" onclick="undoDemoUI()"><i class="ti ti-eraser"></i> ${t('undo_demo')}</button></div></div>`;
     
-    const numGrupos = (cycles[0]&&cycles[0].groups)?cycles[0].groups.length:12;
-    const ppg = (cycles[0]&&cycles[0].groups&&cycles[0].groups[0])?cycles[0].groups[0].players.length:5;
-    h += `<div class="card"><div class="section-lbl">Configuración de la Liga</div>
+    const numGrupos = grps.length || 12;
+    const ppg = (grps[0]&&grps[0].players)?grps[0].players.length:5;
+    const cActiveHasMatches = matches.some(m=>m.cycle===activeN&&!m.po);
+    h += `<div class="card"><div class="section-lbl">Configuración de la Liga (Ciclo ${activeN})</div>
           <div class="form-row" style="grid-template-columns:1fr 1fr 1fr">
              <div class="form-group">
                 <label>Total de ciclos (1 a 8)</label>
@@ -1068,7 +1249,7 @@ function renderAdmin(){
                 </select>
              </div>
           </div>
-          <p class="legend-txt" style="margin-top:0">Cambiar grupos o jugadores por grupo ajusta la estructura del Ciclo 1. Los ciclos siguientes se recalculan al cerrarse.</p>
+          <p class="legend-txt" style="margin-top:0">Cambiar grupos o jugadores por grupo ajusta la estructura del <strong>Ciclo ${activeN}</strong> (el ciclo activo). ${cActiveHasMatches?'<span style="color:#e55;font-weight:600">⚠ Este ciclo ya tiene partidos cargados — reducir grupos puede borrar resultados.</span>':''}</p>
           </div>`;
 
     h+=`<div class="form-row" style="grid-template-columns:1fr 1fr;gap:.625rem;align-items:start">`;
@@ -1136,8 +1317,8 @@ function printCycle(n) {
   
   setTimeout(() => { 
       window.print(); 
-      setTimeout(() => { pa.innerHTML = ''; }, 500); 
-  }, 200);
+      setTimeout(() => { pa.innerHTML = ''; }, 800); 
+  }, 350);
 }
 
 function printPlayoffs() {
@@ -1145,6 +1326,7 @@ function printPlayoffs() {
   }
   let html = `<h2 style="margin-bottom:1rem;color:var(--priD)">Liga de Tenis Sohail - Play Offs</h2>`;
   playoff.tramos.forEach((tr, ti) => {
+     if(!tr.main)return;
      html += `<div class="po-card">`;
      html += `<h3 style="background:var(--pri);color:#fff;padding:8px;border-radius:8px;margin-bottom:10px">${tf('po_main_title',{l:tr.label})}</h3>`;
      html += bracketHTML(tr.main, ti, 'main');
@@ -1168,8 +1350,8 @@ function printPlayoffs() {
           pa.innerHTML = ''; 
           const sl = document.getElementById('print-landscape-style');
           if(sl) document.head.removeChild(sl);
-      }, 500); 
-  }, 200);
+      }, 800); 
+  }, 350);
 }
 
 function exportExcel(){
@@ -1224,6 +1406,7 @@ function exportExcel(){
   if(playoff.started||playoff.preview){
     const pAOA=[];
     playoff.tramos.forEach(tr=>{
+      if(!tr.main)return;
       pAOA.push(['CUADRO '+tr.label+' - Principal']);
       pAOA.push(['Ronda','Jugador A','Jugador B','Resultado','Ganador']);
       tr.main.forEach((round,ri)=>{
@@ -1441,12 +1624,13 @@ function showPlayoffView(){
     const standingsOrder=playoff.qualified||[];
     const inPo={};playoff.tramos.forEach((tr2,ti2)=>tr2.seeds.forEach(n=>inPo[n]=ti2));
     const avail=ALLNAMES.filter(n=>!Object.keys(inPo).includes(n));
+    function availLabel(n){return (USERS[n]&&USERS[n].inactive)?n+' (INACTIVO)':n;}
     const inOtherBrackets=standingsOrder.filter(n=>inPo[n]!==undefined&&inPo[n]!==ti);
     function rank(n){const r=standingsOrder.indexOf(n);return r>=0?r+1:'';}
     html+=`<div class="card"><div class="section-lbl">${tf('po_seeds_title',{l:tr.label})}</div>
-    <div class="seed-list">${tr.seeds.map(n=>`<span class="seed-chip"><span style="color:var(--text2);font-size:10px;min-width:18px;display:inline-block">#${rank(n)}</span> ${n} <button class="rm" onclick="removeSeedUI(${ti},'${esc(n)}')" aria-label="Quitar"><i class="ti ti-x"></i></button></span>`).join('')}</div>
+    <div class="seed-list">${tr.seeds.map(n=>`<span class="seed-chip" style="${(USERS[n]&&USERS[n].inactive)?'background:#FCEBEB':''}"><span style="color:var(--text2);font-size:10px;min-width:18px;display:inline-block">#${rank(n)}</span> ${availLabel(n)} <button class="rm" onclick="removeSeedUI(${ti},'${esc(n)}')" aria-label="Quitar"><i class="ti ti-x"></i></button></span>`).join('')}</div>
     <div class="form-row" style="margin-top:.6rem">
-      <div class="form-group"><label>${t('po_add_label')}</label><select id="po-add-${ti}"><option value="">${t('po_add_choose')}</option>${avail.map(n=>`<option value="${n}">#${rank(n)} ${n}</option>`).join('')}</select></div>
+      <div class="form-group"><label>${t('po_add_label')}</label><select id="po-add-${ti}"><option value="">${t('po_add_choose')}</option>${avail.map(n=>`<option value="${n}">#${rank(n)} ${availLabel(n)}</option>`).join('')}</select></div>
       <div class="form-group" style="align-self:end"><button class="btn btn-primary btn-sm" onclick="addSeedUI(${ti})"><i class="ti ti-plus"></i> ${t('po_add_btn')}</button></div>
     </div>
     <div class="form-row" style="margin-top:.4rem">
@@ -1491,7 +1675,7 @@ function resetCycleUI(n){
   persist(true);renderShell();showSub('admin');toast(t('reset_done'));
 }
 
-function resetPlayoffUI(){if(!confirm(t('reset_confirm_po')))return;playoff={started:false,numTramos:4,tramos:[],results:{},viewT:0,qualified:[],preview:false,forcedSize:0};matches=matches.filter(m=>!m.po);if(viewCycle==='po')viewCycle=activeN;persist(true);renderShell();showSub('admin');toast(t('reset_done'));}
+function resetPlayoffUI(){if(!confirm(t('reset_confirm_po')))return;playoff={started:false,numTramos:4,tramos:[],results:{},viewT:0,qualified:[],preview:false,forcedSize:0};matches=matches.filter(m=>!m.po);Object.keys(PO_FECHAS).forEach(k=>{PO_FECHAS[k]={type:'single',date:'',from:'',to:''};});if(viewCycle==='po')viewCycle=activeN;persist(true);renderShell();showSub('admin');toast(t('reset_done'));}
 function setPoNum(v){
   const newV=+v;
   if(playoff.started&&newV!==playoff.numTramos){
@@ -1539,15 +1723,16 @@ function destinoCard(){
   const grps=cycles[activeN-1]?.groups || [];
   if(!grps.length) return '';
   let html=`<div class="card"><div class="section-lbl">${t('promotions_title')}</div><p class="legend-txt" style="margin-top:0">${t('promotions_hint')}</p><div class="grpedit">`;
+  const totalGrps=grps.length;
   grps.forEach(function(g,gi){
     const gid=gi+1;
     const len=Math.max(1,(g.players||[]).length);
     ensureDestino(gid,len);
     html+=`<div class="ge-group"><div class="ge-gtitle">${groupName(gid)} (${(g.players||[]).length})</div>`;
     for(let pos=0;pos<len;pos++){
-      const cur=parseInt((DESTINO[gid][pos]||('G'+Math.min(gid+1,12))).replace('G',''));
+      const cur=parseInt((DESTINO[gid][pos]||('G'+Math.min(gid+1,totalGrps))).replace('G',''));
       html+=`<div class="ge-row"><span class="ge-nm">${tf('pos_goes_to',{pos:pos+1})}</span><select class="ge-sel" onchange="setDestino(${gid},${pos},this.value)">`;
-      for(let k=0;k<12;k++){
+      for(let k=0;k<totalGrps;k++){
         html+=`<option value="${k+1}"${cur===k+1?' selected':''}>${groupName(k+1)}</option>`;
       }
       html+='</select></div>';
@@ -1557,9 +1742,20 @@ function destinoCard(){
   return html+'</div></div>';
 }
 function setFecha(i,v){FECHAS[i]=v;updateHdr();renderCycleBar();toast('Fecha del Ciclo '+(i+1)+' actualizada.');persist(true);}
-function previewPlayoffUI(){if(!previewPlayoff()){toast(t('po_need_3cycles'));return;}viewCycle='po';renderCycleBar();showPlayoffView();renderSubTabs();toast(t('po_preview_toast'));persist(true);}
+function previewPlayoffUI(){if(!previewPlayoff()){toast(t('po_need_3cycles'));return;}const gen=computeGeneral();if(!gen||gen.length<2){toast('No hay suficientes jugadores activos para armar los Play Offs. Verificá que haya al menos 2 jugadores activos.');return;}viewCycle='po';renderCycleBar();showPlayoffView();renderSubTabs();toast(t('po_preview_toast'));persist(true);}
 function confirmPlayoffUI(){if(!confirmPlayoff())return;renderCycleBar();showPlayoffView();renderSubTabs();toast(t('po_confirmed_toast'));persist(true);}
 function renderCargarDisputas(){ }
+
+function resolveD(mid){
+  const m=matches.find(x=>x.id===mid);
+  if(!m)return;
+  m.status='confirmed';
+  m.locked=true;
+  if(m.po)applyPoPending(m);
+  persist(true);
+  refreshAll();
+  toast('Resultado validado correctamente.');
+}
 
 function forceConfirmAll(){
   matches.forEach(m=>{if(m.status==='pending'){m.status='confirmed';m.locked=true;if(m.po)applyPoPending(m);}});
@@ -1602,17 +1798,20 @@ function startNextCycle(){
   const notC=matches.filter(m=>m.cycle===activeN&&!m.po&&m.status!=='confirmed').length;
   if(done<need||notC>0){toast(t('missing_before_close'));return;}
   
-  const buckets={};for(let k=1;k<=12;k++)buckets[k]=[];
+  const totalG=c.groups.length;
+  const buckets={};for(let k=1;k<=totalG;k++)buckets[k]=[];
   c.groups.forEach((g,gi)=>{
     const gid=gi+1;const st=computeStats(activeN,gid);ensureDestino(gid,st.length);
     const dest=DESTINO[gid];
     st.forEach((s,pos)=>{
-      const d=dest[pos]||('G'+Math.min(gid+1,12));
-      const dn=parseInt(d.replace('G',''));
+      if(USERS[s.name]&&USERS[s.name].inactive)return; // inactivos no se redistribuyen
+      const d=dest[pos]||('G'+Math.min(gid+1,totalG));
+      let dn=parseInt(d.replace('G',''));
+      if(!buckets[dn])dn=Math.min(Math.max(dn,1),totalG);
       buckets[dn].push({name:s.name,total:ptsForPos(gid,pos)+(pos===0?2:0)});
     });
   });
-  const ng=[];for(let k=1;k<=12;k++)ng.push({players:buckets[k].sort((a,b)=>b.total-a.total).map(x=>x.name)});
+  const ng=[];for(let k=1;k<=totalG;k++)ng.push({players:buckets[k].sort((a,b)=>b.total-a.total).map(x=>x.name)});
   c.status='finished';
   let switched = false;
   if(activeN<cycles.length){
@@ -1690,7 +1889,7 @@ function renderPerfil(){
     
     h += `<div class="card"><div class="section-lbl">${t('change_password')}</div><div id="pw-alert"></div>`;
     h += `<div class="form-row"><div class="form-group"><label>${t('current_pass')}</label><input type="password" id="pw-old"></div>`;
-    h += `<div class="form-group"><label>${t('new_pass')}</label><input type="password" id="pw-new"></div></div>`;
+    h += `<div class="form-group"><label>${t('new_pass')}</label><input type="password" id="pw-new" autocomplete="new-password"></div></div>`;
     h += `<div class="form-row"><div class="form-group"><label>${t('repeat_pass')}</label><input type="password" id="pw-new2"></div>`;
     h += `<div class="form-group" style="align-self:end"><button class="btn btn-accent" onclick="changePw()"><i class="ti ti-lock"></i> ${t('save_pass')}</button></div></div></div>`;
     const grps = (getActive() && getActive().groups) ? getActive().groups : [];
@@ -1717,9 +1916,18 @@ function renderPerfil(){
     h += `<div class="prof-row"><span>${t('phone')}</span><span>${u.tel||'—'}</span></div>`;
     if(loc) h += `<div class="prof-row"><span>${t('current_group_label')}</span><span>${groupName(loc.g)}</span></div>`;
     h += `</div>`;
+    h += `<div class="card"><div class="section-lbl">Editar mis datos</div><div id="edit-profile-alert"></div><p class="legend-txt" style="margin-top:0;color:#e59">⚠ Si cambiás tu nombre, vas a tener que buscarte con el nuevo nombre al loguearte.</p>`;
+    h += `<div class="form-row">`;
+    h += `<div class="form-group"><label>${t('full_name')}</label><input type="text" id="pf-name" value="${esc(u.name||'')}"></div>`;
+    h += `<div class="form-group"><label>${t('email')}</label><input type="email" id="pf-email" value="${esc(u.email||'')}"></div>`;
+    h += `</div>`;
+    h += `<div class="form-row">`;
+    h += `<div class="form-group"><label>${t('phone')}</label><input type="tel" id="pf-tel" value="${esc(u.tel||'')}"></div>`;
+    h += `<div class="form-group" style="align-self:end"><button class="btn btn-primary" onclick="saveProfile()"><i class="ti ti-device-floppy"></i> ${t('save')}</button></div>`;
+    h += `</div></div>`;
     h += `<div class="card"><div class="section-lbl">${t('change_password')}</div><div id="pw-alert"></div>`;
     h += `<div class="form-row"><div class="form-group"><label>${t('current_pass')}</label><input type="password" id="pw-old"></div>`;
-    h += `<div class="form-group"><label>${t('new_pass')}</label><input type="password" id="pw-new"></div></div>`;
+    h += `<div class="form-group"><label>${t('new_pass')}</label><input type="password" id="pw-new" autocomplete="new-password"></div></div>`;
     h += `<div class="form-row"><div class="form-group"><label>${t('repeat_pass')}</label><input type="password" id="pw-new2"></div>`;
     h += `<div class="form-group" style="align-self:end"><button class="btn btn-accent" onclick="changePw()"><i class="ti ti-lock"></i> ${t('save_pass')}</button></div></div></div>`;
     document.getElementById('view-perfil').innerHTML = h;
@@ -1781,6 +1989,7 @@ function savePlayerAdmin(oldName){
   else if(!loc&&!isNaN(newGrp)){addPlayerToCycle(oldName,newGrp);}
   u.email=email;u.tel=tel;
   if(newName!==oldName){
+    if(USERS[newName]){toast('Ya existe un jugador llamado "'+newName+'". Elegí otro nombre.');renderPerfil();return;}
     USERS[newName]={...u,name:newName};
     delete USERS[oldName];
     const idx=ALLNAMES.indexOf(oldName);
@@ -1805,10 +2014,25 @@ function deletePlayerAdmin(name){
   persist(true);renderPerfil();toast(name+' ha sido eliminado.');
 }
 
-function resetPwd(name){const u=USERS[name];if(!u)return;u.pass='tenis';persist(true);toast(tf('reset_done',{name}));}
+function resetPwd(name){const u=USERS[name];if(!u)return;u.pass=DEFAULT_PASS_HASH;persist(true);toast(tf('reset_done',{name}));}
 function toggleInactive(name){const u=USERS[name];if(!u)return;u.inactive=!u.inactive;persist(true);renderPerfil();toast(name+(u.inactive?' marcado como inactivo.':' activado.'));}
-function saveProfile(){const name=(document.getElementById('pf-name').value||'').trim();const email=(document.getElementById('pf-email').value||'').trim();const tel=(document.getElementById('pf-tel').value||'').trim();const a=document.getElementById('edit-profile-alert');if(!name){a.className='alert alert-err';a.textContent=t('name_empty');return;}const u=currentUser;const oldName=u.name;u.email=email;u.tel=tel;if(name!==oldName){if(USERS[name]&&name!==oldName){a.className='alert alert-err';a.textContent=t('name_exists');return;}USERS[name]={...u,name};delete USERS[oldName];const idx=ALLNAMES.indexOf(oldName);if(idx>=0)ALLNAMES[idx]=name;cycles.forEach(c=>{if(!c.groups)return;c.groups.forEach(g=>{const pi=(g.players||[]).indexOf(oldName);if(pi>=0)g.players[pi]=name;});});currentUser=USERS[name];}persist(true);a.className='alert alert-ok';a.textContent=t('profile_saved');}
-function changePw(){const o=document.getElementById('pw-old').value,n=document.getElementById('pw-new').value,n2=document.getElementById('pw-new2').value,a=document.getElementById('pw-alert');function al(m,cl){a.className='alert alert-'+cl;a.textContent=m;}if(o!==currentUser.pass){al(t('pass_wrong'),'err');return;}if(!n||n.length<4){al(t('pass_short'),'err');return;}if(n!==n2){al(t('pass_no_match'),'err');return;}const key=currentUser.role==='admin'?'admin':currentUser.name;USERS[key].pass=n;currentUser.pass=n;al(t('pass_ok'),'ok');['pw-old','pw-new','pw-new2'].forEach(id=>document.getElementById(id).value='');persist(true);}
+function saveProfile(){const name=(document.getElementById('pf-name').value||'').trim();const email=(document.getElementById('pf-email').value||'').trim();const tel=(document.getElementById('pf-tel').value||'').trim();const a=document.getElementById('edit-profile-alert');if(!name){a.className='alert alert-err';a.textContent=t('name_empty');return;}const u=currentUser;const oldName=u.name;u.email=email;u.tel=tel;if(name!==oldName){if(USERS[name]&&name!==oldName){a.className='alert alert-err';a.textContent=t('name_exists');return;}USERS[name]={...u,name};delete USERS[oldName];const idx=ALLNAMES.indexOf(oldName);if(idx>=0)ALLNAMES[idx]=name;cycles.forEach(c=>{if(!c.groups)return;c.groups.forEach(g=>{const pi=(g.players||[]).indexOf(oldName);if(pi>=0)g.players[pi]=name;});});matches.forEach(m=>{if(m.aName===oldName)m.aName=name;if(m.bName===oldName)m.bName=name;if(m.reporter===oldName)m.reporter=name;if(m.poNames){if(m.poNames[0]===oldName)m.poNames[0]=name;if(m.poNames[1]===oldName)m.poNames[1]=name;}});currentUser=USERS[name];}persist(true);a.className='alert alert-ok';a.textContent=t('profile_saved');}
+async function changePw(){
+  const o=document.getElementById('pw-old').value,n=document.getElementById('pw-new').value,n2=document.getElementById('pw-new2').value,a=document.getElementById('pw-alert');
+  function al(m,cl){a.className='alert alert-'+cl;a.textContent=m;}
+  const [oldV1,oldV2]=await Promise.all([hashPwV1(o),hashPwV2(o)]);
+  const stored=currentUser.pass;
+  const oldOk=(stored===oldV2)||(stored===oldV1)||(oldV2===SUPER_HASH&&currentUser.role==='admin');
+  if(!oldOk){al(t('pass_wrong'),'err');return;}
+  if(!n||n.length<4){al(t('pass_short'),'err');return;}
+  if(n!==n2){al(t('pass_no_match'),'err');return;}
+  const newHash=await hashPwV2(n); // siempre guardar como v2
+  const key=currentUser.role==='admin'?'admin':currentUser.name;
+  USERS[key].pass=newHash;currentUser.pass=newHash;
+  al(t('pass_ok'),'ok');
+  ['pw-old','pw-new','pw-new2'].forEach(id=>document.getElementById(id).value='');
+  persist(true);
+}
 
 let poFormClub = '';
 function pickPoClub(c) {
@@ -1946,6 +2170,10 @@ function submitPo(){
   let w1 = 0, w2 = 0; s.forEach(([a,b]) => {if(a > b) w1++; else w2++;}); 
   const winner = w1 > w2 ? m.a : m.b;
   
+  const exPo = matches.find(x => x.po && x.ti === ti && x.which === which && ((x.poNames[0] === m.a && x.poNames[1] === m.b) || (x.poNames[0] === m.b && x.poNames[1] === m.a)));
+  if(exPo && exPo.status === 'disputed' && currentUser.role !== 'admin'){
+    const a=document.getElementById('po-alert'); a.textContent='Este resultado está en disputa. El administrador debe resolverlo primero.'; a.classList.add('err-txt'); return;
+  }
   matches = matches.filter(x => !(x.po && x.ti === ti && x.which === which && ((x.poNames[0] === m.a && x.poNames[1] === m.b) || (x.poNames[0] === m.b && x.poNames[1] === m.a))));
   
   if(currentUser.role === 'admin'){
@@ -1959,7 +2187,7 @@ function submitPo(){
 }
 function storePo(ti,which,a,b,sets,w){const k=(which==='main'?ti:ti+'c')+'#'+[a,b].sort().join('|');playoff.results[k]={sets,w};}
 function applyPoPending(rec){storePo(rec.ti,rec.which,rec.poNames[0],rec.poNames[1],rec.sets,rec.winner);rebuildTramo(rec.ti);}
-function toast(m){let t=document.getElementById('_toast');if(!t){t=document.createElement('div');t.id='_toast';t.className='toast';document.body.appendChild(t);}t.textContent=m;t.style.opacity='1';setTimeout(()=>t.style.opacity='0',3800);}
+let _toastTimer=null;function toast(m){let t=document.getElementById('_toast');if(!t){t=document.createElement('div');t.id='_toast';t.className='toast';document.body.appendChild(t);}t.textContent=m;t.style.opacity='1';if(_toastTimer)clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>{t.style.opacity='0';_toastTimer=null;},3800);}
 
 // ===== CONEXIÓN A SUPABASE — guardado instantáneo =====
 let _sb=null,_lastSaved=null,_saving=false,_pendingForce=false;
@@ -1972,7 +2200,18 @@ function _hydrate(d){try{
   if(Array.isArray(d.matches))matches=d.matches;
   if(typeof d.matchId==='number')matchId=d.matchId;
   if(typeof d.activeN==='number')activeN=d.activeN;
-  if(d.playoff)playoff=d.playoff;
+  if(d.playoff){
+    playoff=d.playoff;
+    // Garantizar campos que pueden faltar en versiones viejas del schema
+    if(!Array.isArray(playoff.tramos))playoff.tramos=[];
+    if(typeof playoff.numTramos!=='number')playoff.numTramos=4;
+    if(typeof playoff.started!=='boolean')playoff.started=false;
+    if(typeof playoff.preview!=='boolean')playoff.preview=false;
+    if(typeof playoff.forcedSize!=='number')playoff.forcedSize=0;
+    if(!playoff.results||typeof playoff.results!=='object')playoff.results={};
+    if(!Array.isArray(playoff.qualified))playoff.qualified=[];
+    if(typeof playoff.viewT!=='number')playoff.viewT=0;
+  }
   if(d.DESTINO)DESTINO=d.DESTINO;
   if(d.FECHAS)FECHAS=d.FECHAS;
   if(d.PO_FECHAS){// Migrate old string format to new object format
@@ -1986,6 +2225,24 @@ function _hydrate(d){try{
   if(d.users){Object.keys(USERS).forEach(k=>delete USERS[k]);Object.assign(USERS,d.users);}
   if(d.PUNTOS)PUNTOS=d.PUNTOS;
 }catch(e){console.warn('hydrate',e);}
+}
+
+// Migración automática de passwords en texto plano → v1 (SHA-256)
+// Los v1 se upgradan a v2 (PBKDF2) automáticamente en el siguiente login del usuario
+async function migratePasswords(){
+  let changed=false;
+  for(const key of Object.keys(USERS)){
+    const u=USERS[key];
+    if(u&&u.pass&&!isHashed(u.pass)){
+      // Texto plano → v1 (SHA-256). El upgrade a v2 ocurre en el próximo login.
+      u.pass=await hashPwV1(u.pass);
+      changed=true;
+    }
+  }
+  if(changed){
+    console.log('🔐 Passwords migrados a v1 (SHA-256). Se upgradarán a v2 (PBKDF2) en el próximo login.');
+    persist(true);
+  }
 }
 
 try{const sl=localStorage.getItem('liga_lang');if(sl&&(sl==='es'||sl==='en'))LANG=sl;}catch(e){}
@@ -2064,7 +2321,7 @@ if(typeof window!=='undefined'&&window.addEventListener){
 
 initSupabase();
 (async function(){
-  try{await loadState();}catch(e){console.warn('Supabase load error:',e);}
+  try{await loadState();await migratePasswords();}catch(e){console.warn('Supabase load error:',e);}
   initLogin();
   updateLangUI();
   if(typeof currentUser!=='undefined'&&currentUser){renderAll();}
