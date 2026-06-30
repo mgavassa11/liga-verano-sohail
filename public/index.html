@@ -969,7 +969,10 @@ function getMyPoMatch(){
   return null;
 }
 
-function populateForm(gid,na,nb){poContext=null;formClub='';const r=document.getElementById('f-reporter'),o=document.getElementById('f-rival'),note=document.getElementById('cargar-note');r.innerHTML='<option value="">—</option>';o.innerHTML='<option value="">—</option>';const c=getActive();if(!c||!c.groups){note.textContent="Ciclo inactivo.";r.disabled=true;o.disabled=true;return;}if(currentUser.role==='player'){
+function populateForm(gid,na,nb){poContext=null;formClub='';const r=document.getElementById('f-reporter'),o=document.getElementById('f-rival'),note=document.getElementById('cargar-note');r.innerHTML='<option value="">—</option>';o.innerHTML='<option value="">—</option>';const c=getActive();if(!c||!c.groups){note.textContent="Ciclo inactivo.";r.disabled=true;o.disabled=true;return;}
+// Ocultar/mostrar el filtro de grupo/playoff según el rol
+const _fw=document.getElementById('admin-group-filter');
+if(_fw)_fw.style.display=(currentUser&&currentUser.role==='admin')?'flex':'none';if(currentUser.role==='player'){
   // Si hay playoffs activos y el jugador tiene partido, mostrarlo automáticamente
   const myPo=getMyPoMatch();
   if(myPo&&!na){
@@ -1001,27 +1004,93 @@ function populateForm(gid,na,nb){poContext=null;formClub='';const r=document.get
     const g=c.groups[fgi];if(!g)return;
     (g.players||[]).slice().sort((a,b)=>a.localeCompare(b,'es')).forEach(j=>r.appendChild(new Option(j,fgi+'|'+j)));
   }
-  // Insertar selector de grupo filtro antes del note
+  // Construir opciones del filtro incluyendo playoffs dinámicos
+  function buildFilterOptions(){
+    let html='<option value="">— Todos los grupos —</option>';
+    const haspo=(playoff.started||playoff.preview)&&playoff.tramos&&playoff.tramos.length>0;
+    if(haspo){
+      html+='<optgroup label="─── Play Offs ───">';
+      playoff.tramos.forEach((tr,ti)=>{
+        const roundName=(ri,total)=>{const fe=total-1-ri;return fe===0?'Final':fe===1?'Semifinal':fe===2?'Cuartos':fe===3?'Octavos':'Ronda '+(ri+1);};
+        ['main','cons'].forEach(which=>{
+          const rounds=tr[which];
+          if(!Array.isArray(rounds))return;
+          // Contar partidos abiertos
+          let open=0;rounds.forEach(rd=>rd.forEach(m=>{if(!m.w&&m.a&&m.b)open++;}));
+          if(open===0)return; // sección eliminada — no aparece en el filtro
+          const lbl=which==='cons'?'Consolación '+tr.label:'Cuadro '+tr.label;
+          html+='<option value="po:'+ti+':'+which+'">'+lbl+'</option>';
+        });
+      });
+      html+='</optgroup><optgroup label="─── Liga ───">';
+    }
+    html+=c.groups.map((_,gi)=>'<option value="'+gi+'">'+groupName(gi+1)+'</option>').join('');
+    if(haspo)html+='</optgroup>';
+    return html;
+  }
+
+  function fillReporterByPoSection(ti,which){
+    r.innerHTML='<option value="">— Seleccioná jugador —</option>';
+    const tr=playoff.tramos[ti];if(!tr||!tr[which])return;
+    const rounds=tr[which];
+    const added=new Set();
+    rounds.forEach((round,ri)=>round.forEach((m,mi)=>{
+      if(!m.w&&m.a&&m.b){
+        if(!added.has(m.a)){added.add(m.a);r.appendChild(new Option(m.a,'po:'+ti+':'+which+':'+m.a));}
+        if(!added.has(m.b)){added.add(m.b);r.appendChild(new Option(m.b,'po:'+ti+':'+which+':'+m.b));}
+      }
+    }));
+    r.onchange=function(){
+      const val=this.value;
+      if(!val||!val.startsWith('po:'))return;
+      const parts=val.split(':');const pti=+parts[1],pwhich=parts[2],pname=parts[3];
+      const ptr=playoff.tramos[pti];if(!ptr||!ptr[pwhich])return;
+      let rival=null,pri=-1,pmi=-1;
+      ptr[pwhich].forEach((round,ri)=>round.forEach((m,mi)=>{
+        if(!m.w&&(m.a===pname||m.b===pname)&&m.a&&m.b){
+          rival=m.a===pname?m.b:m.a;pri=ri;pmi=mi;
+        }
+      }));
+      if(rival){
+        o.innerHTML='<option value="'+rival+'">'+rival+'</option>';
+        o.value=rival;o.disabled=true;
+        poContext={ti:pti,which:pwhich,ri:pri,mi:pmi};
+        const total=ptr[pwhich].length;
+        const fe=total-1-pri;
+        const rn=fe===0?'Final':fe===1?'Semifinal':fe===2?'Cuartos':fe===3?'Octavos':'Ronda '+(pri+1);
+        const sn=pwhich==='cons'?'Consolación '+ptr.label:'Cuadro '+ptr.label;
+        note.innerHTML='<strong style="color:var(--pri)">🏆 Play Offs — '+sn+' · '+rn+'</strong>';
+      } else {
+        o.innerHTML='<option value="">—</option>';o.disabled=false;poContext=null;
+        note.textContent=t('load_note_admin');
+      }
+    };
+  }
+
+  // Insertar selector de grupo/playoff filtro antes del note
   const filterWrap=document.getElementById('admin-group-filter');
   if(!filterWrap){
     const fw=document.createElement('div');
     fw.id='admin-group-filter';
     fw.style.cssText='margin-bottom:.6rem;display:flex;align-items:center;gap:8px';
-    const lbl=document.createElement('label');lbl.textContent='Filtrar por grupo:';lbl.style.fontWeight='600';lbl.style.fontSize='13px';lbl.style.color='var(--pri)';
+    const lbl=document.createElement('label');lbl.textContent='Filtrar:';lbl.style.fontWeight='600';lbl.style.fontSize='13px';lbl.style.color='var(--pri)';
     const sel=document.createElement('select');sel.id='admin-grp-filter-sel';sel.style.cssText='padding:5px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13px;flex:1';
-    sel.innerHTML='<option value="">— Todos los grupos —</option>'+c.groups.map((_,gi)=>'<option value="'+gi+'">'+groupName(gi+1)+'</option>').join('');
+    sel.innerHTML=buildFilterOptions();
     sel.onchange=function(){
       const v=this.value;
-      if(v===''){fillReporterAll();}else{fillReporterByGroup(+v);}
-      r.value='';o.innerHTML='<option value="">—</option>';filterRival('',null);
+      o.innerHTML='<option value="">—</option>';o.disabled=false;poContext=null;r.value='';
+      if(v===''){fillReporterAll();r.onchange=function(){filterRival(this.value,null);};note.textContent=t('load_note_admin');}
+      else if(v.startsWith('po:')){
+        const parts=v.split(':');fillReporterByPoSection(+parts[1],parts[2]);
+      }else{fillReporterByGroup(+v);r.onchange=function(){filterRival(this.value,null);};note.textContent=t('load_note_admin');}
     };
     fw.appendChild(lbl);fw.appendChild(sel);
     const noteEl=document.getElementById('cargar-note');
     noteEl.parentNode.insertBefore(fw,noteEl);
   } else {
-    // Si ya existe, actualizarlo
     const sel=document.getElementById('admin-grp-filter-sel');
-    if(sel){sel.innerHTML='<option value="">— Todos los grupos —</option>'+c.groups.map((_,gi)=>'<option value="'+gi+'">'+groupName(gi+1)+'</option>').join('');sel.value='';}
+    if(sel){sel.innerHTML=buildFilterOptions();sel.value='';}
+    filterWrap.style.display='flex';
   }
   fillReporterAll();
   r.onchange=function(){filterRival(this.value,null);};
@@ -1084,11 +1153,31 @@ function parseSel(v){if(v.indexOf('|')>=0){const p=v.split('|');return{g:+p[0]+1
 function submitResult(){
   const rv=document.getElementById('f-reporter').value,iv=document.getElementById('f-rival').value,fecha=document.getElementById('f-fecha').value;
   if(!rv||!iv){fAlert(t('select_two'),'err');return;}
+  // Si hay poContext activo, redirigir a lógica de playoff
+  if(poContext){
+    if(!formClub){fAlert(t('select_club'),'err');document.getElementById('club-pick').classList.add('req-empty');return;}
+    if(!fecha){fAlert(t('select_date'),'err');document.getElementById('f-fecha').classList.add('req-empty');return;}
+    const s=readSets();const v=validMatch(s);if(!v.ok){fAlert('✕ '+v.msg,'err');return;}
+    const ti=poContext.ti,which=poContext.which,ri=poContext.ri,mi=poContext.mi;
+    const tr=playoff.tramos[ti];if(!tr||!tr[which])return;
+    const m=tr[which][ri][mi];if(!m)return;
+    const isAdmin=currentUser.role==='admin';
+    // Guardar resultado en matches igual que submitPo
+    matches=matches.filter(x=>!(x.po&&x.ti===ti&&x.which===which&&x.poNames&&x.poNames.includes(m.a)&&x.poNames.includes(m.b)));
+    const newM={id:matchId++,po:true,ti,which,ri,mi,poNames:[m.a,m.b],sets:s,date:fecha,club:formClub||'',status:isAdmin?'confirmed':'pending',reporter:currentUser.name,locked:isAdmin};
+    matches.push(newM);
+    if(isAdmin)applyPoPending(newM);
+    clearForm();poContext=null;
+    fAlert(isAdmin?t('result_sent_admin'):t('result_sent_player'),'ok');
+    persist(true);refreshAll();
+    return;
+  }
   let repName,rivName,gid;
   if(currentUser.role==='player'){
     repName=currentUser.name;rivName=iv;const loc=findLoc(repName,activeN);gid=loc.g;
   }else{
-    const a=parseSel(rv),b=parseSel(iv);
+    const repVal=rv.startsWith('po:')?rv.split(':')[3]:rv;
+    const a=parseSel(repVal),b=parseSel(iv);
     if(a.g!==b.g){fAlert(t('same_group'),'err');return;}
     gid=a.g;repName=a.name;rivName=b.name;
   }
