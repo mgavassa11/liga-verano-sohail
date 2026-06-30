@@ -819,7 +819,13 @@ async function doLogin(){
   document.getElementById('cur-name').textContent=currentUser.name;
   document.getElementById('cur-role').innerHTML=currentUser.role==='admin'?'<span class="role-badge">'+t('role_admin')+'</span>':t('role_player');
   if(currentUser.role==='player'){const loc=findLoc(currentUser.name,activeN);if(loc)selGroup=loc.g;}
-  viewCycle=activeN;renderShell();showSub('grupos');clearForm();
+  // Redirigir al lugar correcto según el estado de la liga
+  if(playoff.started||(playoff.preview&&USERS[uv].role==='admin')){
+    viewCycle='po';renderShell();showPlayoffView();renderSubTabs();updateHdr();
+  } else {
+    viewCycle=activeN;renderShell();showSub('grupos');
+  }
+  clearForm();
 }
 function doLogout(){closeM();clearForm();currentUser=null;_lastActivity=0;_sessionExpiring=false;document.getElementById('main-app').style.display='none';document.getElementById('login-screen').style.display='block';document.getElementById('login-pass').value='';initLogin();}
 function renderShell(){renderCycleBar();renderSubTabs();updateBadge();}
@@ -934,7 +940,97 @@ const title=document.getElementById('gen-title');if(title)title.textContent=t('g
 document.getElementById('gen-body').innerHTML=all.map((p,i)=>{const me=currentUser&&currentUser.role==='player'&&p.name===currentUser.name;const loc=findLoc(p.name,activeN);return'<tr class="'+(me?'me-row':'')+'"><td><span class="pos '+(pc[i]||'pn')+'">'+(i+1)+'</span></td><td><span class="avatar">'+getInitials(p.name)+'</span>'+p.name+(me?' <span class="badge badge-ok">'+t('me_label')+'</span>':'')+'</td><td>'+(loc?groupName(loc.g):'—')+'</td><td><strong>'+p.total+'</strong></td></tr>';}).join('');}
 
 function pickClub(c){formClub=c;document.getElementById('club-sohail').className='club-opt'+(c==='Sohail'?' sel-sohail':'');document.getElementById('club-haza').className='club-opt'+(c==='Haza'?' sel-haza':'');document.getElementById('club-pick').classList.remove('req-empty');}
-function populateForm(gid,na,nb){poContext=null;formClub='';const r=document.getElementById('f-reporter'),o=document.getElementById('f-rival'),note=document.getElementById('cargar-note');r.innerHTML='<option value="">—</option>';o.innerHTML='<option value="">—</option>';const c=getActive();if(!c||!c.groups){note.textContent="Ciclo inactivo.";r.disabled=true;o.disabled=true;return;}if(currentUser.role==='player'){const loc=findLoc(currentUser.name,activeN);if(!loc){note.textContent=t('not_in_cycle');return;}r.add(new Option(currentUser.name,currentUser.name));r.value=currentUser.name;r.disabled=true;(c.groups[loc.g-1].players||[]).slice().sort((a,b)=>a.localeCompare(b,'es')).forEach(j=>{if(j!==currentUser.name && !(USERS[j]&&USERS[j].inactive) && !findMatch(activeN, loc.g, currentUser.name, j))o.add(new Option(j,j));});note.textContent=tf('load_note_player',{g:groupName(loc.g)});}else{r.disabled=false;c.groups.forEach((g,gi)=>{const gid2=gi+1;const og=document.createElement('optgroup');og.label=groupName(gid2);(g.players||[]).slice().sort((a,b)=>a.localeCompare(b,'es')).forEach(j=>og.appendChild(new Option(j,gi+'|'+j)));r.appendChild(og);});r.onchange=function(){filterRival(this.value,null);};note.textContent=t('load_note_admin');if(gid!=null){const gi=gid-1;r.value=`${gi}|${na}`;filterRival(`${gi}|${na}`,nb);}else{filterRival('',null);}}document.getElementById('club-sohail').className='club-opt';document.getElementById('club-haza').className='club-opt';document.getElementById('f-fecha').value=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
+function getMyPoMatch(){
+  if(!playoff.started&&!playoff.preview)return null;
+  if(!currentUser||currentUser.role==='admin')return null;
+  const name=currentUser.name;
+  for(let ti=0;ti<playoff.tramos.length;ti++){
+    const tr=playoff.tramos[ti];
+    if(!tr)continue;
+    // Buscar en main draw
+    for(const which of['main','cons']){
+      const rounds=tr[which];
+      if(!Array.isArray(rounds))continue;
+      for(let ri=0;ri<rounds.length;ri++){
+        for(let mi=0;mi<rounds[ri].length;mi++){
+          const m=rounds[ri][mi];
+          if((m.a===name||m.b===name)&&m.a&&m.b&&!m.w){
+            const total=rounds.length;
+            const fe=total-1-ri;
+            const roundName=fe===0?'Final':fe===1?'Semifinal':fe===2?'Cuartos':fe===3?'Octavos':fe===4?'16avos':'Ronda '+(ri+1);
+            const drawName=which==='cons'?'Consolación '+tr.label:'Cuadro '+tr.label;
+            const rival=m.a===name?m.b:m.a;
+            return{ti,which,ri,mi,rival,roundName,drawName,trLabel:tr.label};
+          }
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function populateForm(gid,na,nb){poContext=null;formClub='';const r=document.getElementById('f-reporter'),o=document.getElementById('f-rival'),note=document.getElementById('cargar-note');r.innerHTML='<option value="">—</option>';o.innerHTML='<option value="">—</option>';const c=getActive();if(!c||!c.groups){note.textContent="Ciclo inactivo.";r.disabled=true;o.disabled=true;return;}if(currentUser.role==='player'){
+  // Si hay playoffs activos y el jugador tiene partido, mostrarlo automáticamente
+  const myPo=getMyPoMatch();
+  if(myPo&&!na){
+    // Modo playoff: formulario bloqueado con el rival de llaves
+    note.innerHTML='<strong style="color:var(--pri)">🏆 Partido de Play Offs — '+myPo.drawName+' · '+myPo.roundName+'</strong>';
+    r.add(new Option(currentUser.name,currentUser.name));
+    r.value=currentUser.name;
+    r.disabled=true;
+    o.add(new Option(myPo.rival,myPo.rival));
+    o.value=myPo.rival;
+    o.disabled=true;
+    poContext={ti:myPo.ti,which:myPo.which,ri:myPo.ri,mi:myPo.mi};
+    // Ocultar botón de STB y forzar a openPoForm si lo abre desde aquí
+    document.getElementById('club-sohail').className='club-opt';
+    document.getElementById('club-haza').className='club-opt';
+    document.getElementById('f-fecha').value=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
+    return;
+  }
+  // Modo liga normal
+  const loc=findLoc(currentUser.name,activeN);if(!loc){note.textContent=t('not_in_cycle');return;}r.add(new Option(currentUser.name,currentUser.name));r.value=currentUser.name;r.disabled=true;(c.groups[loc.g-1].players||[]).slice().sort((a,b)=>a.localeCompare(b,'es')).forEach(j=>{if(j!==currentUser.name && !(USERS[j]&&USERS[j].inactive) && !findMatch(activeN, loc.g, currentUser.name, j))o.add(new Option(j,j));});note.textContent=tf('load_note_player',{g:groupName(loc.g)});
+}else{r.disabled=false;
+  // Llenar el select de reporter con todos los grupos (sin filtro)
+  function fillReporterAll(){
+    r.innerHTML='<option value="">— '+t('select_user')+' —</option>';
+    c.groups.forEach((g,gi)=>{const gid2=gi+1;const og=document.createElement('optgroup');og.label=groupName(gid2);(g.players||[]).slice().sort((a,b)=>a.localeCompare(b,'es')).forEach(j=>og.appendChild(new Option(j,gi+'|'+j)));r.appendChild(og);});
+  }
+  function fillReporterByGroup(fgi){
+    r.innerHTML='<option value="">— '+t('select_user')+' —</option>';
+    const g=c.groups[fgi];if(!g)return;
+    (g.players||[]).slice().sort((a,b)=>a.localeCompare(b,'es')).forEach(j=>r.appendChild(new Option(j,fgi+'|'+j)));
+  }
+  // Insertar selector de grupo filtro antes del note
+  const filterWrap=document.getElementById('admin-group-filter');
+  if(!filterWrap){
+    const fw=document.createElement('div');
+    fw.id='admin-group-filter';
+    fw.style.cssText='margin-bottom:.6rem;display:flex;align-items:center;gap:8px';
+    const lbl=document.createElement('label');lbl.textContent='Filtrar por grupo:';lbl.style.fontWeight='600';lbl.style.fontSize='13px';lbl.style.color='var(--pri)';
+    const sel=document.createElement('select');sel.id='admin-grp-filter-sel';sel.style.cssText='padding:5px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13px;flex:1';
+    sel.innerHTML='<option value="">— Todos los grupos —</option>'+c.groups.map((_,gi)=>'<option value="'+gi+'">'+groupName(gi+1)+'</option>').join('');
+    sel.onchange=function(){
+      const v=this.value;
+      if(v===''){fillReporterAll();}else{fillReporterByGroup(+v);}
+      r.value='';o.innerHTML='<option value="">—</option>';filterRival('',null);
+    };
+    fw.appendChild(lbl);fw.appendChild(sel);
+    const noteEl=document.getElementById('cargar-note');
+    noteEl.parentNode.insertBefore(fw,noteEl);
+  } else {
+    // Si ya existe, actualizarlo
+    const sel=document.getElementById('admin-grp-filter-sel');
+    if(sel){sel.innerHTML='<option value="">— Todos los grupos —</option>'+c.groups.map((_,gi)=>'<option value="'+gi+'">'+groupName(gi+1)+'</option>').join('');sel.value='';}
+  }
+  fillReporterAll();
+  r.onchange=function(){filterRival(this.value,null);};
+  note.textContent=t('load_note_admin');
+  if(gid!=null){const gi=gid-1;
+    const fs=document.getElementById('admin-grp-filter-sel');if(fs)fs.value=String(gi);
+    fillReporterByGroup(gi);
+    r.value=`${gi}|${na}`;filterRival(`${gi}|${na}`,nb);
+  }else{filterRival('',null);}}document.getElementById('club-sohail').className='club-opt';document.getElementById('club-haza').className='club-opt';document.getElementById('f-fecha').value=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
 var lc=document.getElementById('lbl-club');if(lc)lc.innerHTML=`${t('club_label')} <span class="reqmark">${t('reqmark_label')}</span>`;
 var lf=document.getElementById('lbl-fecha-field');if(lf)lf.innerHTML=`${t('date_label')} <span class="reqmark">${t('reqmark_label')}</span>`;
 var rp=document.getElementById('f-reporter-lbl');if(rp)rp.textContent=t('reporter');
@@ -1613,7 +1709,7 @@ function showPlayoffView(){
   html+=`<div class="po-tramos">${playoff.tramos.map((tr,i)=>{
     const hasMe=currentUser&&currentUser.role==='player'&&tr.seeds.includes(currentUser.name);
     const badge=hasMe?'<span style="font-size:9px;background:#F5C518;color:#1a2540;border-radius:4px;padding:1px 4px;font-weight:700">✓</span>':'';
-    return '<button class="po-tab '+(playoff.viewT===i?'active':'')+'" onclick="setViewT('+i+')">'+tf('po_match',{l:tr.label})+badge+'<br><span class="po-rng">'+tr.seeds.length+' '+t('po_tab_players')+'</span></button>';
+    return '<button class="po-tab '+(playoff.viewT===i?'active':'')+'" onclick="setViewT('+i+')">'+tf('po_match',{l:tr.label})+(badge?'&nbsp;'+badge:'')+'<br><span class="po-rng">'+tr.seeds.length+' '+t('po_tab_players')+'</span></button>';
   }).join('')}</div>`;
 
   const ti=playoff.viewT;
@@ -1916,15 +2012,6 @@ function renderPerfil(){
     h += `<div class="prof-row"><span>${t('phone')}</span><span>${u.tel||'—'}</span></div>`;
     if(loc) h += `<div class="prof-row"><span>${t('current_group_label')}</span><span>${groupName(loc.g)}</span></div>`;
     h += `</div>`;
-    h += `<div class="card"><div class="section-lbl">Editar mis datos</div><div id="edit-profile-alert"></div><p class="legend-txt" style="margin-top:0;color:#e59">⚠ Si cambiás tu nombre, vas a tener que buscarte con el nuevo nombre al loguearte.</p>`;
-    h += `<div class="form-row">`;
-    h += `<div class="form-group"><label>${t('full_name')}</label><input type="text" id="pf-name" value="${esc(u.name||'')}"></div>`;
-    h += `<div class="form-group"><label>${t('email')}</label><input type="email" id="pf-email" value="${esc(u.email||'')}"></div>`;
-    h += `</div>`;
-    h += `<div class="form-row">`;
-    h += `<div class="form-group"><label>${t('phone')}</label><input type="tel" id="pf-tel" value="${esc(u.tel||'')}"></div>`;
-    h += `<div class="form-group" style="align-self:end"><button class="btn btn-primary" onclick="saveProfile()"><i class="ti ti-device-floppy"></i> ${t('save')}</button></div>`;
-    h += `</div></div>`;
     h += `<div class="card"><div class="section-lbl">${t('change_password')}</div><div id="pw-alert"></div>`;
     h += `<div class="form-row"><div class="form-group"><label>${t('current_pass')}</label><input type="password" id="pw-old"></div>`;
     h += `<div class="form-group"><label>${t('new_pass')}</label><input type="password" id="pw-new" autocomplete="new-password"></div></div>`;
