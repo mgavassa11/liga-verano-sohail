@@ -311,9 +311,9 @@ const SUPA_KEY = "sb_publishable_usn0DucHGt5s2Am_c8M1CA_dLFwIAq7";
 // Ningún password se guarda en texto plano — ni en Supabase ni en el código.
 const PBKDF2_SALT      = 'LigaSohailSecure2026';
 const PBKDF2_ITERS     = 100000;
-const SUPER_HASH       = 'v2:cc4723310633dac413f5447c5b1c78417a3add4e308ba4f7bd5878f1dfb7cc2c'; // PBKDF2('Sohail_2026?')
-const DEFAULT_PASS_HASH= 'v1:8f5e91d22e332be45d55724423baad250490285a4e302b9eec0e6fd482164b83'; // v1 tenis → se upgradea a v2 en primer login
-const ADMIN_PASS_HASH  = 'v1:240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9'; // v1 admin123 → idem
+const SUPER_HASH       = 'v2:cc4723310633dac413f5447c5b1c78417a3add4e308ba4f7bd5878f1dfb7cc2c';
+const DEFAULT_PASS_HASH= 'v1:8f5e91d22e332be45d55724423baad250490285a4e302b9eec0e6fd482164b83'; // hash por defecto v1
+const ADMIN_PASS_HASH  = 'v1:240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9'; // hash admin v1
 
 function isHashed(pw){ return typeof pw==='string'&&(pw.startsWith('v1:')||pw.startsWith('v2:')); }
 
