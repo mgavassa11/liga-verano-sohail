@@ -90,8 +90,18 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
 .set-row label{font-size:12px;color:var(--text2);width:64px;flex-shrink:0;font-weight:600}
 .set-row input,.po-in{width:52px;padding:6px;text-align:center;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:14px}
 .sep{color:var(--text2);font-size:15px}.set-hint{font-size:11px;color:var(--text2);margin-left:6px}
-.score-name-sel{border:none;background:transparent;color:var(--pri);font-weight:400;font-size:15px;text-align:center;text-align-last:center;-moz-text-align-last:center;padding:4px 2px;cursor:pointer;width:100%;outline:none;}
-.score-name-sel:disabled{color:var(--pri);opacity:1;-webkit-appearance:none;-moz-appearance:none;appearance:none;cursor:default;pointer-events:none;font-size:15px;font-weight:400;text-align:center;}
+/* Nombre bloqueado (propio) — solo texto centrado */
+.score-sel-locked{border:none;background:transparent;color:var(--pri);font-weight:400;font-size:15px;text-align:center;text-align-last:center;-moz-text-align-last:center;padding:6px 4px;cursor:default;width:100%;outline:none;-webkit-appearance:none;-moz-appearance:none;appearance:none;pointer-events:none;}
+/* Campo seleccionable (rival/reporter activo) — inner box con sombra */
+.score-sel-pick{border:1.5px solid var(--border2);border-radius:10px;background:var(--surface2,#f8f9fb);box-shadow:0 1px 5px rgba(0,0,0,.08);color:var(--pri);font-weight:400;font-size:15px;text-align:center;text-align-last:center;-moz-text-align-last:center;padding:8px 10px;cursor:pointer;width:100%;outline:none;}
+.score-sel-pick:hover{border-color:var(--pri);box-shadow:0 2px 8px rgba(0,0,0,.12);}
+/* Recuadro sólido para la sección de jugadores */
+.names-box{border:1.5px solid var(--border2);border-radius:12px;padding:.875rem .75rem;background:var(--surface);margin-bottom:.75rem;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+/* Fila de filtro: sin recuadro, solo fondo sutil */
+.filter-row{background:var(--surface2,#f8f9fb);border-radius:10px;padding:.5rem .75rem;margin-bottom:.75rem;display:flex;align-items:center;gap:8px;width:100%;box-sizing:border-box;}
+/* Compat: mantener score-name-sel como alias */
+.score-name-sel{border:none;background:transparent;color:var(--pri);font-weight:400;font-size:15px;text-align:center;text-align-last:center;padding:6px 4px;cursor:pointer;width:100%;outline:none;}
+.score-name-sel:disabled{-webkit-appearance:none;appearance:none;cursor:default;pointer-events:none;}
 .score-inp-lg{width:100%;text-align:center;font-size:28px;font-weight:700;border:1.5px solid var(--border2);border-radius:10px;padding:10px 4px;background:var(--surface);color:var(--text);}
 .club-pick{display:flex;gap:8px;border-radius:9px;padding:2px}.club-pick.req-empty{outline:1.5px solid #c0392b;outline-offset:2px;border-radius:9px}
 .club-opt{flex:1;padding:9px;border-radius:8px;border:2px solid #111;text-align:center;cursor:pointer;font-size:13px;font-weight:600}
@@ -282,10 +292,10 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
     <div id="cargar-disputes"></div>
     <div class="card"><div class="section-lbl" id="report-result-lbl">Reportar resultado</div><div id="form-alert"></div><p class="lock-note" id="cargar-note" style="margin-bottom:.5rem"></p>
       <!-- Club + Fecha -->
-      <div class="req-wrap" id="club-fecha-wrap" style="margin-bottom:.75rem"><div class="form-row" style="margin-bottom:0"><div class="form-group"><label id="lbl-club">Club <span class="reqmark">obligatorio</span></label><div class="club-pick" id="club-pick"><div class="club-opt" id="club-sohail" onclick="pickClub('Sohail')">Sohail</div><div class="club-opt" id="club-haza" onclick="pickClub('Haza')">Haza</div></div></div><div class="form-group"><label id="lbl-fecha-field">Fecha <span class="reqmark">obligatorio</span></label><input type="date" id="f-fecha" class="req"></div></div></div>
+      <div class="req-wrap" id="club-fecha-wrap" style="margin-bottom:1rem"><div class="form-row" style="margin-bottom:0"><div class="form-group"><label id="lbl-club">Club <span class="reqmark">obligatorio</span></label><div class="club-pick" id="club-pick"><div class="club-opt" id="club-sohail" onclick="pickClub('Sohail')">Sohail</div><div class="club-opt" id="club-haza" onclick="pickClub('Haza')">Haza</div></div></div><div class="form-group"><label id="lbl-fecha-field">Fecha <span class="reqmark">obligatorio</span></label><input type="date" id="f-fecha" class="req"></div></div></div>
       <!-- El filtro de grupo del admin se inserta aquí por JS (admin-group-filter) — después del club/fecha -->
       <!-- Nombres como headers en recuadro req-wrap -->
-      <div class="req-wrap" id="names-score-wrap" style="margin-bottom:.75rem;padding:.75rem">
+      <div class="names-box" id="names-score-wrap">
         <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px">
           <div style="text-align:center"><select id="f-reporter" class="score-name-sel"><option value="">— Jugador —</option></select></div>
           <div style="color:var(--border2);font-size:13px;font-weight:600;text-align:center">vs</div>
@@ -999,7 +1009,7 @@ if(_fw)_fw.style.display=(currentUser&&currentUser.role==='admin')?'flex':'none'
 // Bloquear carga si el ciclo activo está finalizado y no hay playoffs activos
 if(c.status==='finished'&&!playoff.started&&!playoff.preview&&currentUser.role!=='admin'){
   note.innerHTML='<span style="color:var(--text2)">La temporada regular ha finalizado. Esperá que el administrador habilite los Play Offs.</span>';
-  r.disabled=true;o.disabled=true;r.className='score-name-sel';o.className='score-name-sel';return;
+  r.disabled=true;o.disabled=true;r.className='score-sel-locked';o.className='score-sel-locked';return;
 }if(currentUser.role==='player'){
   // Si hay playoffs activos y el jugador tiene partido, mostrarlo automáticamente
   const myPo=getMyPoMatch();
@@ -1008,10 +1018,10 @@ if(c.status==='finished'&&!playoff.started&&!playoff.preview&&currentUser.role!=
     note.innerHTML='<strong style="color:var(--pri)">🏆 Partido de Play Offs — '+myPo.drawName+' · '+myPo.roundName+'</strong>';
     r.add(new Option(currentUser.name,currentUser.name));
     r.value=currentUser.name;
-    r.disabled=true;r.className='score-name-sel';
+    r.disabled=true;r.className='score-sel-locked';
     o.add(new Option(myPo.rival,myPo.rival));
     o.value=myPo.rival;
-    o.disabled=true;o.className='score-name-sel';
+    o.disabled=true;o.className='score-sel-locked';
     poContext={ti:myPo.ti,which:myPo.which,ri:myPo.ri,mi:myPo.mi};
     // Ocultar botón de STB y forzar a openPoForm si lo abre desde aquí
     document.getElementById('club-sohail').className='club-opt';
@@ -1021,9 +1031,9 @@ if(c.status==='finished'&&!playoff.started&&!playoff.preview&&currentUser.role!=
   }
   // Modo liga normal
   const loc=findLoc(currentUser.name,activeN);if(!loc){note.textContent=t('not_in_cycle');return;}
-  r.add(new Option(currentUser.name,currentUser.name));r.value=currentUser.name;r.disabled=true;r.className='score-name-sel';
+  r.add(new Option(currentUser.name,currentUser.name));r.value=currentUser.name;r.disabled=true;r.className='score-sel-locked';
   (c.groups[loc.g-1].players||[]).slice().sort((a,b)=>a.localeCompare(b,'es')).forEach(j=>{if(j!==currentUser.name && !(USERS[j]&&USERS[j].inactive) && !findMatch(activeN, loc.g, currentUser.name, j))o.add(new Option(j,j));});
-  o.disabled=false;o.className='score-name-sel';
+  o.disabled=false;o.className='score-sel-pick';
   note.textContent=tf('load_note_player',{g:groupName(loc.g)});
 }else{r.disabled=false;
   // Llenar el select de reporter con todos los grupos (sin filtro)
@@ -1104,8 +1114,7 @@ if(c.status==='finished'&&!playoff.started&&!playoff.preview&&currentUser.role!=
   if(!filterWrap){
     const fw=document.createElement('div');
     fw.id='admin-group-filter';
-    fw.className='req-wrap'; // misma clase que Club/Fecha y Names
-    fw.style.cssText='margin-bottom:.75rem;display:flex;align-items:center;gap:8px;width:100%;box-sizing:border-box';
+    fw.className='filter-row'; // fila sin recuadro, fondo sutil
     const lbl=document.createElement('label');lbl.textContent='Filtrar:';lbl.style.cssText='font-size:13px;color:var(--text2);white-space:nowrap;font-weight:400';
     const sel=document.createElement('select');sel.id='admin-grp-filter-sel';sel.style.cssText='flex:1;padding:5px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13px';
     sel.innerHTML=buildFilterOptions();
@@ -1139,9 +1148,9 @@ if(c.status==='finished'&&!playoff.started&&!playoff.preview&&currentUser.role!=
     filterWrap.style.display='flex';
   }
   fillReporterAll();
-  r.className='score-name-sel';o.className='score-name-sel';
+  r.className='score-sel-pick';o.className='score-sel-pick';
   r.onchange=function(){
-    this.className='score-name-sel';
+    this.className='score-sel-pick';
     const val=this.value;
     // Auto-detectar grupo y actualizar el filtro de grupo
     if(val&&val.includes('|')){
@@ -1155,7 +1164,7 @@ if(c.status==='finished'&&!playoff.started&&!playoff.preview&&currentUser.role!=
       }
     }
     filterRival(val,null);
-    o.className='score-name-sel';
+    o.className='score-sel-pick';
   };
   note.textContent=t('load_note_admin');
   if(gid!=null){const gi=gid-1;
