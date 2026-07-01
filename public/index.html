@@ -1540,25 +1540,105 @@ function importarJugadoresExcel(input){
 }
 
 // 3. Limpiar todos los participantes (con doble backup Excel)
-async function limpiarParticipantesUI(){
-  if(!confirm('⚠️ LIMPIAR PARTICIPANTES\n\nEsta acción eliminará TODOS los jugadores, partidos y resultados de la liga.\n\nAntes vamos a descargar el Excel 2 veces como respaldo.\n\n¿Querés continuar?'))return;
-  // Primera descarga
-  exportExcel();
-  await new Promise(r=>setTimeout(r,800));
-  if(!confirm('📥 Primera copia descargada.\n\n¿Descargamos una segunda copia de seguridad?'))return;
-  // Segunda descarga
-  exportExcel();
-  await new Promise(r=>setTimeout(r,800));
-  if(!confirm('📥 Segunda copia descargada.\n\n⛔ ÚLTIMA CONFIRMACIÓN\n\n¿Confirmás que querés borrar TODOS los jugadores y resultados? Esta acción NO se puede deshacer.'))return;
-  // Limpiar
+function limpiarJugadoresUI(){
+  // Primera confirmación
+  if(!confirm('⚠️ Limpiar jugadores\n\nEsto eliminará TODOS los jugadores y sus resultados del ciclo activo.\nLa estructura de grupos se mantiene vacía.\n\n¿Querés continuar?')) return;
+  // Segunda confirmación
+  if(!confirm('⛔ Segunda confirmación\n\n¿Estás seguro que querés borrar todos los jugadores y resultados?\nEsta acción no se puede deshacer.')) return;
+  // Ejecutar limpieza solo de jugadores
   const c=cycles[activeN-1];
   const numGrupos=c&&c.groups?c.groups.length:12;
-  const ppg=c&&c.groups&&c.groups[0]?c.groups[0].players.length:5;
-  matches=[];matchId=1;ALLNAMES=[];
-  // Mantener solo el admin
+  matches=matches.filter(m=>m.po); // mantener matches de playoff si los hay
+  ALLNAMES=[];
   const adminU=USERS['admin']||{role:'admin',pass:ADMIN_PASS_HASH,name:'Organización',email:'',tel:''};
   USERS={admin:adminU};
-  // Resetear grupos (misma cantidad, vacíos)
+  cycles.forEach((cy,i)=>{
+    if(cy.groups)cy.groups.forEach(g=>{g.players=[];});
+  });
+  persist(true);renderPerfil();
+  toast('✅ '+numGrupos+' grupos vaciados. Podés importar nuevos jugadores.');
+}
+
+function mostrarModalReiniciar(){
+  // PASO 1: Ofrecer descarga del Excel (Enter = descargar)
+  let _excelDescargado=false;
+  let overlay=document.getElementById('reiniciar-overlay');
+  if(overlay)overlay.remove();
+  overlay=document.createElement('div');
+  overlay.id='reiniciar-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem';
+
+  function paso2(){
+    const estado=_excelDescargado
+      ?'<span style="color:#22c55e;font-weight:600">✅ Excel descargado correctamente</span>'
+      :'<span style="color:#f59e0b;font-weight:600">⚠️ No descargaste el Excel (continuaste sin respaldo)</span>';
+    overlay.innerHTML=`
+      <div style="background:var(--surface);border-radius:16px;padding:1.5rem;max-width:440px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.25)">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:.25rem;font-weight:600;letter-spacing:.05em">PASO 2 DE 2</div>
+        <div style="font-size:20px;font-weight:700;color:var(--danger);margin-bottom:.5rem">⛔ Confirmar reinicio</div>
+        <p style="font-size:13px;margin-bottom:.75rem">${estado}</p>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:.35rem">Para confirmar, escribí exactamente:</p>
+        <p style="font-family:monospace;font-size:14px;font-weight:700;color:var(--pri);background:var(--surface2,#f5f5f5);padding:6px 12px;border-radius:8px;margin-bottom:.75rem;display:inline-block">reiniciar liga</p>
+        <input id="reiniciar-input" type="text" placeholder="Escribí aquí..." autocomplete="off"
+          style="width:100%;padding:10px 14px;border:1.5px solid var(--border2);border-radius:10px;font-size:15px;margin-bottom:1rem;box-sizing:border-box;outline:none"
+          oninput="document.getElementById('btn-confirm-reiniciar').disabled=this.value!=='reiniciar liga'">
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn" onclick="document.getElementById('reiniciar-overlay').remove()">Cancelar</button>
+          <button id="btn-confirm-reiniciar" class="btn btn-danger" disabled onclick="ejecutarReiniciar()">
+            <i class="ti ti-trash"></i> Reiniciar liga
+          </button>
+        </div>
+      </div>`;
+    setTimeout(()=>{ const i=document.getElementById('reiniciar-input'); if(i)i.focus(); },100);
+  }
+
+  overlay.innerHTML=`
+    <div style="background:var(--surface);border-radius:16px;padding:1.5rem;max-width:440px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.25)">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:.25rem;font-weight:600;letter-spacing:.05em">PASO 1 DE 2</div>
+      <div style="font-size:20px;font-weight:700;color:var(--danger);margin-bottom:.5rem">⛔ Reiniciar Liga</div>
+      <p style="color:var(--text);font-size:14px;margin-bottom:1.25rem">Esta acción eliminará <strong>todos los jugadores, partidos y resultados</strong>. No se puede deshacer.<br><br>
+      ¿Querés descargar un respaldo en Excel antes de continuar?</p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button id="btn-excel-reiniciar" class="btn btn-success" style="justify-content:center;font-size:15px;padding:10px">
+          <i class="ti ti-file-spreadsheet"></i> Descargar Excel y continuar
+        </button>
+        <button class="btn" style="justify-content:center;color:var(--text2);font-size:13px" id="btn-sin-excel">
+          Continuar sin descargar
+        </button>
+        <button class="btn" style="justify-content:center" onclick="document.getElementById('reiniciar-overlay').remove()">Cancelar</button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+
+  // Botón descargar Excel (default — también responde al Enter)
+  document.getElementById('btn-excel-reiniciar').addEventListener('click',()=>{
+    exportExcel();
+    _excelDescargado=true;
+    setTimeout(()=>paso2(),600);
+  });
+  document.getElementById('btn-sin-excel').addEventListener('click',()=>{
+    _excelDescargado=false;
+    paso2();
+  });
+  // Enter en el modal paso 1 = descargar Excel
+  overlay.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&document.getElementById('btn-excel-reiniciar')){
+      document.getElementById('btn-excel-reiniciar').click();
+    }
+  });
+  document.getElementById('btn-excel-reiniciar').focus();
+}
+
+async function ejecutarReiniciar(){
+  const overlay=document.getElementById('reiniciar-overlay');
+  if(overlay)overlay.remove();
+  // Ejecutar el reinicio (el Excel ya se descargó en el paso 1 si se eligió)
+  const c=cycles[activeN-1];
+  const numGrupos=c&&c.groups?c.groups.length:12;
+  matches=[];matchId=1;ALLNAMES=[];LOG=[];
+  const adminU=USERS['admin']||{role:'admin',pass:ADMIN_PASS_HASH,name:'Organización',email:'',tel:''};
+  USERS={admin:adminU};
   cycles.forEach((cy,i)=>{
     if(i===0){cy.groups=Array.from({length:numGrupos},()=>({players:[]}));cy.status='active';}
     else{cy.groups=null;cy.status='locked';}
@@ -1567,8 +1647,11 @@ async function limpiarParticipantesUI(){
   playoff={started:false,numTramos:playoff.numTramos||4,tramos:[],results:{},viewT:0,qualified:[],preview:false,forcedSize:0};
   PO_FECHAS={};
   persist(true);renderShell();showSub('admin');
-  toast('✅ Liga limpiada. '+numGrupos+' grupos vacíos listos para nuevos jugadores. Usá "Importar jugadores" o agregalos desde Perfil & Jugadores.');
+  toast('✅ Liga reiniciada. '+numGrupos+' grupos vacíos listos. Importá jugadores con el botón "Importar jugadores (Excel)".');
 }
+
+// Alias para el botón
+function limpiarParticipantesUI(){ mostrarModalReiniciar(); }
 
 // 4. Nueva liga — genera un index.html listo para nuevo repo + Supabase
 async function nuevaLigaUI(){
@@ -1760,22 +1843,15 @@ function renderAdmin(){
     h+=`</div>`;
     h+=`</div>`;
 
-    h+=`<div class="card"><div class="section-lbl" style="color:var(--danger)">Gestión de Liga</div>
-      <p class="legend-txt" style="margin-top:0">Herramientas para reutilizar esta liga en una nueva temporada.</p>
-      <div class="gap-sm mt-sm" style="flex-wrap:wrap">
-        <button class="btn" onclick="descargarPlantillaImport()"><i class="ti ti-file-download"></i> Descargar plantilla Excel</button>
-        <label class="btn" style="cursor:pointer"><i class="ti ti-file-upload"></i> Importar jugadores (Excel)
-          <input type="file" accept=".xlsx,.xls" style="display:none" onchange="importarJugadoresExcel(this)">
-        </label>
-        <button class="btn btn-danger" onclick="limpiarParticipantesUI()"><i class="ti ti-trash"></i> Limpiar participantes</button>
-        <button class="btn btn-primary" onclick="nuevaLigaUI()"><i class="ti ti-copy"></i> Nueva liga</button>
-      </div></div>`;
-    h+=`<div class="card"><div class="section-lbl">Exportar a PDF</div><p class="legend-txt" style="margin-top:0">Exportá los resultados completos o los Play Offs para compartir.</p><div class="gap-sm mt-sm">`;
+    h+=`<div class="card"><div class="section-lbl">Exportar</div>
+      <p class="legend-txt" style="margin-top:0">Exportá los resultados completos o los Play Offs para compartir.</p>
+      <div class="gap-sm mt-sm" style="flex-wrap:wrap">`;
     cycles.forEach(cy => {
-        h += `<button class="btn" onclick="printCycle(${cy.n})"><i class="ti ti-printer"></i> Ciclo ${cy.n}</button>`;
+        h += `<button class="btn" onclick="printCycle(${cy.n})"><i class="ti ti-printer"></i> PDF Ciclo ${cy.n}</button>`;
     });
-    h += `<button class="btn" onclick="printPlayoffs()"><i class="ti ti-printer"></i> Play Offs</button>`;
-    h += `<button class="btn btn-success" onclick="exportExcel()"><i class="ti ti-file-spreadsheet"></i> Exportar Excel</button></div></div>`;
+    h += `<button class="btn" onclick="printPlayoffs()"><i class="ti ti-printer"></i> PDF Play Offs</button>`;
+    h += `<button class="btn btn-success" onclick="exportExcel()"><i class="ti ti-file-spreadsheet"></i> Exportar Excel</button>`;
+    h += `</div></div>`;
 
     h+=`<div class="card"><div class="section-lbl">${tf('edit_groups',{n:activeN})}</div><p class="legend-txt" style="margin-top:0">${t('edit_groups_hint')}</p><div style="margin-bottom:.75rem"><button class="btn btn-primary" onclick="applyGroupsUpdate()"><i class="ti ti-refresh"></i> Actualizar grupos</button></div>`;
     h+=`<div class="grpedit">`+grps.map((g,gi)=>{
@@ -1786,11 +1862,19 @@ function renderAdmin(){
     }).join('')+`</div></div>`;
     h+=destinoCard();
 
-    h+='<div class="card"><div class="section-lbl">Reiniciar datos (¡Cuidado!)</div>';
+    h+='<div class="card"><div class="section-lbl">Reiniciar datos</div>';
     h+='<p class="legend-txt" style="margin-top:0">Estas acciones borran datos permanentemente y no se pueden deshacer.</p>';
-    h+='<div class="gap-sm">';
+    h+='<div class="gap-sm" style="flex-wrap:wrap">';
     h+=cycles.map(cyc=>`<button class="btn btn-danger" onclick="resetCycleUI(${cyc.n})"><i class="ti ti-trash"></i> Reiniciar Ciclo ${cyc.n}</button>`).join('');
     h+='<button class="btn btn-danger" onclick="resetPlayoffUI()"><i class="ti ti-trash"></i> Reiniciar Play Offs</button></div></div>';
+
+    h+='<div class="card" style="border:1.5px solid var(--danger,#e55);border-radius:12px">';
+    h+='<div class="section-lbl" style="color:var(--danger,#e55)">Nueva temporada</div>';
+    h+='<p class="legend-txt" style="margin-top:0">Reiniciá la liga para una nueva temporada, o creá una completamente nueva en otro URL.</p>';
+    h+='<div class="gap-sm" style="flex-wrap:wrap">';
+    h+='<button class="btn btn-danger" onclick="limpiarParticipantesUI()"><i class="ti ti-refresh"></i> Reiniciar liga</button>';
+    h+='<button class="btn btn-primary" onclick="nuevaLigaUI()"><i class="ti ti-copy"></i> Nueva liga</button>';
+    h+='</div></div>';
 
     document.getElementById('view-admin').innerHTML=h;
   } catch (err) {
@@ -2397,12 +2481,23 @@ function renderPerfil(){
     h += `<div class="form-group"><button class="btn btn-primary" onclick="addPlayerUI()"><i class="ti ti-user-plus"></i> ${t('add_btn')}</button></div>`;
     h += `</div></div>`;
 
-    h += `<div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">`;
-    h += `<div class="section-lbl" style="margin:0">${t('player_mgmt')}</div>`;
-    h += `<button class="btn btn-sm" onclick="renderPerfil()"><i class="ti ti-refresh"></i> ${t('refresh_list')}</button></div>`;
-    h += `<p class="legend-txt" style="margin-top:0">${t('player_mgmt_hint')}</p>`;
-    h += `<input type="text" id="player-search" placeholder="${t('search_player')}" oninput="filterPlayerList()" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13px;margin-bottom:.75rem">`;
-    h += `<div id="player-list">${renderPlayerList(players)}</div></div>`;
+    h += `<div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+        <div class="section-lbl" style="margin:0">${t('player_mgmt')}</div>
+        <div class="gap-sm">
+          <button class="btn btn-sm" onclick="renderPerfil()"><i class="ti ti-refresh"></i> ${t('refresh_list')}</button>
+        </div>
+      </div>
+      <p class="legend-txt" style="margin-top:0">${t('player_mgmt_hint')}</p>
+      <div class="gap-sm mt-sm" style="flex-wrap:wrap;margin-bottom:.75rem">
+        <button class="btn btn-sm" onclick="descargarPlantillaImport()"><i class="ti ti-file-download"></i> Descargar plantilla</button>
+        <label class="btn btn-sm" style="cursor:pointer"><i class="ti ti-file-upload"></i> Importar jugadores (Excel)
+          <input type="file" accept=".xlsx,.xls" style="display:none" onchange="importarJugadoresExcel(this)">
+        </label>
+        <button class="btn btn-sm btn-danger" onclick="limpiarJugadoresUI()"><i class="ti ti-eraser"></i> Limpiar jugadores</button>
+      </div>
+      <input type="text" id="player-search" placeholder="${t('search_player')}" oninput="filterPlayerList()" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13px;margin-bottom:.75rem">
+      <div id="player-list">${renderPlayerList(players)}</div></div>`;
     document.getElementById('view-perfil').innerHTML = h;
   } else {
     const loc = findLoc(u.name, activeN);
