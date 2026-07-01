@@ -1104,9 +1104,10 @@ if(c.status==='finished'&&!playoff.started&&!playoff.preview&&currentUser.role!=
   if(!filterWrap){
     const fw=document.createElement('div');
     fw.id='admin-group-filter';
-    fw.style.cssText='margin-bottom:.75rem;display:flex;align-items:center;gap:8px;padding:.625rem;border:2px dashed var(--border2);border-radius:12px;background:var(--cream,#fffbf0)';
-    const lbl=document.createElement('label');lbl.textContent='Filtrar:';lbl.style.fontWeight='600';lbl.style.fontSize='13px';lbl.style.color='var(--pri)';
-    const sel=document.createElement('select');sel.id='admin-grp-filter-sel';sel.style.cssText='padding:5px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13px;flex:1';
+    fw.className='req-wrap'; // misma clase que Club/Fecha y Names
+    fw.style.cssText='margin-bottom:.75rem;display:flex;align-items:center;gap:8px;width:100%;box-sizing:border-box';
+    const lbl=document.createElement('label');lbl.textContent='Filtrar:';lbl.style.cssText='font-size:13px;color:var(--text2);white-space:nowrap;font-weight:400';
+    const sel=document.createElement('select');sel.id='admin-grp-filter-sel';sel.style.cssText='flex:1;padding:5px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13px';
     sel.innerHTML=buildFilterOptions();
     sel.onchange=function(){
       const v=this.value;
