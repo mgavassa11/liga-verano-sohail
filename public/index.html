@@ -330,6 +330,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
   <div id="view-playoff" style="display:none"></div>
   <div id="view-perfil" style="display:none"></div>
   <div id="view-admin" style="display:none"></div>
+      <div id="view-historial" style="display:none"></div>
 </div>
 
 <div id="print-area"></div>
@@ -569,6 +570,7 @@ const C1=[['Neil Young','Marcos Gavassa','Jeremy Pérez','Leo Ramos','Adrián Ma
 let cycles=[{n:1,status:'active',groups:C1.map(p=>({players:[...p]}))},{n:2,status:'locked',groups:null},{n:3,status:'locked',groups:null}];
 let playoff={started:false,numTramos:4,tramos:[],results:{},viewT:0,qualified:[],forcedSize:0};
 let matches=[],matchId=1,activeN=1,viewCycle=1,subView='grupos',currentModal=null,formClub='',poContext=null,selGroup=1,adminMode='';
+let LOG=[]; // historial de acciones sobre resultados (max 500 entradas)
 let ALLNAMES=C1.flat();
 
 // Auxiliares de fechas
@@ -863,7 +865,7 @@ async function doLogin(){
 function doLogout(){closeM();clearForm();currentUser=null;_lastActivity=0;_sessionExpiring=false;document.getElementById('main-app').style.display='none';document.getElementById('login-screen').style.display='block';document.getElementById('login-pass').value='';initLogin();}
 function renderShell(){renderCycleBar();renderSubTabs();updateBadge();}
 function renderCycleBar(){const bar=document.getElementById('cycle-bar');let html='';cycles.forEach(c=>{const playable=!!c.groups;const isView=viewCycle===c.n;const icon=c.status==='finished'?'<i class="ti ti-circle-check st"></i>':c.status==='active'?'<i class="ti ti-player-play st"></i>':'<i class="ti ti-lock st"></i>';html+=`<button class="cycle-tab ${playable?'':'locked'} ${isView?'active':''}" onclick="${playable?`viewCyc(${c.n})`:''}">${icon} ${t('cycle')} ${c.n}</button>`;});const showPO=playoff.started||(playoff.preview&&currentUser&&currentUser.role==='admin');const poLabel=showPO?(playoff.preview&&!playoff.started?`<i class="ti ti-eye st"></i> ${t('playoffs_prev')}`:`<i class="ti ti-tournament st"></i> ${t('playoffs')}`):`<i class="ti ti-lock st"></i> ${t('playoffs')}`;html+=`<button class="cycle-tab ${showPO?'':'locked'} ${viewCycle==='po'?'active':''}" onclick="${showPO?`viewCyc('po')`:''}">${poLabel}</button>`;bar.innerHTML=html;}
-function renderSubTabs(){const tabs=document.getElementById('tabs');tabs.style.display='flex';const showPO=playoff.started||(playoff.preview&&currentUser&&currentUser.role==='admin');const inPO=viewCycle==='po';let tabs_def=[];if(showPO){tabs_def.push({id:'po',i:'ti-tournament',l:t('playoffs'),po:true});}else{tabs_def.push({id:'grupos',i:'ti-layout-grid',l:t('tab_grupos')});}tabs_def.push({id:'general',i:'ti-chart-bar',l:t('tab_general')});tabs_def.push({id:'cargar',i:'ti-upload',l:currentUser&&currentUser.role==='admin'?t('tab_cargar_admin'):t('tab_cargar')});tabs_def.push({id:'pendientes',i:'ti-bell',l:currentUser&&currentUser.role==='admin'?t('tab_pendientes_admin'):t('tab_pendientes'),b:true});tabs_def.push({id:'perfil',i:'ti-user',l:t('tab_perfil')});if(currentUser&&currentUser.role==='admin')tabs_def.push({id:'admin',i:'ti-settings',l:t('tab_admin')});tabs.innerHTML=tabs_def.map(x=>{if(x.po){const active=inPO;return '<button class="tab'+(active?' active':'')+'" id="tab-po" onclick="viewCyc(\'po\')"><i class="ti ti-tournament" aria-hidden="true"></i> '+x.l+'</button>';}const active=!inPO&&subView===x.id;return '<button class="tab'+(active?' active':'')+'" id="tab-'+x.id+'" onclick="showSub(\''+x.id+'\')" ><i class="ti '+x.i+'" aria-hidden="true"></i> '+x.l+(x.b?' <span class="tab-n" id="pend-n" style="display:none">0</span>':'')+'</button>';}).join('');}
+function renderSubTabs(){const tabs=document.getElementById('tabs');tabs.style.display='flex';const showPO=playoff.started||(playoff.preview&&currentUser&&currentUser.role==='admin');const inPO=viewCycle==='po';let tabs_def=[];if(showPO){tabs_def.push({id:'po',i:'ti-tournament',l:t('playoffs'),po:true});}else{tabs_def.push({id:'grupos',i:'ti-layout-grid',l:t('tab_grupos')});}tabs_def.push({id:'general',i:'ti-chart-bar',l:t('tab_general')});tabs_def.push({id:'cargar',i:'ti-upload',l:currentUser&&currentUser.role==='admin'?t('tab_cargar_admin'):t('tab_cargar')});tabs_def.push({id:'pendientes',i:'ti-bell',l:currentUser&&currentUser.role==='admin'?t('tab_pendientes_admin'):t('tab_pendientes'),b:true});tabs_def.push({id:'perfil',i:'ti-user',l:t('tab_perfil')});if(currentUser&&currentUser.role==='admin'){tabs_def.push({id:'admin',i:'ti-settings',l:t('tab_admin')});tabs_def.push({id:'historial',i:'ti-history',l:'Historial'});}tabs.innerHTML=tabs_def.map(x=>{if(x.po){const active=inPO;return '<button class="tab'+(active?' active':'')+'" id="tab-po" onclick="viewCyc(\'po\')"><i class="ti ti-tournament" aria-hidden="true"></i> '+x.l+'</button>';}const active=!inPO&&subView===x.id;return '<button class="tab'+(active?' active':'')+'" id="tab-'+x.id+'" onclick="showSub(\''+x.id+'\')" ><i class="ti '+x.i+'" aria-hidden="true"></i> '+x.l+(x.b?' <span class="tab-n" id="pend-n" style="display:none">0</span>':'')+'</button>';}).join('');}
 function viewCyc(n){
   viewCycle=n;
   if(n==='po'){
@@ -882,7 +884,7 @@ function viewCyc(n){
     showSub('grupos');
   }
 }
-function showSub(name){if(viewCycle==='po')viewCycle=activeN;subView=name;['grupos','general','cargar','pendientes','admin','playoff','perfil'].forEach(v=>{const el=document.getElementById('view-'+v);if(el)el.style.display='none';});const pv=document.getElementById('view-playoff');if(pv)pv.style.display='none';renderSubTabs();document.getElementById('view-'+name).style.display='block';if(name==='grupos')renderGrupos();if(name==='general')renderGeneral();if(name==='cargar'){populateForm();}if(name==='pendientes')renderPend();if(name==='admin')renderAdmin();if(name==='perfil')renderPerfil();updateHdr();if(name!=='pendientes')renderPend();updateBadge();}
+function showSub(name){if(viewCycle==='po')viewCycle=activeN;subView=name;['grupos','general','cargar','pendientes','admin','playoff','perfil','historial'].forEach(v=>{const el=document.getElementById('view-'+v);if(el)el.style.display='none';});const pv=document.getElementById('view-playoff');if(pv)pv.style.display='none';renderSubTabs();document.getElementById('view-'+name).style.display='block';if(name==='grupos')renderGrupos();if(name==='general')renderGeneral();if(name==='cargar'){populateForm();}if(name==='pendientes')renderPend();if(name==='admin')renderAdmin();if(name==='perfil')renderPerfil();if(name==='historial')renderHistorial();updateHdr();if(name!=='pendientes')renderPend();updateBadge();}
 function updateHdr(){const hs=viewCycle==='po'?t('playoffs'):t('cycle')+' '+viewCycle+' · '+(FECHAS[viewCycle-1]||'')+' · '+(cycles[viewCycle-1]?cycles[viewCycle-1].status:'');const sub=document.getElementById('hdr-sub');if(sub)sub.textContent=hs;const tit=document.getElementById('hdr-title');if(tit)tit.textContent=t('app_title');const eb=document.getElementById('exit-btn');if(eb)eb.textContent=t('exit');}
 
 function groupCardHTML(gid){
@@ -1243,11 +1245,13 @@ function submitResult(){
     const newM={id:matchId++,po:true,ti,which,ri,mi,tLabel:playoff.tramos[ti].label,poNames:[m.a,m.b],sets:s,date:fecha,club:formClub||'',status:isAdmin?'confirmed':'pending',reporter:currentUser.name,winner,locked:isAdmin};
     matches.push(newM);
     if(isAdmin){
-      storePo(ti,which,m.a,m.b,s,winner); // actualizar bracket directamente
-      rebuildTramo(ti);                     // avanzar al siguiente round
+      storePo(ti,which,m.a,m.b,s,winner);
+      rebuildTramo(ti);
     } else {
       applyPoPending(newM);
     }
+    const _rn=(()=>{const fe=tr[which].length-1-ri;return fe===0?'Final':fe===1?'Semifinal':fe===2?'Cuartos':fe===3?'Octavos':'Ronda '+(ri+1);})();
+    addLog(isAdmin?'Playoff: validado (admin)':'Playoff: cargado',{a:m.a,b:m.b,sets:s,winner,po:true,cuadro:playoff.tramos[ti].label,which,round:_rn});
     clearForm();poContext=null;
     fAlert(isAdmin?t('result_sent_admin'):t('result_sent_player'),'ok');
     persist(true);
@@ -1279,12 +1283,11 @@ function submitResult(){
   matches=matches.filter(m=>!(m.cycle===activeN&&m.g===gid&&!m.po&&((m.aName===repName&&m.bName===rivName)||(m.aName===rivName&&m.bName===repName))));
   const isAdmin=currentUser.role==='admin';
   matches.push({id:matchId++,cycle:activeN,g:gid,aName:repName,bName:rivName,sets:s,date:fecha,status:isAdmin?'confirmed':'pending',reporter:repName,club:formClub,locked:isAdmin});
-  
+  addLog(isAdmin?'Liga: validado (admin)':'Liga: cargado',{a:repName,b:rivName,sets:s,grupo:gid,po:false});
   clearForm();
   fAlert(isAdmin?t('result_sent_admin'):t('result_sent_player'),'ok');
   persist(true);
   refreshAll();
-  // Admin: repoblar el formulario para que el par ya cargado desaparezca del dropdown
   if(isAdmin) setTimeout(()=>populateForm(),50);
 }
 
@@ -1351,9 +1354,9 @@ h+=`<button class="btn" onclick="closeM()">${t('close')}</button>`;acts.innerHTM
 function closeM(){document.getElementById('modal-bg').classList.remove('open');}
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeM();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeM();});
-function confirmM(){const m=matches.find(x=>x.id===currentModal);if(m){m.status='confirmed';m.locked=true;if(m.po)applyPoPending(m);}closeM();refreshAll();toast(t('toast_confirmed'));persist(true);}
+function confirmM(){const m=matches.find(x=>x.id===currentModal);if(m){m.status='confirmed';m.locked=true;if(m.po){applyPoPending(m);const tr=playoff.tramos[m.ti];const rnd=(()=>{const rounds=m.which==='main'?tr.main:tr.cons;const fe=rounds.length-1-m.ri;return fe===0?'Final':fe===1?'Semifinal':fe===2?'Cuartos':fe===3?'Octavos':'Ronda '+(m.ri+1);})();addLog('Playoff: confirmado',{a:m.poNames[0],b:m.poNames[1],sets:m.sets,winner:m.winner,po:true,cuadro:tr.label,which:m.which,round:rnd});}else{addLog('Liga: confirmado',{a:m.aName,b:m.bName,sets:m.sets,grupo:m.g,po:false});}}closeM();refreshAll();toast(t('toast_confirmed'));persist(true);}
 function disputeM(){const m=matches.find(x=>x.id===currentModal);if(m)m.status='disputed';closeM();refreshAll();toast(t('toast_disputed'));persist(true);}
-function deleteMatch(mid){if(confirm(t('confirm_delete'))){matches=matches.filter(x=>x.id!==mid);closeM();refreshAll();toast(t('match_deleted'));persist(true);}}
+function deleteMatch(mid){if(confirm(t('confirm_delete'))){const dm=matches.find(x=>x.id===mid);if(dm){if(dm.po){const tr=playoff.tramos[dm.ti];addLog('Playoff: eliminado',{a:dm.poNames[0],b:dm.poNames[1],sets:dm.sets,po:true,cuadro:tr?tr.label:'',which:dm.which});}else{addLog('Liga: eliminado',{a:dm.aName,b:dm.bName,sets:dm.sets,grupo:dm.g,po:false});}}matches=matches.filter(x=>x.id!==mid);closeM();refreshAll();toast(t('match_deleted'));persist(true);}}
 function adminEdit(mid){const m=matches.find(x=>x.id===mid);closeM();showSub('cargar');populateForm(m.g,m.aName,m.bName);pickClub(m.club);['s1a','s1b','s2a','s2b','s3a','s3b'].forEach(id=>document.getElementById(id).value='');document.getElementById('s3-row').style.display='none';m.sets.forEach((s,i)=>{const a=document.getElementById(`s${i+1}a`),b=document.getElementById(`s${i+1}b`);if(a)a.value=s[0];if(b)b.value=s[1];if(i===2)document.getElementById('s3-row').style.display='flex';});document.getElementById('f-fecha').value=m.date;}
 
 function setTotalCycles(val){
@@ -1598,6 +1601,84 @@ async function nuevaLigaUI(){
     toast('Error al generar el archivo: '+err.message);
     alert('Si el error persiste, descargá el index.html manualmente, reemplazá SUPA_URL y SUPA_KEY, y subilo al nuevo repo.');
   }
+}
+
+// ===== HISTORIAL =====
+function addLog(action, detail){
+  const now=new Date();
+  const ts=now.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  LOG.unshift({ts,who:currentUser?currentUser.name:'Sistema',action,detail});
+  if(LOG.length>500)LOG.splice(500);
+}
+function fmtSets(sets){if(!sets||!sets.length)return '—';return sets.map(([a,b])=>a+'-'+b).join(' ');}
+function renderHistorial(){
+  const el=document.getElementById('view-historial');if(!el)return;
+  const filter=document.getElementById('hist-filter')?document.getElementById('hist-filter').value:'all';
+  const search=document.getElementById('hist-search')?document.getElementById('hist-search').value.toLowerCase():'';
+  const rows=LOG.filter(e=>{
+    if(filter==='liga'&&e.detail&&e.detail.po)return false;
+    if(filter==='playoff'&&(!e.detail||!e.detail.po))return false;
+    if(search&&!(e.who.toLowerCase().includes(search)||e.action.toLowerCase().includes(search)||(e.detail&&JSON.stringify(e.detail).toLowerCase().includes(search))))return false;
+    return true;
+  });
+  const icons={
+    'Liga: cargado':'<i class="ti ti-upload" style="color:#3b82f6"></i>',
+    'Liga: confirmado':'<i class="ti ti-circle-check" style="color:#22c55e"></i>',
+    'Liga: validado (admin)':'<i class="ti ti-shield-check" style="color:#22c55e"></i>',
+    'Liga: editado':'<i class="ti ti-pencil" style="color:#f59e0b"></i>',
+    'Liga: eliminado':'<i class="ti ti-trash" style="color:#ef4444"></i>',
+    'Liga: en disputa':'<i class="ti ti-alert-triangle" style="color:#ef4444"></i>',
+    'Liga: disputa resuelta':'<i class="ti ti-gavel" style="color:#8b5cf6"></i>',
+    'Playoff: cargado':'<i class="ti ti-upload" style="color:#3b82f6"></i>',
+    'Playoff: validado (admin)':'<i class="ti ti-shield-check" style="color:#22c55e"></i>',
+    'Playoff: confirmado':'<i class="ti ti-circle-check" style="color:#22c55e"></i>',
+    'Playoff: editado':'<i class="ti ti-pencil" style="color:#f59e0b"></i>',
+    'Playoff: eliminado':'<i class="ti ti-trash" style="color:#ef4444"></i>',
+    'Playoff: disputa resuelta':'<i class="ti ti-gavel" style="color:#8b5cf6"></i>',
+  };
+  let h='<div class="card"><div class="section-lbl">Historial de resultados</div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:.75rem;flex-wrap:wrap">';
+  h+='<select id="hist-filter" onchange="renderHistorial()" style="padding:5px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:13px">';
+  h+='<option value="all">Todos</option><option value="liga" '+(filter==='liga'?'selected':'')+'>Solo liga</option><option value="playoff" '+(filter==='playoff'?'selected':'')+'>Solo playoff</option>';
+  h+='</select>';
+  h+='<input id="hist-search" placeholder="Buscar jugador o acción..." value="'+esc(search)+'" oninput="renderHistorial()" style="flex:1;min-width:160px;padding:5px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:13px">';
+  h+='</div>';
+  if(!rows.length){h+='<p style="color:var(--text2);font-style:italic;text-align:center;padding:2rem 0">Sin entradas en el historial todavía.</p></div>';el.innerHTML=h;return;}
+  h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">';
+  h+='<thead><tr style="border-bottom:2px solid var(--border2);text-align:left">';
+  h+='<th style="padding:6px 8px;color:var(--text2);font-weight:600;white-space:nowrap">Fecha y hora</th>';
+  h+='<th style="padding:6px 8px;color:var(--text2);font-weight:600">Quién</th>';
+  h+='<th style="padding:6px 8px;color:var(--text2);font-weight:600">Acción</th>';
+  h+='<th style="padding:6px 8px;color:var(--text2);font-weight:600">Detalle</th>';
+  h+='<th style="padding:6px 8px;color:var(--text2);font-weight:600;white-space:nowrap">Sets</th>';
+  h+='</tr></thead><tbody>';
+  rows.forEach((e,i)=>{
+    const ic=icons[e.action]||'<i class="ti ti-dots" style="color:var(--text2)"></i>';
+    const d=e.detail||{};
+    let detalle='';
+    if(d.po){
+      const rnd=d.round||'';const cuadro=d.cuadro?'Cuadro '+d.cuadro:'';
+      const draw=d.which==='cons'?'Consolación':'Principal';
+      detalle=cuadro+(rnd?' · '+rnd:'')+(draw?' ('+draw+')':'');
+      if(d.a&&d.b)detalle+='<br><span style="font-weight:500">'+d.a+'</span> vs <span style="font-weight:500">'+d.b+'</span>';
+    } else {
+      if(d.grupo)detalle='Grupo '+d.grupo;
+      if(d.a&&d.b)detalle+=(detalle?'<br>':'')+'<span style="font-weight:500">'+d.a+'</span> vs <span style="font-weight:500">'+d.b+'</span>';
+    }
+    const sets=fmtSets(d.sets);
+    const winner=d.winner?'<br><span style="font-size:11px;color:#22c55e;font-weight:600">🏆 '+d.winner+'</span>':'';
+    h+=`<tr style="border-bottom:1px solid var(--border);background:${i%2===0?'transparent':'var(--surface2,#f8f9fb)'}">`;
+    h+=`<td style="padding:7px 8px;color:var(--text2);font-size:12px;white-space:nowrap">${e.ts}</td>`;
+    h+=`<td style="padding:7px 8px;font-weight:500">${e.who}</td>`;
+    h+=`<td style="padding:7px 8px;white-space:nowrap">${ic} ${e.action}</td>`;
+    h+=`<td style="padding:7px 8px">${detalle}${winner}</td>`;
+    h+=`<td style="padding:7px 8px;font-family:monospace;white-space:nowrap">${sets}</td>`;
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  h+=`<p style="font-size:11px;color:var(--text2);margin-top:.5rem;text-align:right">${rows.length} de ${LOG.length} entradas</p>`;
+  h+='</div>';
+  el.innerHTML=h;
 }
 
 function setPoFecha(r, field, v) {
@@ -2165,7 +2246,8 @@ function resolveD(mid){
   if(!m)return;
   m.status='confirmed';
   m.locked=true;
-  if(m.po)applyPoPending(m);
+  if(m.po){applyPoPending(m);const tr=playoff.tramos[m.ti];addLog('Playoff: disputa resuelta',{a:m.poNames[0],b:m.poNames[1],sets:m.sets,winner:m.winner,po:true,cuadro:tr?tr.label:'',which:m.which});}
+  else{addLog('Liga: disputa resuelta',{a:m.aName,b:m.bName,sets:m.sets,grupo:m.g,po:false});}
   persist(true);
   refreshAll();
   toast('Resultado validado correctamente.');
@@ -2529,6 +2611,8 @@ function openPoForm(m,ti){
 function deletePoDirect(ti,which,ri,mi){
   if(!confirm('¿Eliminar este resultado? El partido vuelve a estar pendiente.')) return;
   const m = (which === 'main' ? playoff.tramos[ti].main : playoff.tramos[ti].cons)[ri][mi];
+  const mRec = matches.find(x=>x.po&&x.ti===ti&&x.which===which&&x.poNames&&x.poNames.includes(m.a)&&x.poNames.includes(m.b));
+  addLog('Playoff: eliminado',{a:m.a,b:m.b,sets:mRec?mRec.sets:[],po:true,cuadro:playoff.tramos[ti]?playoff.tramos[ti].label:'',which});
   const k = (which === 'main' ? ti : ti + 'c') + '#' + [m.a, m.b].sort().join('|');
   delete playoff.results[k];
   matches = matches.filter(x => !(x.po && x.ti === ti && x.which === which && ((x.poNames[0] === m.a && x.poNames[1] === m.b) || (x.poNames[0] === m.b && x.poNames[1] === m.a))));
@@ -2584,9 +2668,14 @@ function submitPo(){
   if(currentUser.role === 'admin'){
     storePo(ti, which, m.a, m.b, s, winner);
     matches.push({id: matchId++, po: true, ti, which, tLabel: playoff.tramos[ti].label, poNames: [m.a, m.b], sets: s, status: 'confirmed', reporter: currentUser.name, winner, date: fecha, club: poFormClub, locked: true});
-    rebuildTramo(ti); closeM(); showPlayoffView(); toast(t('po_validated')); persist(true);
+    rebuildTramo(ti);
+    const _rn2=(()=>{const rounds=which==='main'?playoff.tramos[ti].main:playoff.tramos[ti].cons;const fe=rounds.length-1-ri;return fe===0?'Final':fe===1?'Semifinal':fe===2?'Cuartos':fe===3?'Octavos':'Ronda '+(ri+1);})();
+    addLog('Playoff: validado (admin)',{a:m.a,b:m.b,sets:s,winner,po:true,cuadro:playoff.tramos[ti].label,which,round:_rn2});
+    closeM(); showPlayoffView(); toast(t('po_validated')); persist(true);
   } else {
     matches.push({id: matchId++, po: true, ti, which, tLabel: playoff.tramos[ti].label, poNames: [m.a, m.b], sets: s, status: 'pending', reporter: currentUser.name, winner, date: fecha, club: poFormClub});
+    const _rn3=(()=>{const rounds=which==='main'?playoff.tramos[ti].main:playoff.tramos[ti].cons;const fe=rounds.length-1-ri;return fe===0?'Final':fe===1?'Semifinal':fe===2?'Cuartos':fe===3?'Octavos':'Ronda '+(ri+1);})();
+    addLog('Playoff: cargado',{a:m.a,b:m.b,sets:s,po:true,cuadro:playoff.tramos[ti].label,which,round:_rn3});
     closeM(); renderPend(); renderCycleBar(); showPlayoffView(); toast(t('po_sent')); persist(true);
   }
 }
@@ -2597,7 +2686,7 @@ let _toastTimer=null;function toast(m){let t=document.getElementById('_toast');i
 // ===== CONEXIÓN A SUPABASE — guardado instantáneo =====
 let _sb=null,_lastSaved=null,_saving=false,_pendingForce=false;
 function _serialize(){
-  return JSON.stringify({cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,PO_FECHAS,ALLNAMES,users:USERS,PUNTOS});
+  return JSON.stringify({cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,PO_FECHAS,ALLNAMES,users:USERS,PUNTOS,LOG});
 }
 
 function _hydrate(d){try{
@@ -2629,6 +2718,7 @@ function _hydrate(d){try{
   if(Array.isArray(d.ALLNAMES))ALLNAMES=d.ALLNAMES;
   if(d.users){Object.keys(USERS).forEach(k=>delete USERS[k]);Object.assign(USERS,d.users);}
   if(d.PUNTOS)PUNTOS=d.PUNTOS;
+  if(Array.isArray(d.LOG))LOG=d.LOG;
 }catch(e){console.warn('hydrate',e);}
 }
 
