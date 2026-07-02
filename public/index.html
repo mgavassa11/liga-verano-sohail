@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Liga de Tenis Sohail</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><style>
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><script>(function(){try{var c=JSON.parse(localStorage.getItem('lsc')||'null');if(c&&c.p&&c.a){var r=document.documentElement.style;r.setProperty('--pri',c.p);r.setProperty('--priD',c.pd||c.p);r.setProperty('--soft',c.s||'#E6F1FB');r.setProperty('--acc',c.a);r.setProperty('--accD',c.ad||c.a);r.setProperty('--accT',c.at||c.p);r.setProperty('--winrow',c.wr||'#FAEEDA');r.setProperty('--cream',c.cr||'#fffbf0');}}catch(e){}})();</script><meta name="viewport" content="width=device-width,initial-scale=1"><title>Liga de Tenis Sohail</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#EEF2F7;--surface:#ffffff;--surface2:#EDF1F6;--text:#1b2433;--text2:#5b6675;--border:#e2e7ef;--border2:#c8d0dc;
 --pri:#1B4F9C;--priD:#0E3470;--soft:#E6F1FB;--acc:#F5C518;--accD:#D9A800;--accT:#0E3470;--winrow:#FAEEDA;
@@ -16,8 +16,8 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 .login-btn:disabled{opacity:0.6;cursor:not-allowed}
 .login-hint{margin-top:.875rem;padding:.7rem;background:var(--soft);border-radius:8px;font-size:11px;color:var(--priD);line-height:1.5}
 .login-err{background:#FCEBEB;color:#791F1F;padding:.55rem;border-radius:8px;font-size:12px;margin-bottom:.75rem;display:none}
-.hdr{display:flex;align-items:center;gap:12px;padding:.7rem 1rem;background:var(--pri);border-radius:14px;margin-bottom:.6rem;border-top:4px solid #F5C518;}
-.hdr-logo{width:36px;height:36px;background:#F5C518;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--priD);font-size:18px;flex-shrink:0}
+.hdr{display:flex;align-items:center;gap:12px;padding:.7rem 1rem;background:var(--pri);border-radius:14px;margin-bottom:.6rem;border-top:4px solid var(--acc);}
+.hdr-logo{width:36px;height:36px;background:var(--acc);border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--priD);font-size:18px;flex-shrink:0}
 .hdr h1{font-size:15px;font-weight:600;color:#fff}.hdr p{font-size:12px;color:#dce7f6}
 .user-chip{margin-left:auto;display:flex;align-items:center;gap:8px}
 .user-info{text-align:right}.user-info .name{font-size:13px;color:#fff;font-weight:600}.user-info .role{font-size:11px;color:#F5C518}
@@ -432,8 +432,8 @@ function updateLangUI(){
   ['btn-lang-en','btn-lang-en-login'].forEach(id=>{let el=document.getElementById(id);if(el){el.classList.toggle('active',LANG==='en');}});
   const lu=document.getElementById('lbl-user');if(lu)lu.textContent=t('select_user');
   const lp=document.getElementById('lbl-pass');if(lp)lp.textContent=t('password');
-  const lt=document.getElementById('login-title');if(lt)lt.textContent=t('app_title');
-  const ls=document.getElementById('login-sub');if(ls)ls.textContent=t('app_subtitle');
+  const lt=document.getElementById('login-title');if(lt)lt.textContent=LEAGUE_NAME||t('app_title');
+  const ls=document.getElementById('login-sub');if(ls)ls.textContent=LEAGUE_SUBTITLE||t('app_subtitle');
   const bEnv=document.getElementById('btn-enviar');if(bEnv)bEnv.innerHTML='<i class="ti ti-send"></i> '+t('send');
   const bLim=document.getElementById('btn-limpiar');if(bLim)bLim.textContent=t('clear');
   const lbtn=document.getElementById('login-btn');if(lbtn){lbtn.textContent=t('enter');}const sh=document.getElementById('stb-hint');if(sh)sh.textContent=t('stb_hint');
@@ -1246,7 +1246,7 @@ function submitResult(){
     const ti=poContext.ti,which=poContext.which,ri=poContext.ri,mi=poContext.mi;
     const tr=playoff.tramos[ti];if(!tr||!tr[which])return;
     const m=tr[which][ri][mi];if(!m)return;
-    const isAdmin=currentUser.role==='admin';
+    const isAdmin=currentUser.role==='admin'||currentUser.role==='superadmin';
     // Guardar resultado en matches igual que submitPo
     matches=matches.filter(x=>!(x.po&&x.ti===ti&&x.which===which&&x.poNames&&x.poNames.includes(m.a)&&x.poNames.includes(m.b)));
     // Calcular ganador igual que submitPo
@@ -1291,7 +1291,7 @@ function submitResult(){
   if(!v.ok){fAlert('✕ '+v.msg,'err');return;}
   
   matches=matches.filter(m=>!(m.cycle===activeN&&m.g===gid&&!m.po&&((m.aName===repName&&m.bName===rivName)||(m.aName===rivName&&m.bName===repName))));
-  const isAdmin=currentUser.role==='admin';
+  const isAdmin=currentUser.role==='admin'||currentUser.role==='superadmin';
   matches.push({id:matchId++,cycle:activeN,g:gid,aName:repName,bName:rivName,sets:s,date:fecha,status:isAdmin?'confirmed':'pending',reporter:repName,club:formClub,locked:isAdmin});
   addLog(isAdmin?'Liga: validado (admin)':'Liga: cargado',{a:repName,b:rivName,sets:s,grupo:gid,po:false});
   clearForm();
@@ -1564,6 +1564,7 @@ function previewLeagueColors(){
 }
 function resetLeagueColors(){
   LEAGUE_COLOR_PRI='#1B4F9C';LEAGUE_COLOR_ACC='#F5C518';
+  try{localStorage.removeItem('lsc');}catch(e){}
   applyLeagueColors(LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC);
   const pri=document.getElementById('sa-color-pri');if(pri)pri.value='#1B4F9C';
   const acc=document.getElementById('sa-color-acc');if(acc)acc.value='#F5C518';
@@ -1573,19 +1574,25 @@ function resetLeagueColors(){
 }
 
 function applyLeagueColors(pri, acc){
-  // Validar colores hex antes de aplicar
   if(!pri||!/^#[0-9a-fA-F]{6}$/.test(pri))return;
   if(!acc||!/^#[0-9a-fA-F]{6}$/.test(acc))return;
+  const priD=shadeColor(pri,-20);
+  const soft=tintColor(pri,88);
+  const accD=shadeColor(acc,-15);
+  const accT=shadeColor(pri,-30);
+  const winrow=tintColor(acc,92);
+  const cream=tintColor(acc,95);
   const root=document.documentElement;
-  root.style.setProperty('--pri', pri);
-  root.style.setProperty('--priD', shadeColor(pri, -20));
-  root.style.setProperty('--soft', tintColor(pri, 85));
-  root.style.setProperty('--acc', acc);
-  root.style.setProperty('--accD', shadeColor(acc, -15));
-  root.style.setProperty('--accT', shadeColor(pri, -25));
-  // Actualizar el borde del header (línea de color acento)
-  const hdr=document.querySelector('.hdr');
-  if(hdr)hdr.style.borderBottom='3px solid '+acc;
+  root.style.setProperty('--pri',pri);
+  root.style.setProperty('--priD',priD);
+  root.style.setProperty('--soft',soft);
+  root.style.setProperty('--acc',acc);
+  root.style.setProperty('--accD',accD);
+  root.style.setProperty('--accT',accT);
+  root.style.setProperty('--winrow',winrow);
+  root.style.setProperty('--cream',cream);
+  // Guardar en localStorage para aplicación inmediata en próximo load (evita flash)
+  try{localStorage.setItem('lsc',JSON.stringify({p:pri,pd:priD,s:soft,a:acc,ad:accD,at:accT,wr:winrow,cr:cream}));}catch(e){}
 }
 function shadeColor(hex,pct){
   const n=parseInt(hex.replace('#',''),16);
@@ -1594,7 +1601,15 @@ function shadeColor(hex,pct){
   const b=Math.min(255,Math.max(0,(n&0xff)+Math.round(2.55*pct)));
   return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
 }
-function tintColor(hex,pct){return shadeColor(hex,pct);}
+// tintColor: mezcla con blanco (pct=% de blanco, 0=color puro, 100=blanco puro)
+function tintColor(hex,pct){
+  const n=parseInt(hex.replace('#',''),16);
+  const mix=1-(pct/100);
+  const r=Math.round(255*(pct/100)+((n>>16)&0xff)*mix);
+  const g=Math.round(255*(pct/100)+((n>>8)&0xff)*mix);
+  const b=Math.round(255*(pct/100)+(n&0xff)*mix);
+  return '#'+[r,g,b].map(x=>Math.min(255,x).toString(16).padStart(2,'0')).join('');
+}
 
 function saveLeagueName(){
   const inp=document.getElementById('sa-league-name');
@@ -2224,7 +2239,7 @@ function bracketHTML(rounds,ti,which){
     const dateStr=rDateLabel(ri);
     const rk=rKey(ri);
     const pf=PO_FECHAS[rk]||{type:'single',date:'',from:'',to:''};
-    const isAdmin=currentUser&&currentUser.role==='admin';
+    const isAdmin=currentUser&&(currentUser.role==='admin'||currentUser.role==='superadmin');
     let dateLine='';
     if(isAdmin){
       const isSingle=pf.type==='single';
@@ -2263,7 +2278,7 @@ function showPlayoffView(){
     return;
   }
   try{
-  const isAdmin=currentUser&&currentUser.role==='admin';
+  const isAdmin=currentUser&&(currentUser.role==='admin'||currentUser.role==='superadmin');
   let html='';
 
   if(playoff.preview&&!playoff.started){
@@ -3045,7 +3060,12 @@ if(typeof window!=='undefined'&&window.addEventListener){
 
 initSupabase();
 (async function(){
-  try{await loadState();await migratePasswords();}catch(e){console.warn('Supabase load error:',e);}
+  try{await loadState();await migratePasswords();
+    // Aplicar nombre/subtítulo al DOM antes de mostrar login
+    const _lt=document.getElementById('login-title');if(_lt&&LEAGUE_NAME)_lt.textContent=LEAGUE_NAME;
+    const _ls=document.getElementById('login-sub');if(_ls&&LEAGUE_SUBTITLE)_ls.textContent=LEAGUE_SUBTITLE;
+    if(LEAGUE_NAME)document.title=LEAGUE_NAME;
+  }catch(e){console.warn('Supabase load error:',e);}
   initLogin();
   updateLangUI();
   if(typeof currentUser!=='undefined'&&currentUser){renderAll();}
