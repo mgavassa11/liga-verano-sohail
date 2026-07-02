@@ -2485,7 +2485,7 @@ function savePuntos(gid,len){
 
 function renderPerfil(){
   const u = currentUser;
-  if(u.role === 'admin') {
+  if(u.role === 'admin' || u.role === 'superadmin') {
     const players = Object.values(USERS).filter(u=>u&&u.role!=='admin').sort((a,b)=>(a.name||'').localeCompare(b.name||'','es'));
     let h = `<div class="card"><div class="section-lbl">${t('admin_profile')}</div>`;
     h += `<div class="prof-row"><span>${t('full_name')}</span><span>${u.name}</span></div>`;
