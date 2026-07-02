@@ -1,4 +1,11 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><script>(function(){try{var c=JSON.parse(localStorage.getItem('lsc')||'null');if(c&&c.p&&c.a){var r=document.documentElement.style;r.setProperty('--pri',c.p);r.setProperty('--priD',c.pd||c.p);r.setProperty('--soft',c.s||'#E6F1FB');r.setProperty('--acc',c.a);r.setProperty('--accD',c.ad||c.a);r.setProperty('--accT',c.at||c.p);r.setProperty('--winrow',c.wr||'#FAEEDA');r.setProperty('--cream',c.cr||'#fffbf0');}}catch(e){}})();</script><meta name="viewport" content="width=device-width,initial-scale=1"><title>Liga de Tenis Sohail</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><style>
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><script>(function(){try{
+  // Restaurar colores sin flash
+  var c=JSON.parse(localStorage.getItem('lsc')||'null');
+  if(c&&c.p&&c.a){var r=document.documentElement.style;r.setProperty('--pri',c.p);r.setProperty('--priD',c.pd||c.p);r.setProperty('--soft',c.s||'#E6F1FB');r.setProperty('--acc',c.a);r.setProperty('--accD',c.ad||c.a);r.setProperty('--accT',c.at||c.p);r.setProperty('--winrow',c.wr||'#FAEEDA');r.setProperty('--cream',c.cr||'#fffbf0');}
+  // Restaurar nombre y subtítulo sin flash (se ejecuta en DOMContentLoaded para tener acceso al DOM)
+  var lsn=JSON.parse(localStorage.getItem('lsn')||'null');
+  if(lsn){document.addEventListener('DOMContentLoaded',function(){var lt=document.getElementById('login-title');if(lt&&lsn.n)lt.textContent=lsn.n;var ls=document.getElementById('login-sub');if(ls&&lsn.s)ls.textContent=lsn.s;var ht=document.getElementById('hdr-title');if(ht&&lsn.n)ht.textContent=lsn.n;if(lsn.n)document.title=lsn.n;},false);}
+}catch(e){}})();</script><meta name="viewport" content="width=device-width,initial-scale=1"><title>Liga de Tenis Sohail</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#EEF2F7;--surface:#ffffff;--surface2:#EDF1F6;--text:#1b2433;--text2:#5b6675;--border:#e2e7ef;--border2:#c8d0dc;
 --pri:#1B4F9C;--priD:#0E3470;--soft:#E6F1FB;--acc:#F5C518;--accD:#D9A800;--accT:#0E3470;--winrow:#FAEEDA;
@@ -6,8 +13,8 @@
 html,body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px}
 .app{max-width:1040px;margin:0 auto;padding:.75rem}
 .login-wrap{max-width:380px;margin:2rem auto;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.08)}
-.login-head{background:var(--pri);padding:1.5rem;text-align:center;border-top:4px solid #F5C518;}
-.login-head .ball{width:48px;height:48px;background:#F5C518;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:var(--priD);font-size:24px;margin-bottom:.4rem}
+.login-head{background:var(--pri);padding:1.5rem;text-align:center;border-top:4px solid var(--acc);}
+.login-head .ball{width:48px;height:48px;background:var(--acc);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:var(--priD);font-size:24px;margin-bottom:.4rem}
 .login-head h1{color:#fff;font-size:17px;font-weight:600}.login-head p{color:#dce7f6;font-size:12px}
 .login-body{padding:1.25rem}
 .login-body label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:600}
@@ -20,17 +27,17 @@ html,body{background:var(--bg);color:var(--text);font-family:-apple-system,Blink
 .hdr-logo{width:36px;height:36px;background:var(--acc);border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--priD);font-size:18px;flex-shrink:0}
 .hdr h1{font-size:15px;font-weight:600;color:#fff}.hdr p{font-size:12px;color:#dce7f6}
 .user-chip{margin-left:auto;display:flex;align-items:center;gap:8px}
-.user-info{text-align:right}.user-info .name{font-size:13px;color:#fff;font-weight:600}.user-info .role{font-size:11px;color:#F5C518}
+.user-info{text-align:right}.user-info .name{font-size:13px;color:#fff;font-weight:600}.user-info .role{font-size:11px;color:var(--acc)}
 .logout-btn{background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:8px;padding:6px 9px;font-size:12px;cursor:pointer}.logout-btn:hover{background:rgba(255,255,255,.28)}
 
 .lang-btn { background: rgba(255,255,255,.15);
 color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px; font-size: 11px; cursor: pointer; font-weight: 600;
 }
 .lang-btn:hover { background: rgba(255,255,255,.28); }
-.lang-btn.active { background: var(--priD); border-color: #F5C518; color: #F5C518;
+.lang-btn.active { background: var(--priD); border-color: var(--acc); color: var(--acc);
 }
 
-.role-badge{background:#F5C518;color:var(--priD);font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;text-transform:uppercase}
+.role-badge{background:var(--acc);color:var(--priD);font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;text-transform:uppercase}
 .cycle-bar{display:flex;gap:6px;margin-bottom:.6rem;flex-wrap:wrap}
 .cycle-tab{flex:1;min-width:90px;padding:10px 8px;border:1px solid var(--border);background:var(--surface);border-radius:11px;cursor:pointer;font-size:14px;font-weight:600;text-align:center;color:var(--text);display:flex;align-items:center;justify-content:center;gap:5px}
 .cycle-tab:hover:not(.locked){border-color:var(--pri);background:var(--soft)}
@@ -52,7 +59,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
 .grp-btn{padding:7px 11px;border:1px solid var(--border2);background:var(--surface);border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);line-height:1.15;text-align:center}
 .grp-btn:hover{background:var(--soft);border-color:var(--pri)}
 .grp-btn.active{background:var(--pri);color:#fff;border-color:var(--pri)}
-.grp-btn .mine{font-size:9px;color:var(--accD);display:block}.grp-btn.active .mine{color:#F5C518}
+.grp-btn .mine{font-size:9px;color:var(--accD);display:block}.grp-btn.active .mine{color:var(--acc)}
 .grp-title{display:inline-block;background:var(--soft);color:var(--priD);font-size:13px;font-weight:600;padding:5px 14px;border-radius:8px 8px 0 0;border:1px solid var(--pri);border-bottom:none}
 .section-lbl{font-size:11px;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:.05em;margin:.875rem 0 .4rem}
 .cls-table,.gen-table{width:100%;border-collapse:collapse;font-size:12px}
@@ -129,7 +136,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
 .ge-row{display:flex;align-items:center;gap:5px;margin-bottom:5px}.ge-nm{flex:1;font-size:12px}.ge-sel{font-size:11px;padding:3px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);color:var(--text);max-width:90px}
 .prof-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}.prof-row span:first-child{color:var(--text2)}
 .modal-bg{position:fixed;inset:0;background:rgba(10,18,32,.66);display:none;align-items:center;justify-content:center;z-index:100;padding:1rem}.modal-bg.open{display:flex}
-.modal{background:var(--surface);border-radius:14px;padding:1.25rem;width:400px;max-width:100%;border-top:4px solid #F5C518;max-height:88vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.modal{background:var(--surface);border-radius:14px;padding:1.25rem;width:400px;max-width:100%;border-top:4px solid var(--acc);max-height:88vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.45)}
 .modal h3{font-size:15px;font-weight:700;margin-bottom:1rem;color:var(--pri)}
 .modal-rep{font-size:13px;color:var(--text2);margin-bottom:.5rem}.modal-rep .vs{color:var(--text2)}
 .modal-score{border-radius:8px;padding:.7rem;text-align:center;margin-bottom:.5rem}.modal-score p{font-size:15px;font-weight:600}
@@ -170,7 +177,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
 .seed-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:.5rem}
 .seed-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:20px;background:var(--soft);color:var(--pri);font-size:12px}
 .seed-chip .rm{border:none;background:#FCEBEB;color:#c0392b;cursor:pointer;font-size:13px;padding:1px 6px;border-radius:20px;line-height:1;display:inline-flex;align-items:center}.seed-chip .rm:hover{background:#f3c0c0}
-.toast{position:fixed;bottom:16px;right:16px;background:var(--pri);color:#fff;padding:10px 14px;border-radius:8px;font-size:13px;z-index:999;transition:.3s;max-width:300px;border-bottom:3px solid #F5C518;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.toast{position:fixed;bottom:16px;right:16px;background:var(--pri);color:#fff;padding:10px 14px;border-radius:8px;font-size:13px;z-index:999;transition:.3s;max-width:300px;border-bottom:3px solid var(--acc);box-shadow:0 6px 20px rgba(0,0,0,.25)}
 .bracket-main .match-box{background:#EAF3FC}.bracket-cons .match-box{background:#FDF1E6}
 .bracket-main .slot,.bracket-cons .slot{background:transparent}.bracket-main .slot.winner,.bracket-cons .slot.winner{background:var(--winrow)}.bracket-main .slot-foot,.bracket-cons .slot-foot{background:rgba(0,0,0,.04)}
 
@@ -265,7 +272,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
         <button id="btn-lang-es-login" onclick="setLang('es')" class="lang-btn active">ES</button>
         <button id="btn-lang-en-login" onclick="setLang('en')" class="lang-btn">EN</button>
       </div>
-      <div class="ball"><i class="ti ti-ball-tennis"></i></div><h1 id="login-title">Liga de Tenis Sohail</h1><p id="login-sub">Verano 2026</p>
+      <div class="ball"><i class="ti ti-ball-tennis"></i></div><h1 id="login-title"></h1><p id="login-sub"></p>
     </div>
     <div class="login-body"><div class="login-err" id="login-err"></div>
       <label id="lbl-user">Seleccioná tu usuario</label><select id="login-user"><option value=""></option></select>
@@ -275,7 +282,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
   </div>
 </div>
 <div class="app" id="main-app" style="display:none">
-  <div class="hdr"><div class="hdr-logo"><i class="ti ti-trophy"></i></div><div><h1 id="hdr-title">Liga de Tenis Sohail</h1><p id="hdr-sub">Verano 2026</p></div>
+  <div class="hdr"><div class="hdr-logo"><i class="ti ti-trophy"></i></div><div><h1 id="hdr-title"></h1><p id="hdr-sub"></p></div>
     <div class="user-chip">
       <div class="user-info"><div class="name" id="cur-name">—</div><div class="role" id="cur-role">—</div></div>
       <div style="display:flex;gap:4px;margin-right:8px;border-right:1px solid rgba(255,255,255,0.2);padding-right:8px;">
@@ -1630,6 +1637,8 @@ function saveLeagueName(){
   const lsb=document.getElementById('login-sub');if(lsb)lsb.textContent=LEAGUE_SUBTITLE;
   document.title=LEAGUE_NAME;
   addLog('Config: nombre y colores actualizados',{po:null,a:LEAGUE_NAME,b:LEAGUE_SUBTITLE});
+  // Guardar en localStorage para recuperación inmediata sin flash
+  try{localStorage.setItem('lsn',JSON.stringify({n:LEAGUE_NAME,s:LEAGUE_SUBTITLE}));}catch(e){}
   persist(true);
   if(al)al.innerHTML='<span style="color:#22c55e">✓ Configuración guardada.</span>';
   setTimeout(()=>{if(al)al.innerHTML='';},3000);
@@ -2180,8 +2189,8 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
     bot=currentUser&&currentUser.role==='admin'?'<div style="height:56px"></div>':'<div style="height:22px"></div>';
   }
   return '<div style="border:1px solid var(--border2);border-radius:10px;overflow:hidden;background:var(--surface);width:220px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.08)">'
-    +hA+'<div style="display:flex;align-items:center;padding:5px 10px 8px;border-bottom:1px solid var(--border);font-size:12px;min-height:32px;'+sA+iA+'"><span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">'+seedA+'</span><span style="flex:1;font-weight:'+(aw?'700':'400')+'">'+nmA+(meA?' <span style="font-size:9px;background:#F5C518;color:#1a2540;border-radius:4px;padding:1px 4px;font-weight:700">'+t('me_label')+'</span>':'')+'</span></div>'
-    +hB+'<div style="display:flex;align-items:center;padding:5px 10px 8px;font-size:12px;min-height:32px;'+sB+iB+'"><span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">'+seedB+'</span><span style="flex:1;font-weight:'+(bw?'700':'400')+'">'+nmB+(meB?' <span style="font-size:9px;background:#F5C518;color:#1a2540;border-radius:4px;padding:1px 4px;font-weight:700">'+t('me_label')+'</span>':'')+'</span></div>'
+    +hA+'<div style="display:flex;align-items:center;padding:5px 10px 8px;border-bottom:1px solid var(--border);font-size:12px;min-height:32px;'+sA+iA+'"><span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">'+seedA+'</span><span style="flex:1;font-weight:'+(aw?'700':'400')+'">'+nmA+(meA?' <span style="font-size:9px;background:var(--acc);color:var(--priD);border-radius:4px;padding:1px 4px;font-weight:700">'+t('me_label')+'</span>':'')+'</span></div>'
+    +hB+'<div style="display:flex;align-items:center;padding:5px 10px 8px;font-size:12px;min-height:32px;'+sB+iB+'"><span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">'+seedB+'</span><span style="flex:1;font-weight:'+(bw?'700':'400')+'">'+nmB+(meB?' <span style="font-size:9px;background:var(--acc);color:var(--priD);border-radius:4px;padding:1px 4px;font-weight:700">'+t('me_label')+'</span>':'')+'</span></div>'
     +bot+'</div>';
 }
 
@@ -2293,7 +2302,7 @@ function showPlayoffView(){
 
   html+=`<div class="po-tramos">${playoff.tramos.map((tr,i)=>{
     const hasMe=currentUser&&currentUser.role==='player'&&tr.seeds.includes(currentUser.name);
-    const badge=hasMe?'<span style="font-size:9px;background:#F5C518;color:#1a2540;border-radius:4px;padding:1px 4px;font-weight:700">✓</span>':'';
+    const badge=hasMe?'<span style="font-size:9px;background:var(--acc);color:var(--priD);border-radius:4px;padding:1px 4px;font-weight:700">✓</span>':'';
     return '<button class="po-tab '+(playoff.viewT===i?'active':'')+'" onclick="setViewT('+i+')">'+tf('po_match',{l:tr.label})+(badge?'&nbsp;'+badge:'')+'<br><span class="po-rng">'+tr.seeds.length+' '+t('po_tab_players')+'</span></button>';
   }).join('')}</div>`;
 
