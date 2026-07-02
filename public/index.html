@@ -573,6 +573,9 @@ let playoff={started:false,numTramos:4,tramos:[],results:{},viewT:0,qualified:[]
 let matches=[],matchId=1,activeN=1,viewCycle=1,subView='grupos',currentModal=null,formClub='',poContext=null,selGroup=1,adminMode='';
 let LOG=[]; // historial de acciones sobre resultados (max 500 entradas)
 let LEAGUE_NAME='Liga de Tenis Sohail'; // nombre editable de la liga
+let LEAGUE_SUBTITLE='Verano 2026'; // subtítulo editable
+let LEAGUE_COLOR_PRI='#1B4F9C';   // color primario (azul)
+let LEAGUE_COLOR_ACC='#F5C518';   // color acento (amarillo)
 let ALLNAMES=C1.flat();
 
 // Auxiliares de fechas
@@ -890,7 +893,8 @@ function viewCyc(n){
   }
 }
 function showSub(name){if(viewCycle==='po')viewCycle=activeN;subView=name;['grupos','general','cargar','pendientes','admin','playoff','perfil','historial'].forEach(v=>{const el=document.getElementById('view-'+v);if(el)el.style.display='none';});const pv=document.getElementById('view-playoff');if(pv)pv.style.display='none';renderSubTabs();document.getElementById('view-'+name).style.display='block';if(name==='grupos')renderGrupos();if(name==='general')renderGeneral();if(name==='cargar'){populateForm();}if(name==='pendientes')renderPend();if(name==='admin')renderAdmin();if(name==='perfil')renderPerfil();if(name==='historial')renderHistorial();updateHdr();if(name!=='pendientes')renderPend();updateBadge();}
-function updateHdr(){const hs=viewCycle==='po'?t('playoffs'):t('cycle')+' '+viewCycle+' · '+(FECHAS[viewCycle-1]||'')+' · '+(cycles[viewCycle-1]?cycles[viewCycle-1].status:'');const sub=document.getElementById('hdr-sub');if(sub)sub.textContent=hs;const tit=document.getElementById('hdr-title');if(tit)tit.textContent=LEAGUE_NAME||t('app_title');
+function updateHdr(){const hs=viewCycle==='po'?t('playoffs'):t('cycle')+' '+viewCycle+' · '+(FECHAS[viewCycle-1]||'')+' · '+(cycles[viewCycle-1]?cycles[viewCycle-1].status:'');const sub=document.getElementById('hdr-sub');if(sub)sub.textContent=hs;
+const lsub=document.getElementById('login-sub');if(lsub)lsub.textContent=LEAGUE_SUBTITLE||'';const tit=document.getElementById('hdr-title');if(tit)tit.textContent=LEAGUE_NAME||t('app_title');
 const lt=document.getElementById('login-title');if(lt)lt.textContent=LEAGUE_NAME||t('app_title');const eb=document.getElementById('exit-btn');if(eb)eb.textContent=t('exit');}
 
 function groupCardHTML(gid){
@@ -1546,17 +1550,73 @@ function importarJugadoresExcel(input){
 }
 
 // 3. Limpiar todos los participantes (con doble backup Excel)
+function previewLeagueColors(){
+  const pri=document.getElementById('sa-color-pri');
+  const acc=document.getElementById('sa-color-acc');
+  if(!pri||!acc)return;
+  document.getElementById('sa-pri-hex').textContent=pri.value;
+  document.getElementById('sa-acc-hex').textContent=acc.value;
+  // Actualizar también en memoria para que los pickers mantengan coherencia
+  LEAGUE_COLOR_PRI=pri.value;
+  LEAGUE_COLOR_ACC=acc.value;
+  applyLeagueColors(pri.value,acc.value);
+  toast('Vista previa aplicada. Usá "Guardar todo" para persistir los cambios.');
+}
+function resetLeagueColors(){
+  LEAGUE_COLOR_PRI='#1B4F9C';LEAGUE_COLOR_ACC='#F5C518';
+  applyLeagueColors(LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC);
+  const pri=document.getElementById('sa-color-pri');if(pri)pri.value='#1B4F9C';
+  const acc=document.getElementById('sa-color-acc');if(acc)acc.value='#F5C518';
+  const ph=document.getElementById('sa-pri-hex');if(ph)ph.textContent='#1B4F9C';
+  const ah=document.getElementById('sa-acc-hex');if(ah)ah.textContent='#F5C518';
+  persist(true);toast('Colores restablecidos.');
+}
+
+function applyLeagueColors(pri, acc){
+  // Validar colores hex antes de aplicar
+  if(!pri||!/^#[0-9a-fA-F]{6}$/.test(pri))return;
+  if(!acc||!/^#[0-9a-fA-F]{6}$/.test(acc))return;
+  const root=document.documentElement;
+  root.style.setProperty('--pri', pri);
+  root.style.setProperty('--priD', shadeColor(pri, -20));
+  root.style.setProperty('--soft', tintColor(pri, 85));
+  root.style.setProperty('--acc', acc);
+  root.style.setProperty('--accD', shadeColor(acc, -15));
+  root.style.setProperty('--accT', shadeColor(pri, -25));
+  // Actualizar el borde del header (línea de color acento)
+  const hdr=document.querySelector('.hdr');
+  if(hdr)hdr.style.borderBottom='3px solid '+acc;
+}
+function shadeColor(hex,pct){
+  const n=parseInt(hex.replace('#',''),16);
+  const r=Math.min(255,Math.max(0,((n>>16)&0xff)+Math.round(2.55*pct)));
+  const g=Math.min(255,Math.max(0,((n>>8)&0xff)+Math.round(2.55*pct)));
+  const b=Math.min(255,Math.max(0,(n&0xff)+Math.round(2.55*pct)));
+  return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+function tintColor(hex,pct){return shadeColor(hex,pct);}
+
 function saveLeagueName(){
   const inp=document.getElementById('sa-league-name');
+  const sub=document.getElementById('sa-league-sub');
+  const pri=document.getElementById('sa-color-pri');
+  const acc=document.getElementById('sa-color-acc');
   const al=document.getElementById('sa-league-alert');
   if(!inp||!inp.value.trim()){if(al)al.innerHTML='<span style="color:#e55">El nombre no puede estar vacío.</span>';return;}
   LEAGUE_NAME=inp.value.trim();
-  // Actualizar header, login title y tab title
+  if(sub)LEAGUE_SUBTITLE=sub.value.trim();
+  if(pri)LEAGUE_COLOR_PRI=pri.value;
+  if(acc)LEAGUE_COLOR_ACC=acc.value;
+  // Aplicar colores
+  applyLeagueColors(LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC);
+  // Actualizar textos
   const tit=document.getElementById('hdr-title');if(tit)tit.textContent=LEAGUE_NAME;
   const lt=document.getElementById('login-title');if(lt)lt.textContent=LEAGUE_NAME;
+  const lsb=document.getElementById('login-sub');if(lsb)lsb.textContent=LEAGUE_SUBTITLE;
   document.title=LEAGUE_NAME;
+  addLog('Config: nombre y colores actualizados',{po:null,a:LEAGUE_NAME,b:LEAGUE_SUBTITLE});
   persist(true);
-  if(al)al.innerHTML='<span style="color:#22c55e">✓ Nombre actualizado.</span>';
+  if(al)al.innerHTML='<span style="color:#22c55e">✓ Configuración guardada.</span>';
   setTimeout(()=>{if(al)al.innerHTML='';},3000);
 }
 
@@ -1710,7 +1770,7 @@ async function nuevaLigaUI(){
 function addLog(action, detail){
   const now=new Date();
   const ts=now.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+now.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-  LOG.unshift({ts,who:currentUser?currentUser.name:'Sistema',action,detail});
+  LOG.unshift({ts,who:currentUser?currentUser.name:'Sistema',role:currentUser?currentUser.role:'system',action,detail});
   if(LOG.length>500)LOG.splice(500);
 }
 function fmtSets(sets){if(!sets||!sets.length)return '—';return sets.map(([a,b])=>a+'-'+b).join(' ');}
@@ -1718,9 +1778,12 @@ function renderHistorial(){
   const el=document.getElementById('view-historial');if(!el)return;
   const filter=document.getElementById('hist-filter')?document.getElementById('hist-filter').value:'all';
   const search=document.getElementById('hist-search')?document.getElementById('hist-search').value.toLowerCase():'';
+  const isSA=currentUser&&currentUser.role==='superadmin';
   const rows=LOG.filter(e=>{
-    if(filter==='liga'&&e.detail&&e.detail.po)return false;
-    if(filter==='playoff'&&(!e.detail||!e.detail.po))return false;
+    // Admin no ve acciones del superadmin (config de liga, colores, etc.)
+    if(!isSA&&e.role==='superadmin')return false;
+    if(filter==='liga'&&(e.detail&&(e.detail.po===true||e.detail.po===null)))return false;
+    if(filter==='playoff'&&(!e.detail||e.detail.po!==true))return false;
     if(search&&!(e.who.toLowerCase().includes(search)||e.action.toLowerCase().includes(search)||(e.detail&&JSON.stringify(e.detail).toLowerCase().includes(search))))return false;
     return true;
   });
@@ -2486,7 +2549,7 @@ function savePuntos(gid,len){
 function renderPerfil(){
   const u = currentUser;
   if(u.role === 'admin' || u.role === 'superadmin') {
-    const players = Object.values(USERS).filter(u=>u&&u.role!=='admin').sort((a,b)=>(a.name||'').localeCompare(b.name||'','es'));
+    const players = Object.values(USERS).filter(u=>u&&u.role!=='admin'&&u.role!=='superadmin').sort((a,b)=>(a.name||'').localeCompare(b.name||'','es'));
     let h = `<div class="card"><div class="section-lbl">${t('admin_profile')}</div>`;
     h += `<div class="prof-row"><span>${t('full_name')}</span><span>${u.name}</span></div>`;
     h += `<div class="prof-row"><span>${t('role_admin')}</span><span>${t('role_admin')}</span></div></div>`;
@@ -2499,14 +2562,38 @@ function renderPerfil(){
     // SUPERADMIN: secciones exclusivas en su perfil
     if(u.role==='superadmin'){
       h += `<div class="card"><div class="section-lbl" style="color:#8b5cf6">Configuración de la liga</div>
-        <div class="form-group" style="margin-bottom:.75rem">
-          <label style="font-size:13px;color:var(--text2);margin-bottom:4px;display:block">Nombre de la liga</label>
-          <div style="display:flex;gap:8px;align-items:center">
-            <input id="sa-league-name" type="text" value="${esc(LEAGUE_NAME)}" style="flex:1;padding:8px 12px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);font-size:14px">
-            <button class="btn btn-primary" onclick="saveLeagueName()"><i class="ti ti-device-floppy"></i> Guardar</button>
+        <div class="form-row" style="margin-bottom:.75rem">
+          <div class="form-group">
+            <label style="font-size:13px;color:var(--text2);margin-bottom:4px;display:block">Nombre de la liga</label>
+            <input id="sa-league-name" type="text" value="${esc(LEAGUE_NAME)}" style="width:100%;padding:8px 12px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);font-size:14px">
           </div>
-          <div id="sa-league-alert" style="margin-top:6px;font-size:12px"></div>
+          <div class="form-group">
+            <label style="font-size:13px;color:var(--text2);margin-bottom:4px;display:block">Subtítulo</label>
+            <input id="sa-league-sub" type="text" value="${esc(LEAGUE_SUBTITLE)}" style="width:100%;padding:8px 12px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);font-size:14px">
+          </div>
         </div>
+        <div class="form-row" style="margin-bottom:.75rem">
+          <div class="form-group">
+            <label style="font-size:13px;color:var(--text2);margin-bottom:4px;display:block">Color primario</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input id="sa-color-pri" type="color" value="${LEAGUE_COLOR_PRI}" style="width:48px;height:36px;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px">
+              <span style="font-size:13px;color:var(--text2)" id="sa-pri-hex">${LEAGUE_COLOR_PRI}</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label style="font-size:13px;color:var(--text2);margin-bottom:4px;display:block">Color acento</label>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input id="sa-color-acc" type="color" value="${LEAGUE_COLOR_ACC}" style="width:48px;height:36px;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px">
+              <span style="font-size:13px;color:var(--text2)" id="sa-acc-hex">${LEAGUE_COLOR_ACC}</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:.25rem">
+          <button class="btn btn-primary" onclick="previewLeagueColors()"><i class="ti ti-eye"></i> Vista previa</button>
+          <button class="btn btn-success" onclick="saveLeagueName()"><i class="ti ti-device-floppy"></i> Guardar todo</button>
+          <button class="btn" onclick="resetLeagueColors()"><i class="ti ti-refresh"></i> Restablecer colores</button>
+        </div>
+        <div id="sa-league-alert" style="margin-top:6px;font-size:12px"></div>
       </div>`;
     }
     const grps = (getActive() && getActive().groups) ? getActive().groups : [];
@@ -2592,10 +2679,11 @@ function renderPlayerList(players, filter) {
     </div>`;
   }).join('');
 }
-function filterPlayerList(){const f=document.getElementById('player-search').value;const players=Object.values(USERS).filter(u=>u&&u.role!=='admin').sort((a,b)=>(a.name||'').localeCompare(b.name||'','es'));document.getElementById('player-list').innerHTML=renderPlayerList(players,f);}
+function filterPlayerList(){const f=document.getElementById('player-search').value;const players=Object.values(USERS).filter(u=>u&&u.role!=='admin'&&u.role!=='superadmin').sort((a,b)=>(a.name||'').localeCompare(b.name||'','es'));document.getElementById('player-list').innerHTML=renderPlayerList(players,f);}
 function togglePlayerEdit(name){const el=document.getElementById('pe-'+name);if(el)el.style.display=el.style.display==='none'?'block':'none';}
 
 function savePlayerAdmin(oldName){
+  if(USERS[oldName]&&(USERS[oldName].role==='admin'||USERS[oldName].role==='superadmin')){toast('No se puede editar al administrador desde aquí.');return;}
   const newName=(document.getElementById('pe-name-'+oldName).value||'').trim();
   const email=(document.getElementById('pe-email-'+oldName).value||'').trim();
   const tel=(document.getElementById('pe-tel-'+oldName).value||'').trim();
@@ -2625,6 +2713,7 @@ function savePlayerAdmin(oldName){
 }
 
 function deletePlayerAdmin(name){
+  if(USERS[name]&&(USERS[name].role==='admin'||USERS[name].role==='superadmin')){toast('No se puede eliminar al administrador.');return;}
   if(!confirm(`¿Seguro que querés eliminar a ${name} de la liga? Se borrará de los grupos actuales.`))return;
   delete USERS[name];
   const idx=ALLNAMES.indexOf(name);
@@ -2818,7 +2907,7 @@ let _toastTimer=null;function toast(m){let t=document.getElementById('_toast');i
 // ===== CONEXIÓN A SUPABASE — guardado instantáneo =====
 let _sb=null,_lastSaved=null,_saving=false,_pendingForce=false;
 function _serialize(){
-  return JSON.stringify({cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,PO_FECHAS,ALLNAMES,users:USERS,PUNTOS,LOG,LEAGUE_NAME});
+  return JSON.stringify({cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,PO_FECHAS,ALLNAMES,users:USERS,PUNTOS,LOG,LEAGUE_NAME,LEAGUE_SUBTITLE,LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC});
 }
 
 function _hydrate(d){try{
@@ -2854,6 +2943,11 @@ function _hydrate(d){try{
   if(d.PUNTOS)PUNTOS=d.PUNTOS;
   if(Array.isArray(d.LOG))LOG=d.LOG;
   if(d.LEAGUE_NAME)LEAGUE_NAME=d.LEAGUE_NAME;
+  if(d.LEAGUE_SUBTITLE)LEAGUE_SUBTITLE=d.LEAGUE_SUBTITLE;
+  if(d.LEAGUE_COLOR_PRI)LEAGUE_COLOR_PRI=d.LEAGUE_COLOR_PRI;
+  if(d.LEAGUE_COLOR_ACC)LEAGUE_COLOR_ACC=d.LEAGUE_COLOR_ACC;
+  // Aplicar colores guardados al cargar
+  if(d.LEAGUE_COLOR_PRI||d.LEAGUE_COLOR_ACC)applyLeagueColors(d.LEAGUE_COLOR_PRI||LEAGUE_COLOR_PRI,d.LEAGUE_COLOR_ACC||LEAGUE_COLOR_ACC);
 }catch(e){console.warn('hydrate',e);}
 }
 
