@@ -3057,7 +3057,7 @@ async function persist(force){
   }
 }
 
-if(typeof setInterval!=='undefined')setInterval(function(){persist(false);},5000);
+if(typeof setInterval!=='undefined')setInterval(function(){persist(false);},12000);
 
 if(typeof window!=='undefined'&&window.addEventListener){
   window.addEventListener('visibilitychange',function(){
