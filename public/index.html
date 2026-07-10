@@ -1315,8 +1315,8 @@ function clearForm(){if(currentUser&&currentUser.role==='admin'){const r=documen
 function involvedPend(m){if(currentUser&&currentUser.role==='admin')return true;if(m.po)return m.poNames&&m.poNames.includes(currentUser.name)&&m.reporter!==currentUser.name;return (m.aName===currentUser.name||m.bName===currentUser.name)&&m.reporter!==currentUser.name;}
 function renderPend(){
   var _pt=document.getElementById('pend-title');if(_pt)_pt.textContent=t('pending_title');
-  const pend=matches.filter(m=>m.status==='pending');
-  const disp=matches.filter(m=>m.status==='disputed');
+  const pend=matches.filter(m=>m.status==='pending').sort((a,b)=>b.id-a.id);
+  const disp=matches.filter(m=>m.status==='disputed').sort((a,b)=>b.id-a.id);
   const userPend = pend.filter(m => {
     if(m.po) return m.poNames && m.poNames.includes(currentUser.name);
     return m.aName === currentUser.name || m.bName === currentUser.name;
@@ -2724,9 +2724,9 @@ function _histCard(title,g,p,rows){
 }
 function playerHistoryHTML(name){
   let out='',any=false;
-  cycles.forEach(cy=>{
+  cycles.slice().sort((a,b)=>b.n-a.n).forEach(cy=>{
     if(!cy.groups)return;
-    const ms=matches.filter(m=>!m.po&&m.cycle===cy.n&&m.status==='confirmed'&&(m.aName===name||m.bName===name));
+    const ms=matches.filter(m=>!m.po&&m.cycle===cy.n&&m.status==='confirmed'&&(m.aName===name||m.bName===name)).sort((a,b)=>b.id-a.id);
     if(!ms.length)return;
     any=true;let g=0,p=0;
     const rows=ms.map(m=>{
@@ -2742,7 +2742,7 @@ function playerHistoryHTML(name){
     const loc=findLoc(name,cy.n);
     out+=_histCard(t('cycle')+' '+cy.n+(loc?' · '+groupName(loc.g):''),g,p,rows);
   });
-  const poMs=matches.filter(m=>m.po&&m.status==='confirmed'&&m.poNames&&(m.poNames[0]===name||m.poNames[1]===name));
+  const poMs=matches.filter(m=>m.po&&m.status==='confirmed'&&m.poNames&&(m.poNames[0]===name||m.poNames[1]===name)).sort((a,b)=>b.id-a.id);
   if(poMs.length){
     any=true;let g=0,p=0;
     const rows=poMs.map(m=>{
@@ -2755,7 +2755,7 @@ function playerHistoryHTML(name){
       const fecha=m.date?`<span style="color:var(--text2);font-size:11px;white-space:nowrap">${m.date}</span>`:'';
       return _histRow(rival,sc,won,cuadro+club+fecha);
     }).join('');
-    out+=_histCard('Play Offs',g,p,rows);
+    out=_histCard('Play Offs',g,p,rows)+out;
   }
   if(!any)return `<div class="lock-note" style="padding:.5rem 0">${t('hist_no_matches')}</div>`;
   return out;
