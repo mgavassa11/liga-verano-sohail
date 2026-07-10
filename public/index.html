@@ -2154,6 +2154,31 @@ function exportExcel(){
   wsR['!cols']=[{wch:7},{wch:7},{wch:22},{wch:22},{wch:16},{wch:9},{wch:12}];
   XLSX.utils.book_append_sheet(wb,wsR,'Resultados');
 
+  // ===== HOJA: JUGADORES (padrón: grupo por ciclo, estado, contacto) =====
+  const nameSet={};
+  ALLNAMES.forEach(n=>{nameSet[n]=1;});
+  Object.keys(USERS).forEach(n=>{if(USERS[n]&&USERS[n].role==='player')nameSet[n]=1;});
+  cycles.forEach(cy=>{if(cy.groups)cy.groups.forEach(g=>(g.players||[]).forEach(n=>{if(n)nameSet[n]=1;}));});
+  const roster=Object.keys(nameSet).sort((a,b)=>a.localeCompare(b,'es'));
+  const jHead=['Jugador','Email','Teléfono','Estado'];
+  cycles.forEach(cy=>jHead.push('Ciclo '+cy.n));
+  const jAOA=[jHead];
+  roster.forEach(name=>{
+    const u=USERS[name]||{};
+    const row=[name,u.email||'',u.tel||'',u.inactive?'Inactivo':'Activo'];
+    cycles.forEach(cy=>{
+      if(!cy.groups){row.push('—');return;}
+      const loc=findLoc(name,cy.n);
+      row.push(loc?('Grupo '+loc.g):'—');
+    });
+    jAOA.push(row);
+  });
+  const wsJ=XLSX.utils.aoa_to_sheet(jAOA);
+  const jCols=[{wch:24},{wch:26},{wch:16},{wch:10}];
+  cycles.forEach(()=>jCols.push({wch:10}));
+  wsJ['!cols']=jCols;
+  XLSX.utils.book_append_sheet(wb,wsJ,'Jugadores');
+
   const fname='Liga_Sohail_'+new Date().toISOString().slice(0,10)+'.xlsx';
   XLSX.writeFile(wb,fname);
   toast('Excel exportado: '+fname);
