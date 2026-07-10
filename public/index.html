@@ -599,6 +599,34 @@ function parseDateRange(str) {
   }
   return [parse(parts[0]), parse(parts[1])];
 }
+// Mostrar fecha: ISO (o dd/mm/yy) -> DD/MM/YYYY
+function fmtDate(d){
+  if(!d)return '';
+  d=String(d).trim();
+  if(!d)return '';
+  if(/^\d{4}-\d{1,2}-\d{1,2}/.test(d)){const p=d.slice(0,10).split('-');return p[2].padStart(2,'0')+'/'+p[1].padStart(2,'0')+'/'+p[0];}
+  if(d.indexOf('/')>=0){const p=d.split('/');if(p.length===3){const y=p[2].length===2?'20'+p[2]:p[2];return p[0].padStart(2,'0')+'/'+p[1].padStart(2,'0')+'/'+y;}}
+  return d;
+}
+// Rango de fechas de ciclo -> "DD/MM/YYYY – DD/MM/YYYY"
+function fmtRange(str){
+  if(!str)return '';
+  const r=parseDateRange(str);
+  const a=fmtDate(r[0]),b=fmtDate(r[1]);
+  if(a&&b)return a+' – '+b;
+  return a||b||'';
+}
+// Cualquier formato -> ISO (YYYY-MM-DD) para guardar
+function toISODate(d){
+  if(!d)return '';
+  d=String(d).trim().replace(/[.]/g,'/').replace(/-/g,'/');
+  if(!d)return '';
+  const p=d.split('/');
+  if(p.length!==3)return '';
+  if(p[0].length===4)return p[0]+'-'+p[1].padStart(2,'0')+'-'+p[2].padStart(2,'0');
+  let y=p[2];if(y.length===2)y='20'+y;
+  return y.padStart(4,'0')+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0');
+}
 function formatDispDate(d) {
   if(!d) return '';
   const p = d.split('-');
@@ -902,7 +930,7 @@ function viewCyc(n){
   }
 }
 function showSub(name){if(viewCycle==='po')viewCycle=activeN;subView=name;['grupos','general','cargar','pendientes','admin','playoff','perfil','historial'].forEach(v=>{const el=document.getElementById('view-'+v);if(el)el.style.display='none';});const pv=document.getElementById('view-playoff');if(pv)pv.style.display='none';renderSubTabs();document.getElementById('view-'+name).style.display='block';if(name==='grupos')renderGrupos();if(name==='general')renderGeneral();if(name==='cargar'){populateForm();}if(name==='pendientes')renderPend();if(name==='admin')renderAdmin();if(name==='perfil')renderPerfil();if(name==='historial')renderHistorial();updateHdr();if(name!=='pendientes')renderPend();updateBadge();}
-function updateHdr(){const hs=viewCycle==='po'?t('playoffs'):t('cycle')+' '+viewCycle+' · '+(FECHAS[viewCycle-1]||'')+' · '+(cycles[viewCycle-1]?cycles[viewCycle-1].status:'');const sub=document.getElementById('hdr-sub');if(sub)sub.textContent=hs;
+function updateHdr(){const hs=viewCycle==='po'?t('playoffs'):t('cycle')+' '+viewCycle+' · '+fmtRange(FECHAS[viewCycle-1]||'')+' · '+(cycles[viewCycle-1]?cycles[viewCycle-1].status:'');const sub=document.getElementById('hdr-sub');if(sub)sub.textContent=hs;
 const lsub=document.getElementById('login-sub');if(lsub)lsub.textContent=LEAGUE_SUBTITLE||'';const tit=document.getElementById('hdr-title');if(tit)tit.textContent=LEAGUE_NAME||t('app_title');
 const lt=document.getElementById('login-title');if(lt)lt.textContent=LEAGUE_NAME||t('app_title');const eb=document.getElementById('exit-btn');if(eb)eb.textContent=t('exit');}
 
@@ -1360,7 +1388,7 @@ function openModal(mid){const m=matches.find(x=>x.id===mid);if(!m)return;current
 document.getElementById('modal-title').textContent=(m.status==='confirmed'?t('validated_result'):m.status==='disputed'?t('disputed_result'):t('review_result'))+` · ${tag}`;
 const statusLabel = m.status === 'confirmed' ?
 t('confirmed_label') : m.status === 'disputed' ? t('legend_disputed') : t('legend_pending');
-document.getElementById('modal-body').innerHTML=`<p class="modal-rep">${t('reported_by')} <strong>${rep}</strong>${m.club?` · Club <strong>${m.club}</strong>`:''}</p><div class="modal-score ${m.club==='Haza'?'ms-haza':'ms-sohail'}"><p>${p1} ${sc} ${p2}</p></div><p class="modal-meta">${t('date_field')}: ${m.date} · ${t('status_field')}: ${statusLabel}${m.locked?' · 🔒 '+t('locked_label'):''}</p>`;
+document.getElementById('modal-body').innerHTML=`<p class="modal-rep">${t('reported_by')} <strong>${rep}</strong>${m.club?` · Club <strong>${m.club}</strong>`:''}</p><div class="modal-score ${m.club==='Haza'?'ms-haza':'ms-sohail'}"><p>${p1} ${sc} ${p2}</p></div><p class="modal-meta">${t('date_field')}: ${fmtDate(m.date)} · ${t('status_field')}: ${statusLabel}${m.locked?' · 🔒 '+t('locked_label'):''}</p>`;
 const acts=document.getElementById('modal-actions');let h='';const isAdmin=currentUser&&currentUser.role==='admin';const isPend=m.status==='pending';
 if(isAdmin){
   if(isPend) h+=`<button class="btn btn-success" onclick="confirmM()"><i class="ti ti-check"></i> ${t('validate')}</button>`;
@@ -2146,7 +2174,7 @@ function exportExcel(){
         const m=findMatch(cy.n,gid,players[i],players[j]);
         if(!m||m.status!=='confirmed'||m.po)continue;
         const sc=m.sets.map(([a,b])=>a+'-'+b).join(' ');
-        rAOA.push([cy.n,gid,m.aName,m.bName,sc,m.club||'',m.date||'']);
+        rAOA.push([cy.n,gid,m.aName,m.bName,sc,m.club||'',fmtDate(m.date)]);
       }
     });
   });
@@ -2191,8 +2219,8 @@ function descargarPlantillaResultados(){
   const wb=XLSX.utils.book_new();
   const ws=XLSX.utils.aoa_to_sheet([
     ['Ciclo','Grupo','Jugador A','Jugador B','Resultado','Club','Fecha'],
-    [1,1,'Juan Pérez','María García','6-3 6-4','Sohail','2026-07-01'],
-    [1,1,'Carlos López','Ana Ruiz','6-2 4-6 1-0','Haza','2026-07-02'],
+    [1,1,'Juan Pérez','María García','6-3 6-4','Sohail','01/07/2026'],
+    [1,1,'Carlos López','Ana Ruiz','6-2 4-6 1-0','Haza','02/07/2026'],
   ]);
   ws['!cols']=[{wch:7},{wch:7},{wch:22},{wch:22},{wch:16},{wch:9},{wch:12}];
   XLSX.utils.book_append_sheet(wb,ws,'Resultados');
@@ -2254,7 +2282,7 @@ function importarResultadosExcel(input){
         const vr=validMatch(sets);
         if(!vr.ok){errors.push('Fila '+fila+': '+vr.msg+' ("'+resStr+'")');return;}
         if(/haza/i.test(club))club='Haza';else if(/sohail/i.test(club))club='Sohail';else club='';
-        if(!fecha)fecha=new Date().toISOString().slice(0,10);
+        fecha=toISODate(fecha)||new Date().toISOString().slice(0,10);
         const exist=findMatch(cicN,gid,pa,pb);
         if(exist){matches=matches.filter(m=>m!==exist);replaced++;}
         matches.push({id:matchId++,cycle:cicN,g:gid,aName:pa,bName:pb,sets:sets,date:fecha,status:'confirmed',reporter:pa,club:club,locked:true});
@@ -2736,7 +2764,7 @@ function playerHistoryHTML(name){
       const won=w>l;if(won)g++;else p++;
       const sc=mine.map(([a,b])=>a+'-'+b).join('  ');
       const club=m.club?`<span class="badge ${m.club==='Haza'?'badge-haza':'badge-sohail'}">${m.club}</span>`:'';
-      const fecha=m.date?`<span style="color:var(--text2);font-size:11px;white-space:nowrap">${m.date}</span>`:'';
+      const fecha=m.date?`<span style="color:var(--text2);font-size:11px;white-space:nowrap">${fmtDate(m.date)}</span>`:'';
       return _histRow(rival,sc,won,club+fecha);
     }).join('');
     const loc=findLoc(name,cy.n);
@@ -2752,7 +2780,7 @@ function playerHistoryHTML(name){
       const won=m.winner===name;if(won)g++;else p++;
       const cuadro=m.tLabel?`<span class="badge badge-tag">${m.tLabel}</span>`:'';
       const club=m.club?`<span class="badge ${m.club==='Haza'?'badge-haza':'badge-sohail'}">${m.club}</span>`:'';
-      const fecha=m.date?`<span style="color:var(--text2);font-size:11px;white-space:nowrap">${m.date}</span>`:'';
+      const fecha=m.date?`<span style="color:var(--text2);font-size:11px;white-space:nowrap">${fmtDate(m.date)}</span>`:'';
       return _histRow(rival,sc,won,cuadro+club+fecha);
     }).join('');
     out=_histCard('Play Offs',g,p,rows)+out;
