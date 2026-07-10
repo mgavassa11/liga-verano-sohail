@@ -70,7 +70,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
 .cls-table td,.gen-table td{padding:6px 4px;text-align:center;border-bottom:1px solid var(--border)}
 .cls-table td:nth-child(2),.gen-table td:nth-child(2){text-align:left;font-weight:600}
 .cls-table tr:last-child td{border-bottom:none}.cls-table .winner-row td{background:var(--winrow)}
-.gen-table .me-row td{background:var(--winrow)}
+.gen-table .me-row td{background:var(--winrow)}.cls-table .me-row td{background:var(--winrow)}.res-table .me-mtx{background:var(--winrow)!important;color:var(--priD)!important;font-weight:700}
 .legend-txt{font-size:11px;color:var(--text2);line-height:1.6;margin-top:.6rem}.legend-txt b{color:var(--text);font-weight:700}
 .pos{width:19px;height:19px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
 .p1{background:#F5C518;color:#0E3470}.p2{background:#D3D1C7;color:#2C2C2A}.p3{background:#F0997B;color:#4A1B0C}.pn{background:var(--surface2);color:var(--text2)}
@@ -929,10 +929,10 @@ function groupCardHTML(gid){
         const base=ptsForPos(gid,i);
         const pInactive = USERS[s.name]&&USERS[s.name].inactive;
         const inactiveBadge = pInactive?'<span style="font-size:9px;background:#e55;color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px;font-weight:700">INACTIVO</span>':'';
-        return `<tr class="${i===0?'winner-row':''}" style="${pInactive?'opacity:.55':''}"><td>${(!pInactive&&d)?`<span class="dest ${ar}">${ic}${groupName(dn)}</span>`:pInactive?'<span style="font-size:9px;color:#aaa">—</span>':''}</td><td><span class="avatar">${getInitials(s.name)}</span><span class="nm-link" onclick="showPlayerHistory('${esc(s.name)}')">${s.name}</span>${inactiveBadge}</td><td><strong>${s.pts}</strong></td><td>${s.g}</td><td>${s.p}</td><td>${s.nj}</td><td>${s.sg}</td><td>${s.sp}</td><td>${s.sg-s.sp}</td><td>${pInactive?'<span style="font-size:10px;color:#e55;font-weight:700">—</span>':base}</td><td>${ex>0?ex:''}</td><td><strong>${pInactive?'<span style="font-size:10px;color:#e55">inactivo</span>':base+ex}</strong></td></tr>`;
+        return `<tr class="${currentUser&&s.name===currentUser.name?'me-row':''}" style="${pInactive?'opacity:.55':''}"><td>${(!pInactive&&d)?`<span class="dest ${ar}">${ic}${groupName(dn)}</span>`:pInactive?'<span style="font-size:9px;color:#aaa">—</span>':''}</td><td><span class="avatar">${getInitials(s.name)}</span><span class="nm-link" onclick="showPlayerHistory('${esc(s.name)}')">${s.name}</span>${inactiveBadge}</td><td><strong>${s.pts}</strong></td><td>${s.g}</td><td>${s.p}</td><td>${s.nj}</td><td>${s.sg}</td><td>${s.sp}</td><td>${s.sg-s.sp}</td><td>${pInactive?'<span style="font-size:10px;color:#e55;font-weight:700">—</span>':base}</td><td>${ex>0?ex:''}</td><td><strong>${pInactive?'<span style="font-size:10px;color:#e55">inactivo</span>':base+ex}</strong></td></tr>`;
       }).join('');
       
-      const head=players.map(p=>`<th>${lbl(p)}</th>`).join('');
+      const head=players.map(p=>`<th class="${currentUser&&p===currentUser.name?'me-mtx':''}">${lbl(p)}</th>`).join('');
       let mrows=players.map((p,i)=>{
         const cols=players.map((q,j)=>{
           if(i===j)return`<td class="res-black"></td>`;
@@ -943,7 +943,7 @@ function groupCardHTML(gid){
           if(isActive&&canCreate(gid,p,q))return`<td class="cell-empty" onclick="prefill(${gid},'${esc(p)}','${esc(q)}')">+</td>`;
           return`<td class="cell-locked">·</td>`;
         }).join('');
-        return`<tr><td>${lbl(p)}</td>${cols}</tr>`;
+        return`<tr><td class="${currentUser&&p===currentUser.name?'me-mtx':''}">${lbl(p)}</td>${cols}</tr>`;
       }).join('');
       
       const thPtsText = t('pts_classif') + (currentUser&&(currentUser.role==='admin'||currentUser.role==='superadmin') ? ` <button class="btn btn-sm" style="padding:2px 6px;font-size:10px;margin-left:5px" onclick="editPuntosUI(${gid})"><i class="ti ti-edit"></i> ${t('edit')}</button>` : '');
