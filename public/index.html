@@ -2002,6 +2002,17 @@ function renderAdmin(){
       <p class="legend-txt" style="margin-bottom:0;font-size:11px">Se importan solo resultados de liga (grupos), no de Play Offs. Los resultados importados quedan validados. Un resultado ya cargado del mismo partido se reemplaza.</p>
     </div>`;
 
+    h+=`<div class="card" style="border:1px solid var(--pri)"><div class="section-lbl"><i class="ti ti-shield-check"></i> Copia de seguridad (backup completo)</div>
+      <p class="legend-txt" style="margin-top:0">Descargá un backup con TODA la liga (jugadores, grupos, ciclos, resultados, ascensos/descensos, puntos, colores y nombre). Si algún día se pierde la data, con este archivo restaurás todo en un clic. <b>Recomendado: bajá un backup cada semana.</b></p>
+      <div class="gap-sm" style="flex-wrap:wrap">
+        <button class="btn btn-success" onclick="exportBackup()"><i class="ti ti-download"></i> Descargar backup (.json)</button>
+        <label class="btn btn-danger" style="cursor:pointer"><i class="ti ti-upload"></i> Restaurar backup (.json)
+          <input type="file" accept=".json,application/json" style="display:none" onchange="importBackup(this)">
+        </label>
+      </div>
+      <p class="legend-txt" style="margin-bottom:0;font-size:11px">Restaurar REEMPLAZA todo el estado actual por el del archivo (pide confirmación). Es la forma segura de recuperar la liga completa.</p>
+    </div>`;
+
     h+=`<div class="card"><div class="section-lbl">${tf('edit_groups',{n:activeN})}</div><p class="legend-txt" style="margin-top:0">${t('edit_groups_hint')}</p><div style="margin-bottom:.75rem"><button class="btn btn-primary" onclick="applyGroupsUpdate()"><i class="ti ti-refresh"></i> Actualizar grupos</button></div>`;
     h+=`<div class="grpedit">`+grps.map((g,gi)=>{
       const gid=gi+1;
@@ -3155,7 +3166,7 @@ function applyPoPending(rec){storePo(rec.ti,rec.which,rec.poNames[0],rec.poNames
 let _toastTimer=null;function toast(m){let t=document.getElementById('_toast');if(!t){t=document.createElement('div');t.id='_toast';t.className='toast';document.body.appendChild(t);}t.textContent=m;t.style.opacity='1';if(_toastTimer)clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>{t.style.opacity='0';_toastTimer=null;},3800);}
 
 // ===== CONEXIÓN A SUPABASE — guardado instantáneo =====
-let _sb=null,_lastSaved=null,_saving=false,_pendingForce=false;
+let _sb=null,_lastSaved=null,_saving=false,_pendingForce=false,_loadOK=false,_dbEmpty=false;
 function _serialize(){
   return JSON.stringify({cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,PO_FECHAS,ALLNAMES,users:USERS,PUNTOS,LOG,LEAGUE_NAME,LEAGUE_SUBTITLE,LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC});
 }
@@ -3198,11 +3209,71 @@ function _hydrate(d){try{
   if(d.LEAGUE_COLOR_ACC)LEAGUE_COLOR_ACC=d.LEAGUE_COLOR_ACC;
   // Aplicar colores guardados al cargar
   if(d.LEAGUE_COLOR_PRI||d.LEAGUE_COLOR_ACC)applyLeagueColors(d.LEAGUE_COLOR_PRI||LEAGUE_COLOR_PRI,d.LEAGUE_COLOR_ACC||LEAGUE_COLOR_ACC);
-}catch(e){console.warn('hydrate',e);}
+  return true;
+}catch(e){console.warn('hydrate',e);return false;}
 }
 
 // Migración automática de passwords en texto plano → v1 (SHA-256)
 // Los v1 se upgradan a v2 (PBKDF2) automáticamente en el siguiente login del usuario
+// ===== COPIA DE SEGURIDAD: backup y restore del estado COMPLETO =====
+function exportBackup(){
+  try{
+    const json=_serialize();
+    const blob=new Blob([json],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const d=new Date();const pad=n=>String(n).padStart(2,'0');
+    const stamp=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'_'+pad(d.getHours())+pad(d.getMinutes());
+    const a=document.createElement('a');
+    a.href=url;a.download='backup_liga_sohail_'+stamp+'.json';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
+    if(typeof addLog==='function')addLog('Backup completo exportado (JSON)','');
+    toast('Backup completo descargado. Guardalo en un lugar seguro.');
+  }catch(e){toast('Error al generar el backup: '+e.message);}
+}
+function importBackup(input){
+  const file=input.files&&input.files[0];
+  if(!file)return;
+  if(!(currentUser&&currentUser.role==='admin')){toast(t('validated_only_admin'));input.value='';return;}
+  const reader=new FileReader();
+  reader.onload=async function(e){
+    try{
+      const obj=JSON.parse(e.target.result);
+      if(!obj||typeof obj!=='object'||!obj.cycles||!obj.users){
+        toast('El archivo no parece un backup válido de la liga.');input.value='';return;
+      }
+      const nJug=Array.isArray(obj.ALLNAMES)?obj.ALLNAMES.length:Object.keys(obj.users||{}).length;
+      const nPart=Array.isArray(obj.matches)?obj.matches.length:0;
+      if(!confirm('RESTAURAR BACKUP\n\nEsto REEMPLAZA todo el estado actual de la liga por el del archivo:\n\n• '+nJug+' jugadores\n• '+nPart+' partidos\n• ciclos, grupos, puntos, ascensos/descensos, colores y nombre\n\n¿Continuar? Esta acción sobrescribe la base de datos.')){input.value='';return;}
+      const ok=_hydrate(obj);
+      if(!ok){toast('No se pudo aplicar el backup (formato inválido).');input.value='';return;}
+      _loadOK=true;_dbEmpty=false;_hideLoadError();
+      if(typeof addLog==='function')addLog('Backup completo RESTAURADO (JSON)',{jugadores:nJug,partidos:nPart});
+      await _doPersist();
+      toast('Backup restaurado. Recargando…');
+      setTimeout(()=>location.reload(),700);
+    }catch(err){toast('Error al leer el backup: '+err.message);input.value='';}
+  };
+  reader.readAsText(file);
+}
+function initEmptyLeague(){
+  if(!(currentUser&&currentUser.role==='admin')){toast(t('validated_only_admin'));return;}
+  if(!_dbEmpty){toast('La base ya tiene datos — no hace falta inicializar. Para reemplazar todo, usá Restaurar backup.');return;}
+  if(!confirm('INICIALIZAR LIGA\n\nLa base de datos está vacía. Esto GUARDA el estado actual (jugadores y grupos por defecto) como punto de partida.\n\nSolo hacelo en una liga NUEVA. ¿Continuar?'))return;
+  _loadOK=true;_dbEmpty=false;_hideLoadError();
+  _doPersist();
+  toast('Estado inicial guardado.');
+  setTimeout(()=>location.reload(),700);
+}
+function _showLoadError(msg){
+  try{
+    let b=document.getElementById('_loaderr');
+    if(!b){b=document.createElement('div');b.id='_loaderr';b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:99999;background:#791F1F;color:#fff;padding:10px 16px;font-size:13px;line-height:1.4;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.35);font-family:system-ui,-apple-system,sans-serif';document.body.appendChild(b);}
+    b.innerHTML='⚠️ '+msg+' &nbsp;<button onclick="location.reload()" style="background:#fff;color:#791F1F;border:none;padding:3px 12px;border-radius:6px;font-weight:700;cursor:pointer;margin-left:6px">Recargar</button>';
+  }catch(e){}
+}
+function _hideLoadError(){var b=document.getElementById('_loaderr');if(b)b.remove();}
+
 async function migratePasswords(){
   let changed=false;
   for(const key of Object.keys(USERS)){
@@ -3233,17 +3304,24 @@ function initSupabase(){
 }
 
 async function loadState(){
-  if(!_sb){console.warn('⚠️ loadState: sin conexión a Supabase');return;}
+  if(!_sb){console.warn('⚠️ loadState: sin conexión a Supabase');_showLoadError('Sin conexión con la base de datos. No se guardará nada hasta reconectar.');return;}
   console.log('🔄 Cargando estado desde Supabase...');
-  const r=await _sb.from('liga_state').select('data').eq('id',1).maybeSingle();
-  if(r.error){console.error('❌ Error al cargar estado:',r.error);throw r.error;}
+  let r;
+  try{r=await _sb.from('liga_state').select('data').eq('id',1).maybeSingle();}
+  catch(e){console.error('❌ Excepción al leer estado:',e);_showLoadError('No se pudo leer la base de datos. Para proteger tus datos NO se guardará nada. Recargá en unos segundos.');throw e;}
+  if(r.error){console.error('❌ Error al cargar estado:',r.error);_showLoadError('Error al leer la base de datos. Para proteger tus datos NO se guardará nada. Recargá en unos segundos.');throw r.error;}
   if(r.data&&r.data.data){
-    _hydrate(typeof r.data.data==='string'?JSON.parse(r.data.data):r.data.data);
+    const ok=_hydrate(typeof r.data.data==='string'?JSON.parse(r.data.data):r.data.data);
+    if(!ok){console.error('❌ Hydrate falló — autosave BLOQUEADO');_showLoadError('Los datos se leyeron pero no se pudieron aplicar. Para proteger tu información NO se guardará nada. Recargá.');return;}
     _lastSaved=_serialize();
+    _loadOK=true;
     console.log('✅ Estado cargado correctamente desde Supabase');
   }else{
-    console.log('ℹ️ No hay datos en Supabase todavía — guardando estado inicial...');
-    await _doPersist();
+    // Lectura VACÍA: puede ser un fallo transitorio, NO necesariamente una liga vacía real.
+    // NUNCA sobrescribimos acá. El autosave queda bloqueado (_loadOK sigue false).
+    _dbEmpty=true;
+    console.warn('⚠️ Lectura VACÍA — NO se sobrescribe nada (protección de datos).');
+    _showLoadError('La base respondió sin datos. Para proteger tu información NO se guardó nada. Si es momentáneo, recargá. Si es una liga NUEVA, entrá como admin y usá "Copia de seguridad → Inicializar liga".');
   }
 }
 
@@ -3263,6 +3341,7 @@ async function _doPersist(){
 
 async function persist(force){
   if(!_sb)return;
+  if(!_loadOK){console.warn('⛔ persist bloqueado: el estado no se cargó correctamente. No se guarda para no pisar datos buenos.');return;}
   const json=_serialize();
   if(!force&&json===_lastSaved)return;
   if(_saving){
