@@ -2765,7 +2765,7 @@ function playerHistoryHTML(name){
   let out='',any=false;
   cycles.slice().sort((a,b)=>b.n-a.n).forEach(cy=>{
     if(!cy.groups)return;
-    const ms=matches.filter(m=>!m.po&&m.cycle===cy.n&&m.status==='confirmed'&&(m.aName===name||m.bName===name)).sort((a,b)=>b.id-a.id);
+    const ms=matches.filter(m=>!m.po&&m.cycle===cy.n&&m.status==='confirmed'&&(m.aName===name||m.bName===name)).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.id-a.id));
     if(!ms.length)return;
     any=true;let g=0,p=0;
     const rows=ms.map(m=>{
@@ -2775,13 +2775,12 @@ function playerHistoryHTML(name){
       const won=w>l;if(won)g++;else p++;
       const sc=mine.map(([a,b])=>a+'-'+b).join('  ');
       const club=m.club?`<span class="badge ${m.club==='Haza'?'badge-haza':'badge-sohail'}">${m.club}</span>`:'';
-      const fecha=m.date?`<span style="color:var(--text2);font-size:11px;white-space:nowrap">${fmtDate(m.date)}</span>`:'';
-      return _histRow(rival,sc,won,club+fecha);
+      return _histRow(rival,sc,won,club);
     }).join('');
     const loc=findLoc(name,cy.n);
     out+=_histCard(t('cycle')+' '+cy.n+(loc?' · '+groupName(loc.g):''),g,p,rows);
   });
-  const poMs=matches.filter(m=>m.po&&m.status==='confirmed'&&m.poNames&&(m.poNames[0]===name||m.poNames[1]===name)).sort((a,b)=>b.id-a.id);
+  const poMs=matches.filter(m=>m.po&&m.status==='confirmed'&&m.poNames&&(m.poNames[0]===name||m.poNames[1]===name)).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.id-a.id));
   if(poMs.length){
     any=true;let g=0,p=0;
     const rows=poMs.map(m=>{
@@ -2791,8 +2790,7 @@ function playerHistoryHTML(name){
       const won=m.winner===name;if(won)g++;else p++;
       const cuadro=m.tLabel?`<span class="badge badge-tag">${m.tLabel}</span>`:'';
       const club=m.club?`<span class="badge ${m.club==='Haza'?'badge-haza':'badge-sohail'}">${m.club}</span>`:'';
-      const fecha=m.date?`<span style="color:var(--text2);font-size:11px;white-space:nowrap">${fmtDate(m.date)}</span>`:'';
-      return _histRow(rival,sc,won,cuadro+club+fecha);
+      return _histRow(rival,sc,won,cuadro+club);
     }).join('');
     out=_histCard('Play Offs',g,p,rows)+out;
   }
