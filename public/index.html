@@ -332,7 +332,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
       <div class="gap-sm mt-sm">
         <button class="btn" id="stb-toggle-btn" onclick="toggleSTB()"><i class="ti ti-plus"></i> Supertiebreak (1-1)</button>
         <button class="btn btn-accent" onclick="submitResult()" id="btn-enviar"><i class="ti ti-send"></i> Enviar</button>
-        <button class="btn" onclick="markNotPlayed()" id="btn-nojugado" style="display:none"><i class="ti ti-ban"></i> No jugado</button>
+        <button class="btn" onclick="markNotPlayed()" id="btn-nojugado" style="display:none;background:#ea580c;color:#fff;border-color:#ea580c"><i class="ti ti-ban"></i> No jugado</button>
         <button class="btn" onclick="clearForm()" id="btn-limpiar">Limpiar</button>
       </div>
     </div>
@@ -812,7 +812,7 @@ function buildRounds(seeds){
   return rounds;
 }
 function propagate(r){for(let ri=0;ri<r.length-1;ri++){const nx=r[ri+1];r[ri].forEach((m,mi)=>{const sl=nx[Math.floor(mi/2)];if(mi%2===0)sl.a=m.w;else sl.b=m.w;});}}
-function applyStored(key,r){for(let p=0;p<r.length+1;p++){r.forEach(rd=>rd.forEach(m=>{if(m.a&&m.b&&!m.w){const k=key+'#'+[m.a,m.b].sort().join('|');const st=playoff.results[k];if(st){m.sets=st.sets;m.w=st.w;m.locked=true;}}}));propagate(r);}}
+function applyStored(key,r){for(let p=0;p<r.length+1;p++){r.forEach(rd=>rd.forEach(m=>{if(m.a&&m.b&&!m.w){const k=key+'#'+[m.a,m.b].sort().join('|');const st=playoff.results[k];if(st){m.sets=st.sets;m.w=st.w;m.wo=st.wo;m.locked=true;}}}));propagate(r);}}
 function loserOf(m){return m.w&&m.a&&m.b?(m.w===m.a?m.b:m.a):null;}
 function label(i){return String.fromCharCode(65+i);}
 function rebuildTramo(t){const tr=playoff.tramos[t];if(!tr)return;tr.main=buildRounds(tr.seeds);applyStored(t,tr.main);const losers=tr.main[0].map(loserOf).filter(Boolean);tr.cons=losers.length>=2?buildRounds(losers):null;if(tr.cons)applyStored(t+'c',tr.cons);}
@@ -1629,12 +1629,28 @@ function importarJugadoresExcel(input){
 }
 
 // 3. Limpiar todos los participantes (con doble backup Excel)
+// Sincroniza el selector de color con el campo de texto hex (bidireccional).
+// source==='picker' → el usuario movió la paleta; si no, escribió un código.
+function syncHex(which,source){
+  const picker=document.getElementById('sa-color-'+which);
+  const txt=document.getElementById('sa-'+which+'-hex');
+  if(!picker||!txt)return;
+  if(source==='picker'){
+    txt.value=picker.value;txt.style.borderColor='';
+    return;
+  }
+  let v=(txt.value||'').trim();
+  if(v&&v[0]!=='#')v='#'+v;
+  if(/^#[0-9a-fA-F]{6}$/.test(v)){picker.value=v;txt.style.borderColor='';}
+  else if(/^#[0-9a-fA-F]{3}$/.test(v)){const h=v.slice(1);picker.value='#'+h[0]+h[0]+h[1]+h[1]+h[2]+h[2];txt.style.borderColor='';}
+  else{txt.style.borderColor='#ef4444';}
+}
 function previewLeagueColors(){
   const pri=document.getElementById('sa-color-pri');
   const acc=document.getElementById('sa-color-acc');
   if(!pri||!acc)return;
-  document.getElementById('sa-pri-hex').textContent=pri.value;
-  document.getElementById('sa-acc-hex').textContent=acc.value;
+  document.getElementById('sa-pri-hex').value=pri.value;
+  document.getElementById('sa-acc-hex').value=acc.value;
   // Actualizar también en memoria para que los pickers mantengan coherencia
   LEAGUE_COLOR_PRI=pri.value;
   LEAGUE_COLOR_ACC=acc.value;
@@ -1647,8 +1663,8 @@ function resetLeagueColors(){
   applyLeagueColors(LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC);
   const pri=document.getElementById('sa-color-pri');if(pri)pri.value='#1B4F9C';
   const acc=document.getElementById('sa-color-acc');if(acc)acc.value='#F5C518';
-  const ph=document.getElementById('sa-pri-hex');if(ph)ph.textContent='#1B4F9C';
-  const ah=document.getElementById('sa-acc-hex');if(ah)ah.textContent='#F5C518';
+  const ph=document.getElementById('sa-pri-hex');if(ph){ph.value='#1B4F9C';ph.style.borderColor='';}
+  const ah=document.getElementById('sa-acc-hex');if(ah){ah.value='#F5C518';ah.style.borderColor='';}
   persist(true);toast('Colores restablecidos.');
 }
 
@@ -1897,6 +1913,7 @@ function renderHistorial(){
     'Playoff: confirmado':'<i class="ti ti-circle-check" style="color:#22c55e"></i>',
     'Playoff: editado':'<i class="ti ti-pencil" style="color:#f59e0b"></i>',
     'Playoff: eliminado':'<i class="ti ti-trash" style="color:#ef4444"></i>',
+    'Playoff: WO':'<i class="ti ti-arrow-big-right-lines" style="color:#ea580c"></i>',
     'Playoff: disputa resuelta':'<i class="ti ti-gavel" style="color:#8b5cf6"></i>',
   };
   let h='<div class="card"><div class="section-lbl">Historial de resultados</div>';
@@ -2378,7 +2395,7 @@ function addSeedUI(ti){const sel=document.getElementById('po-add-'+ti);const nam
 
 function matchBox(m,ti,which,ri,mi,isFirstRound){
   const realMatch=!!(m.a&&m.b);const aw=realMatch&&m.w&&m.w===m.a,bw=realMatch&&m.w&&m.w===m.b;
-  const sc=m.np?'No jugado':(m.sets?m.sets.map(([a,b])=>a+'-'+b).join(' '):'');
+  const sc=m.np?'No jugado':m.wo?'WO':(m.sets?m.sets.map(([a,b])=>a+'-'+b).join(' '):'');
   const canLoad=m.a&&m.b&&!m.w&&(currentUser&&currentUser.role==='admin'||m.a===currentUser.name||m.b===currentUser.name);
   const emptyTxt=isFirstRound?'BYE':t('tbd');
   const isBYE_A=!m.a&&m.b;const isBYE_B=!m.b&&m.a;
@@ -2831,7 +2848,7 @@ function playerHistoryHTML(name){
     const rows=poMs.map(m=>{
       const isA=m.poNames[0]===name,rival=isA?m.poNames[1]:m.poNames[0];
       const mine=(m.sets||[]).map(([a,b])=>isA?[a,b]:[b,a]);
-      const sc=mine.map(([a,b])=>a+'-'+b).join('  ');
+      const sc=m.wo?'WO':mine.map(([a,b])=>a+'-'+b).join('  ');
       const won=m.winner===name;if(won)g++;else p++;
       const cuadro=m.tLabel?`<span class="badge badge-tag">${m.tLabel}</span>`:'';
       const club=m.club?`<span class="badge ${m.club==='Haza'?'badge-haza':'badge-sohail'}">${m.club}</span>`:'';
@@ -2879,15 +2896,15 @@ function renderPerfil(){
           <div class="form-group">
             <label style="font-size:13px;color:var(--text2);margin-bottom:4px;display:block">Color primario</label>
             <div style="display:flex;align-items:center;gap:8px">
-              <input id="sa-color-pri" type="color" value="${LEAGUE_COLOR_PRI}" style="width:48px;height:36px;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px">
-              <span style="font-size:13px;color:var(--text2)" id="sa-pri-hex">${LEAGUE_COLOR_PRI}</span>
+              <input id="sa-color-pri" type="color" value="${LEAGUE_COLOR_PRI}" oninput="syncHex('pri','picker')" style="width:48px;height:36px;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px">
+              <input id="sa-pri-hex" type="text" value="${LEAGUE_COLOR_PRI}" maxlength="7" spellcheck="false" oninput="syncHex('pri')" style="width:92px;font-size:13px;font-family:monospace;padding:6px 8px;border:1.5px solid var(--border2);border-radius:8px;background:var(--surface);color:var(--text)">
             </div>
           </div>
           <div class="form-group">
             <label style="font-size:13px;color:var(--text2);margin-bottom:4px;display:block">Color acento</label>
             <div style="display:flex;align-items:center;gap:8px">
-              <input id="sa-color-acc" type="color" value="${LEAGUE_COLOR_ACC}" style="width:48px;height:36px;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px">
-              <span style="font-size:13px;color:var(--text2)" id="sa-acc-hex">${LEAGUE_COLOR_ACC}</span>
+              <input id="sa-color-acc" type="color" value="${LEAGUE_COLOR_ACC}" oninput="syncHex('acc','picker')" style="width:48px;height:36px;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px">
+              <input id="sa-acc-hex" type="text" value="${LEAGUE_COLOR_ACC}" maxlength="7" spellcheck="false" oninput="syncHex('acc')" style="width:92px;font-size:13px;font-family:monospace;padding:6px 8px;border:1.5px solid var(--border2);border-radius:8px;background:var(--surface);color:var(--text)">
             </div>
           </div>
         </div>
@@ -3122,7 +3139,7 @@ function poReport(ti,which,ri,mi){
 }
 
 function openPoForm(m,ti){
-  const existing = m.locked && m.sets;
+  const existing = m.locked && m.sets && m.sets.length;
   document.getElementById('modal-title').textContent = (existing ? t('edit_result') : t('po_load_result')) + ' · ' + tf('po_match',{l:playoff.tramos[ti].label});
   
   const s1a = existing ? m.sets[0][0] : '', s1b = existing ? m.sets[0][1] : '', s2a = existing ? m.sets[1]?.[0] : '', s2b = existing ? m.sets[1]?.[1] : '';
@@ -3176,6 +3193,14 @@ function openPoForm(m,ti){
   <div style="text-align:center; margin-top:12px">
     <button class="btn btn-sm" onclick="document.getElementById('po-s3-row').style.display='grid'"><i class="ti ti-plus"></i> Supertiebreak</button>
   </div>
+  ${(currentUser.role==='admin'||currentUser.role==='superadmin')?`
+  <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border)">
+    <p style="font-size:12px;color:var(--text2);margin-bottom:.5rem;text-align:center">O marcá <strong style="color:#ea580c">WO</strong> (walkover) si un jugador no se presenta o no puede jugar:</p>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="btn btn-sm" onclick="markPoWO(true)" style="background:#ea580c;color:#fff;border-color:#ea580c;font-weight:600"><i class="ti ti-arrow-big-right-lines"></i> Avanza ${esc(m.a)}</button>
+      <button class="btn btn-sm" onclick="markPoWO(false)" style="background:#ea580c;color:#fff;border-color:#ea580c;font-weight:600"><i class="ti ti-arrow-big-right-lines"></i> Avanza ${esc(m.b)}</button>
+    </div>
+  </div>`:''}
   <p class="lock-note" id="po-alert" style="margin-top:.5rem"></p>`;
 
   let actions = `<button class="btn btn-accent" onclick="submitPo()"><i class="ti ti-send"></i> ${currentUser.role === 'admin' ? t('save_validate') : t('send')}</button>`;
@@ -3185,6 +3210,28 @@ function openPoForm(m,ti){
   actions += `<button class="btn" onclick="closeM()">${t('close')}</button>`;
   document.getElementById('modal-actions').innerHTML = actions;
   document.getElementById('modal-bg').classList.add('open');
+}
+// El admin hace avanzar a un jugador por WO (walkover): el rival no se presenta / no puede jugar.
+function markPoWO(advanceA){
+  if(!(currentUser&&(currentUser.role==='admin'||currentUser.role==='superadmin'))){toast('Solo el administrador puede marcar WO.');return;}
+  if(!poContext)return;
+  const ti=poContext.ti,which=poContext.which,ri=poContext.ri,mi=poContext.mi;
+  const tr=playoff.tramos[ti];if(!tr||!tr[which])return;
+  const m=tr[which][ri][mi];if(!m||!m.a||!m.b){toast('Faltan jugadores en este partido.');return;}
+  const winnerName=advanceA?m.a:m.b,loser=advanceA?m.b:m.a;
+  if(!confirm(winnerName+' avanza por WO (walkover).\n\n'+loser+' queda eliminado por no presentarse. No se registra ningún resultado.\n\n¿Confirmás?'))return;
+  // Reemplazar cualquier resultado/partido previo de este cruce
+  matches=matches.filter(x=>!(x.po&&x.ti===ti&&x.which===which&&x.poNames&&x.poNames.includes(m.a)&&x.poNames.includes(m.b)));
+  const k=(which==='main'?ti:ti+'c')+'#'+[m.a,m.b].sort().join('|');
+  playoff.results[k]={sets:[],w:winnerName,wo:true};
+  matches.push({id:matchId++,po:true,ti,which,ri,mi,tLabel:tr.label,poNames:[m.a,m.b],sets:[],wo:true,date:'',club:'',status:'confirmed',reporter:currentUser.name,winner:winnerName,locked:true});
+  rebuildTramo(ti);
+  addLog('Playoff: WO',{a:m.a,b:m.b,winner:winnerName,po:true,cuadro:tr.label,which});
+  closeM();
+  if(typeof showPlayoffView==='function')showPlayoffView();
+  refreshAll();
+  toast(winnerName+' avanza por WO.');
+  persist(true);
 }
 
 function deletePoDirect(ti,which,ri,mi){
