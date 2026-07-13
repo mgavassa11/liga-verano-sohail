@@ -332,7 +332,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
       <div class="gap-sm mt-sm">
         <button class="btn" id="stb-toggle-btn" onclick="toggleSTB()"><i class="ti ti-plus"></i> Supertiebreak (1-1)</button>
         <button class="btn btn-accent" onclick="submitResult()" id="btn-enviar"><i class="ti ti-send"></i> Enviar</button>
-        <button class="btn" onclick="markNotPlayed()" id="btn-nojugado" style="display:none;background:#ea580c;color:#fff;border-color:#ea580c"><i class="ti ti-ban"></i> No jugado</button>
+        <button class="btn" onclick="markNotPlayed()" id="btn-nojugado" style="display:none;background:#ffedd5;color:#c2410c;border-color:#fdba74"><i class="ti ti-ban"></i> No jugado</button>
         <button class="btn" onclick="clearForm()" id="btn-limpiar">Limpiar</button>
       </div>
     </div>
@@ -3197,8 +3197,8 @@ function openPoForm(m,ti){
   <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border)">
     <p style="font-size:12px;color:var(--text2);margin-bottom:.5rem;text-align:center">O marcá <strong style="color:#ea580c">WO</strong> (walkover) si un jugador no se presenta o no puede jugar:</p>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-      <button class="btn btn-sm" onclick="markPoWO(true)" style="background:#ea580c;color:#fff;border-color:#ea580c;font-weight:600"><i class="ti ti-arrow-big-right-lines"></i> Avanza ${esc(m.a)}</button>
-      <button class="btn btn-sm" onclick="markPoWO(false)" style="background:#ea580c;color:#fff;border-color:#ea580c;font-weight:600"><i class="ti ti-arrow-big-right-lines"></i> Avanza ${esc(m.b)}</button>
+      <button class="btn btn-sm" onclick="markPoWO(true)" style="background:#ffedd5;color:#c2410c;border-color:#fdba74;font-weight:600"><i class="ti ti-arrow-big-right-lines"></i> Avanza ${esc(m.a)}</button>
+      <button class="btn btn-sm" onclick="markPoWO(false)" style="background:#ffedd5;color:#c2410c;border-color:#fdba74;font-weight:600"><i class="ti ti-arrow-big-right-lines"></i> Avanza ${esc(m.b)}</button>
     </div>
   </div>`:''}
   <p class="lock-note" id="po-alert" style="margin-top:.5rem"></p>`;
