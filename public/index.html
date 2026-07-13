@@ -1,14 +1,14 @@
 <!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><script>(function(){try{
   // Restaurar colores sin flash
   var c=JSON.parse(localStorage.getItem('lsc')||'null');
-  if(c&&c.p&&c.a){var r=document.documentElement.style;r.setProperty('--pri',c.p);r.setProperty('--priD',c.pd||c.p);r.setProperty('--soft',c.s||'#E6F1FB');r.setProperty('--acc',c.a);r.setProperty('--accD',c.ad||c.a);r.setProperty('--accT',c.at||c.p);r.setProperty('--winrow',c.wr||'#FAEEDA');r.setProperty('--cream',c.cr||'#fffbf0');}
+  if(c&&c.p&&c.a){var r=document.documentElement.style;r.setProperty('--pri',c.p);r.setProperty('--priD',c.pd||c.p);r.setProperty('--soft',c.s||'#E6F1FB');r.setProperty('--acc',c.a);r.setProperty('--accD',c.ad||c.a);r.setProperty('--accT',c.at||c.p);r.setProperty('--winrow',c.wr||'#FAEEDA');r.setProperty('--cream',c.cr||'#fffbf0');r.setProperty('--hl',c.hl||'#FFEDD5');}
   // Restaurar nombre y subtítulo sin flash (se ejecuta en DOMContentLoaded para tener acceso al DOM)
   var lsn=JSON.parse(localStorage.getItem('lsn')||'null');
   if(lsn){document.addEventListener('DOMContentLoaded',function(){var lt=document.getElementById('login-title');if(lt&&lsn.n)lt.textContent=lsn.n;var ls=document.getElementById('login-sub');if(ls&&lsn.s)ls.textContent=lsn.s;var ht=document.getElementById('hdr-title');if(ht&&lsn.n)ht.textContent=lsn.n;if(lsn.n)document.title=lsn.n;},false);}
 }catch(e){}})();</script><meta name="viewport" content="width=device-width,initial-scale=1"><title>Liga de Tenis Sohail</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#EEF2F7;--surface:#ffffff;--surface2:#EDF1F6;--text:#1b2433;--text2:#5b6675;--border:#e2e7ef;--border2:#c8d0dc;
---pri:#1B4F9C;--priD:#0E3470;--soft:#E6F1FB;--acc:#F5C518;--accD:#D9A800;--accT:#0E3470;--winrow:#FAEEDA;
+--pri:#1B4F9C;--priD:#0E3470;--soft:#E6F1FB;--acc:#F5C518;--accD:#D9A800;--accT:#0E3470;--winrow:#FAEEDA;--hl:#FFEDD5;
 --sohail:#D6ECFB;--sohailT:#0C447C;--haza:#FCE6CF;--hazaT:#854F0B}
 html,body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px}
 .app{max-width:1040px;margin:0 auto;padding:.75rem}
@@ -332,7 +332,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
       <div class="gap-sm mt-sm">
         <button class="btn" id="stb-toggle-btn" onclick="toggleSTB()"><i class="ti ti-plus"></i> Supertiebreak (1-1)</button>
         <button class="btn btn-accent" onclick="submitResult()" id="btn-enviar"><i class="ti ti-send"></i> Enviar</button>
-        <button class="btn" onclick="markNotPlayed()" id="btn-nojugado" style="display:none;background:#ffedd5;color:#c2410c;border-color:#fdba74"><i class="ti ti-ban"></i> No jugado</button>
+        <button class="btn" onclick="markNotPlayed()" id="btn-nojugado" style="display:none;background:var(--hl);color:var(--priD);border-color:var(--priD)"><i class="ti ti-ban"></i> No jugado</button>
         <button class="btn" onclick="clearForm()" id="btn-limpiar">Limpiar</button>
       </div>
     </div>
@@ -586,6 +586,7 @@ let LEAGUE_NAME='Liga de Tenis Sohail'; // nombre editable de la liga
 let LEAGUE_SUBTITLE='Verano 2026'; // subtítulo editable
 let LEAGUE_COLOR_PRI='#1B4F9C';   // color primario (azul)
 let LEAGUE_COLOR_ACC='#F5C518';   // color acento (amarillo)
+let LEAGUE_COLOR_HL='#FFEDD5';    // color de resaltado (fondo de botones No jugado / W.O.)
 let ALLNAMES=C1.flat();
 
 // Auxiliares de fechas
@@ -1635,42 +1636,51 @@ function syncHex(which,source){
   const picker=document.getElementById('sa-color-'+which);
   const txt=document.getElementById('sa-'+which+'-hex');
   if(!picker||!txt)return;
+  const demo=document.getElementById('sa-'+which+'-demo');
   if(source==='picker'){
     txt.value=picker.value;txt.style.borderColor='';
+    if(demo)demo.style.background=picker.value;
     return;
   }
   let v=(txt.value||'').trim();
   if(v&&v[0]!=='#')v='#'+v;
-  if(/^#[0-9a-fA-F]{6}$/.test(v)){picker.value=v;txt.style.borderColor='';}
-  else if(/^#[0-9a-fA-F]{3}$/.test(v)){const h=v.slice(1);picker.value='#'+h[0]+h[0]+h[1]+h[1]+h[2]+h[2];txt.style.borderColor='';}
+  if(/^#[0-9a-fA-F]{6}$/.test(v)){picker.value=v;txt.style.borderColor='';if(demo)demo.style.background=v;}
+  else if(/^#[0-9a-fA-F]{3}$/.test(v)){const h=v.slice(1);const full='#'+h[0]+h[0]+h[1]+h[1]+h[2]+h[2];picker.value=full;txt.style.borderColor='';if(demo)demo.style.background=full;}
   else{txt.style.borderColor='#ef4444';}
 }
 function previewLeagueColors(){
   const pri=document.getElementById('sa-color-pri');
   const acc=document.getElementById('sa-color-acc');
+  const hl=document.getElementById('sa-color-hl');
   if(!pri||!acc)return;
   document.getElementById('sa-pri-hex').value=pri.value;
   document.getElementById('sa-acc-hex').value=acc.value;
+  if(hl)document.getElementById('sa-hl-hex').value=hl.value;
   // Actualizar también en memoria para que los pickers mantengan coherencia
   LEAGUE_COLOR_PRI=pri.value;
   LEAGUE_COLOR_ACC=acc.value;
-  applyLeagueColors(pri.value,acc.value);
+  if(hl)LEAGUE_COLOR_HL=hl.value;
+  applyLeagueColors(pri.value,acc.value,hl?hl.value:LEAGUE_COLOR_HL);
   toast('Vista previa aplicada. Usá "Guardar todo" para persistir los cambios.');
 }
 function resetLeagueColors(){
-  LEAGUE_COLOR_PRI='#1B4F9C';LEAGUE_COLOR_ACC='#F5C518';
+  LEAGUE_COLOR_PRI='#1B4F9C';LEAGUE_COLOR_ACC='#F5C518';LEAGUE_COLOR_HL='#FFEDD5';
   try{localStorage.removeItem('lsc');}catch(e){}
-  applyLeagueColors(LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC);
+  applyLeagueColors(LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC,LEAGUE_COLOR_HL);
   const pri=document.getElementById('sa-color-pri');if(pri)pri.value='#1B4F9C';
   const acc=document.getElementById('sa-color-acc');if(acc)acc.value='#F5C518';
+  const hl=document.getElementById('sa-color-hl');if(hl)hl.value='#FFEDD5';
   const ph=document.getElementById('sa-pri-hex');if(ph){ph.value='#1B4F9C';ph.style.borderColor='';}
   const ah=document.getElementById('sa-acc-hex');if(ah){ah.value='#F5C518';ah.style.borderColor='';}
+  const hh=document.getElementById('sa-hl-hex');if(hh){hh.value='#FFEDD5';hh.style.borderColor='';}
+  const dm=document.getElementById('sa-hl-demo');if(dm)dm.style.background='#FFEDD5';
   persist(true);toast('Colores restablecidos.');
 }
 
-function applyLeagueColors(pri, acc){
+function applyLeagueColors(pri, acc, hl){
   if(!pri||!/^#[0-9a-fA-F]{6}$/.test(pri))return;
   if(!acc||!/^#[0-9a-fA-F]{6}$/.test(acc))return;
+  hl=(hl&&/^#[0-9a-fA-F]{6}$/.test(hl))?hl:((typeof LEAGUE_COLOR_HL!=='undefined'&&LEAGUE_COLOR_HL)||'#FFEDD5');
   const priD=shadeColor(pri,-20);
   const soft=tintColor(pri,88);
   const accD=shadeColor(acc,-15);
@@ -1686,8 +1696,9 @@ function applyLeagueColors(pri, acc){
   root.style.setProperty('--accT',accT);
   root.style.setProperty('--winrow',winrow);
   root.style.setProperty('--cream',cream);
+  root.style.setProperty('--hl',hl);
   // Guardar en localStorage para aplicación inmediata en próximo load (evita flash)
-  try{localStorage.setItem('lsc',JSON.stringify({p:pri,pd:priD,s:soft,a:acc,ad:accD,at:accT,wr:winrow,cr:cream}));}catch(e){}
+  try{localStorage.setItem('lsc',JSON.stringify({p:pri,pd:priD,s:soft,a:acc,ad:accD,at:accT,wr:winrow,cr:cream,hl:hl}));}catch(e){}
 }
 function shadeColor(hex,pct){
   const n=parseInt(hex.replace('#',''),16);
@@ -1711,14 +1722,16 @@ function saveLeagueName(){
   const sub=document.getElementById('sa-league-sub');
   const pri=document.getElementById('sa-color-pri');
   const acc=document.getElementById('sa-color-acc');
+  const hl=document.getElementById('sa-color-hl');
   const al=document.getElementById('sa-league-alert');
   if(!inp||!inp.value.trim()){if(al)al.innerHTML='<span style="color:#e55">El nombre no puede estar vacío.</span>';return;}
   LEAGUE_NAME=inp.value.trim();
   if(sub)LEAGUE_SUBTITLE=sub.value.trim();
   if(pri)LEAGUE_COLOR_PRI=pri.value;
   if(acc)LEAGUE_COLOR_ACC=acc.value;
+  if(hl)LEAGUE_COLOR_HL=hl.value;
   // Aplicar colores
-  applyLeagueColors(LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC);
+  applyLeagueColors(LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC,LEAGUE_COLOR_HL);
   // Actualizar textos
   const tit=document.getElementById('hdr-title');if(tit)tit.textContent=LEAGUE_NAME;
   const lt=document.getElementById('login-title');if(lt)lt.textContent=LEAGUE_NAME;
@@ -1913,7 +1926,7 @@ function renderHistorial(){
     'Playoff: confirmado':'<i class="ti ti-circle-check" style="color:#22c55e"></i>',
     'Playoff: editado':'<i class="ti ti-pencil" style="color:#f59e0b"></i>',
     'Playoff: eliminado':'<i class="ti ti-trash" style="color:#ef4444"></i>',
-    'Playoff: WO':'<i class="ti ti-arrow-big-right-lines" style="color:#ea580c"></i>',
+    'Playoff: W.O.':'<i class="ti ti-arrow-big-right-lines" style="color:#ea580c"></i>',
     'Playoff: disputa resuelta':'<i class="ti ti-gavel" style="color:#8b5cf6"></i>',
   };
   let h='<div class="card"><div class="section-lbl">Historial de resultados</div>';
@@ -2395,7 +2408,7 @@ function addSeedUI(ti){const sel=document.getElementById('po-add-'+ti);const nam
 
 function matchBox(m,ti,which,ri,mi,isFirstRound){
   const realMatch=!!(m.a&&m.b);const aw=realMatch&&m.w&&m.w===m.a,bw=realMatch&&m.w&&m.w===m.b;
-  const sc=m.np?'No jugado':m.wo?'WO':(m.sets?m.sets.map(([a,b])=>a+'-'+b).join(' '):'');
+  const sc=m.np?'No jugado':m.wo?'W.O.':(m.sets?m.sets.map(([a,b])=>a+'-'+b).join(' '):'');
   const canLoad=m.a&&m.b&&!m.w&&(currentUser&&currentUser.role==='admin'||m.a===currentUser.name||m.b===currentUser.name);
   const emptyTxt=isFirstRound?'BYE':t('tbd');
   const isBYE_A=!m.a&&m.b;const isBYE_B=!m.b&&m.a;
@@ -2848,7 +2861,7 @@ function playerHistoryHTML(name){
     const rows=poMs.map(m=>{
       const isA=m.poNames[0]===name,rival=isA?m.poNames[1]:m.poNames[0];
       const mine=(m.sets||[]).map(([a,b])=>isA?[a,b]:[b,a]);
-      const sc=m.wo?'WO':mine.map(([a,b])=>a+'-'+b).join('  ');
+      const sc=m.wo?'W.O.':mine.map(([a,b])=>a+'-'+b).join('  ');
       const won=m.winner===name;if(won)g++;else p++;
       const cuadro=m.tLabel?`<span class="badge badge-tag">${m.tLabel}</span>`:'';
       const club=m.club?`<span class="badge ${m.club==='Haza'?'badge-haza':'badge-sohail'}">${m.club}</span>`:'';
@@ -2905,6 +2918,16 @@ function renderPerfil(){
             <div style="display:flex;align-items:center;gap:8px">
               <input id="sa-color-acc" type="color" value="${LEAGUE_COLOR_ACC}" oninput="syncHex('acc','picker')" style="width:48px;height:36px;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px">
               <input id="sa-acc-hex" type="text" value="${LEAGUE_COLOR_ACC}" maxlength="7" spellcheck="false" oninput="syncHex('acc')" style="width:92px;font-size:13px;font-family:monospace;padding:6px 8px;border:1.5px solid var(--border2);border-radius:8px;background:var(--surface);color:var(--text)">
+            </div>
+          </div>
+        </div>
+        <div class="form-row" style="margin-bottom:.75rem">
+          <div class="form-group">
+            <label style="font-size:13px;color:var(--text2);margin-bottom:4px;display:block">Color de resaltado <span style="font-size:11px">(fondo de "No jugado" y "W.O.")</span></label>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <input id="sa-color-hl" type="color" value="${LEAGUE_COLOR_HL}" oninput="syncHex('hl','picker')" style="width:48px;height:36px;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px">
+              <input id="sa-hl-hex" type="text" value="${LEAGUE_COLOR_HL}" maxlength="7" spellcheck="false" oninput="syncHex('hl')" style="width:92px;font-size:13px;font-family:monospace;padding:6px 8px;border:1.5px solid var(--border2);border-radius:8px;background:var(--surface);color:var(--text)">
+              <span id="sa-hl-demo" style="font-size:12px;font-weight:600;padding:5px 12px;border-radius:6px;background:${LEAGUE_COLOR_HL};color:var(--priD);border:1px solid var(--priD)">No jugado</span>
             </div>
           </div>
         </div>
@@ -3195,10 +3218,15 @@ function openPoForm(m,ti){
   </div>
   ${(currentUser.role==='admin'||currentUser.role==='superadmin')?`
   <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border)">
-    <p style="font-size:12px;color:var(--text2);margin-bottom:.5rem;text-align:center">O marcá <strong style="color:#ea580c">WO</strong> (walkover) si un jugador no se presenta o no puede jugar:</p>
-    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-      <button class="btn btn-sm" onclick="markPoWO(true)" style="background:#ffedd5;color:#c2410c;border-color:#fdba74;font-weight:600"><i class="ti ti-arrow-big-right-lines"></i> Avanza ${esc(m.a)}</button>
-      <button class="btn btn-sm" onclick="markPoWO(false)" style="background:#ffedd5;color:#c2410c;border-color:#fdba74;font-weight:600"><i class="ti ti-arrow-big-right-lines"></i> Avanza ${esc(m.b)}</button>
+    <div id="po-wo-trigger" style="text-align:center">
+      <button class="btn btn-sm" onclick="document.getElementById('po-wo-trigger').style.display='none';document.getElementById('po-wo-opts').style.display='block'" style="background:var(--hl);color:var(--priD);border-color:var(--priD);font-weight:600"><i class="ti ti-ban"></i> Marcar como no jugado</button>
+    </div>
+    <div id="po-wo-opts" style="display:none">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:.5rem;text-align:center">Partido no jugado — ¿quién avanza por <strong style="color:var(--priD)">W.O.</strong> (walkover)?</p>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-sm" onclick="markPoWO(true)" style="background:var(--hl);color:var(--priD);border-color:var(--priD);font-weight:600"><i class="ti ti-arrow-big-right-lines"></i> Avanza ${esc(m.a)}</button>
+        <button class="btn btn-sm" onclick="markPoWO(false)" style="background:var(--hl);color:var(--priD);border-color:var(--priD);font-weight:600"><i class="ti ti-arrow-big-right-lines"></i> Avanza ${esc(m.b)}</button>
+      </div>
     </div>
   </div>`:''}
   <p class="lock-note" id="po-alert" style="margin-top:.5rem"></p>`;
@@ -3213,24 +3241,24 @@ function openPoForm(m,ti){
 }
 // El admin hace avanzar a un jugador por WO (walkover): el rival no se presenta / no puede jugar.
 function markPoWO(advanceA){
-  if(!(currentUser&&(currentUser.role==='admin'||currentUser.role==='superadmin'))){toast('Solo el administrador puede marcar WO.');return;}
+  if(!(currentUser&&(currentUser.role==='admin'||currentUser.role==='superadmin'))){toast('Solo el administrador puede marcar W.O.');return;}
   if(!poContext)return;
   const ti=poContext.ti,which=poContext.which,ri=poContext.ri,mi=poContext.mi;
   const tr=playoff.tramos[ti];if(!tr||!tr[which])return;
   const m=tr[which][ri][mi];if(!m||!m.a||!m.b){toast('Faltan jugadores en este partido.');return;}
   const winnerName=advanceA?m.a:m.b,loser=advanceA?m.b:m.a;
-  if(!confirm(winnerName+' avanza por WO (walkover).\n\n'+loser+' queda eliminado por no presentarse. No se registra ningún resultado.\n\n¿Confirmás?'))return;
+  if(!confirm(winnerName+' avanza por W.O. (walkover).\n\n'+loser+' queda eliminado por no presentarse. No se registra ningún resultado.\n\n¿Confirmás?'))return;
   // Reemplazar cualquier resultado/partido previo de este cruce
   matches=matches.filter(x=>!(x.po&&x.ti===ti&&x.which===which&&x.poNames&&x.poNames.includes(m.a)&&x.poNames.includes(m.b)));
   const k=(which==='main'?ti:ti+'c')+'#'+[m.a,m.b].sort().join('|');
   playoff.results[k]={sets:[],w:winnerName,wo:true};
   matches.push({id:matchId++,po:true,ti,which,ri,mi,tLabel:tr.label,poNames:[m.a,m.b],sets:[],wo:true,date:'',club:'',status:'confirmed',reporter:currentUser.name,winner:winnerName,locked:true});
   rebuildTramo(ti);
-  addLog('Playoff: WO',{a:m.a,b:m.b,winner:winnerName,po:true,cuadro:tr.label,which});
+  addLog('Playoff: W.O.',{a:m.a,b:m.b,winner:winnerName,po:true,cuadro:tr.label,which});
   closeM();
   if(typeof showPlayoffView==='function')showPlayoffView();
   refreshAll();
-  toast(winnerName+' avanza por WO.');
+  toast(winnerName+' avanza por W.O.');
   persist(true);
 }
 
@@ -3312,7 +3340,7 @@ let _toastTimer=null;function toast(m){let t=document.getElementById('_toast');i
 // ===== CONEXIÓN A SUPABASE — guardado instantáneo =====
 let _sb=null,_lastSaved=null,_saving=false,_pendingForce=false,_loadOK=false,_dbEmpty=false;
 function _serialize(){
-  return JSON.stringify({cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,PO_FECHAS,ALLNAMES,users:USERS,PUNTOS,LOG,LEAGUE_NAME,LEAGUE_SUBTITLE,LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC});
+  return JSON.stringify({cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,PO_FECHAS,ALLNAMES,users:USERS,PUNTOS,LOG,LEAGUE_NAME,LEAGUE_SUBTITLE,LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC,LEAGUE_COLOR_HL});
 }
 
 function _hydrate(d){try{
@@ -3351,8 +3379,9 @@ function _hydrate(d){try{
   if(d.LEAGUE_SUBTITLE)LEAGUE_SUBTITLE=d.LEAGUE_SUBTITLE;
   if(d.LEAGUE_COLOR_PRI)LEAGUE_COLOR_PRI=d.LEAGUE_COLOR_PRI;
   if(d.LEAGUE_COLOR_ACC)LEAGUE_COLOR_ACC=d.LEAGUE_COLOR_ACC;
+  if(d.LEAGUE_COLOR_HL)LEAGUE_COLOR_HL=d.LEAGUE_COLOR_HL;
   // Aplicar colores guardados al cargar
-  if(d.LEAGUE_COLOR_PRI||d.LEAGUE_COLOR_ACC)applyLeagueColors(d.LEAGUE_COLOR_PRI||LEAGUE_COLOR_PRI,d.LEAGUE_COLOR_ACC||LEAGUE_COLOR_ACC);
+  if(d.LEAGUE_COLOR_PRI||d.LEAGUE_COLOR_ACC||d.LEAGUE_COLOR_HL)applyLeagueColors(d.LEAGUE_COLOR_PRI||LEAGUE_COLOR_PRI,d.LEAGUE_COLOR_ACC||LEAGUE_COLOR_ACC,d.LEAGUE_COLOR_HL||LEAGUE_COLOR_HL);
   return true;
 }catch(e){console.warn('hydrate',e);return false;}
 }
