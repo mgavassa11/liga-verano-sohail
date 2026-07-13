@@ -2345,6 +2345,8 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
   const iA=!m.a?'color:var(--text2);font-style:italic;':'';
   const iB=!m.b&&m.a?'color:var(--text2);font-style:italic;':'';
   const nmA=m.a||emptyTxt;const nmB=m.b||(m.a?'BYE':emptyTxt);
+  const clA=m.a?'<span class="nm-link" onclick="event.stopPropagation();showPlayerHistory(\''+esc(m.a)+'\')">'+nmA+'</span>':nmA;
+  const clB=m.b?'<span class="nm-link" onclick="event.stopPropagation();showPlayerHistory(\''+esc(m.b)+'\')">'+nmB+'</span>':nmB;
   const seedA=m.sid[0]||'';const seedB=m.sid[1]||'';
   function fn(n){return n?n.split(' ')[0]:'';}
   const fA=fn(m.a),fB=fn(m.b);
@@ -2372,8 +2374,8 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
     bot=currentUser&&currentUser.role==='admin'?'<div style="height:56px"></div>':'<div style="height:22px"></div>';
   }
   return '<div style="border:1px solid var(--border2);border-radius:10px;overflow:hidden;background:var(--surface);width:220px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.08)">'
-    +hA+'<div style="display:flex;align-items:center;padding:5px 10px 8px;border-bottom:1px solid var(--border);font-size:12px;min-height:32px;'+sA+iA+'"><span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">'+seedA+'</span><span style="flex:1;font-weight:'+(aw?'700':'400')+'">'+nmA+(meA?' <span style="font-size:9px;background:var(--acc);color:var(--priD);border-radius:4px;padding:1px 4px;font-weight:700">'+t('me_label')+'</span>':'')+'</span></div>'
-    +hB+'<div style="display:flex;align-items:center;padding:5px 10px 8px;font-size:12px;min-height:32px;'+sB+iB+'"><span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">'+seedB+'</span><span style="flex:1;font-weight:'+(bw?'700':'400')+'">'+nmB+(meB?' <span style="font-size:9px;background:var(--acc);color:var(--priD);border-radius:4px;padding:1px 4px;font-weight:700">'+t('me_label')+'</span>':'')+'</span></div>'
+    +hA+'<div style="display:flex;align-items:center;padding:5px 10px 8px;border-bottom:1px solid var(--border);font-size:12px;min-height:32px;'+sA+iA+'"><span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">'+seedA+'</span><span style="flex:1;font-weight:'+(aw?'700':'400')+'">'+clA+(meA?' <span style="font-size:9px;background:var(--acc);color:var(--priD);border-radius:4px;padding:1px 4px;font-weight:700">'+t('me_label')+'</span>':'')+'</span></div>'
+    +hB+'<div style="display:flex;align-items:center;padding:5px 10px 8px;font-size:12px;min-height:32px;'+sB+iB+'"><span style="font-size:10px;color:var(--text2);min-width:22px;font-weight:600">'+seedB+'</span><span style="flex:1;font-weight:'+(bw?'700':'400')+'">'+clB+(meB?' <span style="font-size:9px;background:var(--acc);color:var(--priD);border-radius:4px;padding:1px 4px;font-weight:700">'+t('me_label')+'</span>':'')+'</span></div>'
     +bot+'</div>';
 }
 
@@ -2514,10 +2516,10 @@ function showPlayoffView(){
   }
 
   const finalM=tr.main&&tr.main.length?tr.main[tr.main.length-1][0]:null;
-  html+=`<div class="card"><div class="po-section-title"><i class="ti ti-trophy"></i> ${tf('po_main_title',{l:tr.label})}</div>${bracketHTML(tr.main,ti,'main')}${finalM&&finalM.w?`<div class="champ-card"><div class="lbl">${tf('po_champ',{l:tr.label})}</div><div class="who"><i class="ti ti-crown"></i> ${finalM.w}</div></div>`:''}</div>`;
+  html+=`<div class="card"><div class="po-section-title"><i class="ti ti-trophy"></i> ${tf('po_main_title',{l:tr.label})}</div>${bracketHTML(tr.main,ti,'main')}${finalM&&finalM.w?`<div class="champ-card"><div class="lbl">${tf('po_champ',{l:tr.label})}</div><div class="who"><i class="ti ti-crown"></i> <span class="nm-link" onclick="showPlayerHistory('${esc(finalM.w)}')">${finalM.w}</span></div></div>`:''}</div>`;
   if(tr.cons){
     const cf=tr.cons[tr.cons.length-1][0];
-    html+=`<div class="card"><div class="po-section-title po-cons-title"><i class="ti ti-shield"></i> ${tf('po_cons_title',{l:tr.label})}</div>${bracketHTML(tr.cons,ti,'cons')}${cf&&cf.w?`<div class="champ-card champ-cons"><div class="lbl">${tf('po_champ_cons',{l:tr.label})}</div><div class="who">${cf.w}</div></div>`:''}</div>`;
+    html+=`<div class="card"><div class="po-section-title po-cons-title"><i class="ti ti-shield"></i> ${tf('po_cons_title',{l:tr.label})}</div>${bracketHTML(tr.cons,ti,'cons')}${cf&&cf.w?`<div class="champ-card champ-cons"><div class="lbl">${tf('po_champ_cons',{l:tr.label})}</div><div class="who"><span class="nm-link" onclick="showPlayerHistory('${esc(cf.w)}')">${cf.w}</span></div></div>`:''}</div>`;
   }
 
   html+=`<div class="card legend-card"><p class="legend-txt">${t('po_legend')}</p></div>`;
@@ -2941,6 +2943,70 @@ function renderPlayerList(players, filter) {
 function filterPlayerList(){const f=document.getElementById('player-search').value;const players=Object.values(USERS).filter(u=>u&&u.role!=='admin'&&u.role!=='superadmin').sort((a,b)=>(a.name||'').localeCompare(b.name||'','es'));document.getElementById('player-list').innerHTML=renderPlayerList(players,f);}
 function togglePlayerEdit(name){const el=document.getElementById('pe-'+name);if(el)el.style.display=el.style.display==='none'?'block':'none';}
 
+// Renombra un jugador en TODO el estado (liga + playoffs). Un solo lugar para no olvidar ninguna referencia.
+function renamePlayerEverywhere(oldName,newName){
+  if(!oldName||!newName||oldName===newName)return;
+  // USERS (la clave ES el nombre) — conserva pass, email, tel, rol, inactive, etc.
+  if(USERS[oldName]){USERS[newName]={...USERS[oldName],name:newName};delete USERS[oldName];}
+  // ALLNAMES
+  const idx=ALLNAMES.indexOf(oldName);if(idx>=0)ALLNAMES[idx]=newName;
+  // Grupos de cada ciclo
+  cycles.forEach(c=>{if(!c.groups)return;c.groups.forEach(g=>{if(!g.players)return;const pi=g.players.indexOf(oldName);if(pi>=0)g.players[pi]=newName;});});
+  // Partidos (liga y playoff): todos los campos que guardan un nombre
+  matches.forEach(m=>{
+    if(m.aName===oldName)m.aName=newName;
+    if(m.bName===oldName)m.bName=newName;
+    if(m.reporter===oldName)m.reporter=newName;
+    if(m.winner===oldName)m.winner=newName;
+    if(m.poNames){if(m.poNames[0]===oldName)m.poNames[0]=newName;if(m.poNames[1]===oldName)m.poNames[1]=newName;}
+  });
+  // Playoffs
+  if(playoff){
+    if(Array.isArray(playoff.qualified)){const qi=playoff.qualified.indexOf(oldName);if(qi>=0)playoff.qualified[qi]=newName;}
+    if(playoff._autoJumped===oldName)playoff._autoJumped=newName;
+    if(Array.isArray(playoff.tramos)){
+      playoff.tramos.forEach(tr=>{
+        if(!tr)return;
+        if(Array.isArray(tr.seeds)){const si=tr.seeds.indexOf(oldName);if(si>=0)tr.seeds[si]=newName;}
+        ['main','cons'].forEach(which=>{
+          if(!Array.isArray(tr[which]))return;
+          tr[which].forEach(rd=>rd.forEach(m=>{if(!m)return;if(m.a===oldName)m.a=newName;if(m.b===oldName)m.b=newName;if(m.w===oldName)m.w=newName;}));
+        });
+      });
+    }
+    // playoff.results: la CLAVE lleva los dos nombres ordenados + el ganador está en .w
+    if(playoff.results&&typeof playoff.results==='object'){
+      const nr={};
+      Object.keys(playoff.results).forEach(k=>{
+        const hi=k.indexOf('#');
+        if(hi<0){nr[k]=playoff.results[k];return;}
+        const pre=k.slice(0,hi+1);
+        const pair=k.slice(hi+1).split('|').map(n=>n===oldName?newName:n).sort();
+        const v=playoff.results[k];
+        if(v&&v.w===oldName)v.w=newName;
+        nr[pre+pair.join('|')]=v;
+      });
+      playoff.results=nr;
+    }
+  }
+  // LOG (registro de actividad): actualizar el actor y los nombres dentro del detalle.
+  // Solo se reemplaza cuando el valor coincide EXACTO con el nombre viejo,
+  // así nunca se tocan nombres de liga, números ni etiquetas (cuadro, ronda, etc.).
+  if(Array.isArray(LOG)){
+    LOG.forEach(e=>{
+      if(!e)return;
+      if(e.who===oldName)e.who=newName;
+      const d=e.detail;
+      if(d&&typeof d==='object'){
+        if(d.a===oldName)d.a=newName;
+        if(d.b===oldName)d.b=newName;
+        if(d.winner===oldName)d.winner=newName;
+        if(d.reporter===oldName)d.reporter=newName;
+      }
+    });
+  }
+}
+
 function savePlayerAdmin(oldName){
   if(USERS[oldName]&&(USERS[oldName].role==='admin'||USERS[oldName].role==='superadmin')){toast('No se puede editar al administrador desde aquí.');return;}
   const newName=(document.getElementById('pe-name-'+oldName).value||'').trim();
@@ -2956,17 +3022,7 @@ function savePlayerAdmin(oldName){
   u.email=email;u.tel=tel;
   if(newName!==oldName){
     if(USERS[newName]){toast('Ya existe un jugador llamado "'+newName+'". Elegí otro nombre.');renderPerfil();return;}
-    USERS[newName]={...u,name:newName};
-    delete USERS[oldName];
-    const idx=ALLNAMES.indexOf(oldName);
-    if(idx>=0)ALLNAMES[idx]=newName;
-    cycles.forEach(c=>{if(!c.groups)return;c.groups.forEach(g=>{const pi=(g.players||[]).indexOf(oldName);if(pi>=0)g.players[pi]=newName;});});
-    matches.forEach(m=>{
-      if(m.aName===oldName)m.aName=newName;
-      if(m.bName===oldName)m.bName=newName;
-      if(m.reporter===oldName)m.reporter=newName;
-      if(m.poNames){if(m.poNames[0]===oldName)m.poNames[0]=newName;if(m.poNames[1]===oldName)m.poNames[1]=newName;}
-    });
+    renamePlayerEverywhere(oldName,newName);
   }
   persist(true);renderPerfil();toast(tf('save_done',{name:newName}));
 }
@@ -2983,7 +3039,7 @@ function deletePlayerAdmin(name){
 
 function resetPwd(name){const u=USERS[name];if(!u)return;u.pass=DEFAULT_PASS_HASH;persist(true);toast(tf('reset_done',{name}));}
 function toggleInactive(name){const u=USERS[name];if(!u)return;u.inactive=!u.inactive;persist(true);renderPerfil();toast(name+(u.inactive?' marcado como inactivo.':' activado.'));}
-function saveProfile(){const name=(document.getElementById('pf-name').value||'').trim();const email=(document.getElementById('pf-email').value||'').trim();const tel=(document.getElementById('pf-tel').value||'').trim();const a=document.getElementById('edit-profile-alert');if(!name){a.className='alert alert-err';a.textContent=t('name_empty');return;}const u=currentUser;const oldName=u.name;u.email=email;u.tel=tel;if(name!==oldName){if(USERS[name]&&name!==oldName){a.className='alert alert-err';a.textContent=t('name_exists');return;}USERS[name]={...u,name};delete USERS[oldName];const idx=ALLNAMES.indexOf(oldName);if(idx>=0)ALLNAMES[idx]=name;cycles.forEach(c=>{if(!c.groups)return;c.groups.forEach(g=>{const pi=(g.players||[]).indexOf(oldName);if(pi>=0)g.players[pi]=name;});});matches.forEach(m=>{if(m.aName===oldName)m.aName=name;if(m.bName===oldName)m.bName=name;if(m.reporter===oldName)m.reporter=name;if(m.poNames){if(m.poNames[0]===oldName)m.poNames[0]=name;if(m.poNames[1]===oldName)m.poNames[1]=name;}});currentUser=USERS[name];}persist(true);a.className='alert alert-ok';a.textContent=t('profile_saved');}
+function saveProfile(){const name=(document.getElementById('pf-name').value||'').trim();const email=(document.getElementById('pf-email').value||'').trim();const tel=(document.getElementById('pf-tel').value||'').trim();const a=document.getElementById('edit-profile-alert');if(!name){a.className='alert alert-err';a.textContent=t('name_empty');return;}const u=currentUser;const oldName=u.name;u.email=email;u.tel=tel;if(name!==oldName){if(USERS[name]&&name!==oldName){a.className='alert alert-err';a.textContent=t('name_exists');return;}renamePlayerEverywhere(oldName,name);currentUser=USERS[name];}persist(true);a.className='alert alert-ok';a.textContent=t('profile_saved');}
 async function changePw(){
   const o=document.getElementById('pw-old').value,n=document.getElementById('pw-new').value,n2=document.getElementById('pw-new2').value,a=document.getElementById('pw-alert');
   function al(m,cl){a.className='alert alert-'+cl;a.textContent=m;}
