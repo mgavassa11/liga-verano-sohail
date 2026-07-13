@@ -332,6 +332,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
       <div class="gap-sm mt-sm">
         <button class="btn" id="stb-toggle-btn" onclick="toggleSTB()"><i class="ti ti-plus"></i> Supertiebreak (1-1)</button>
         <button class="btn btn-accent" onclick="submitResult()" id="btn-enviar"><i class="ti ti-send"></i> Enviar</button>
+        <button class="btn" onclick="markNotPlayed()" id="btn-nojugado" style="display:none"><i class="ti ti-ban"></i> No jugado</button>
         <button class="btn" onclick="clearForm()" id="btn-limpiar">Limpiar</button>
       </div>
     </div>
@@ -681,6 +682,7 @@ function computeStats(cycN,gid){
   const confirmed=matches.filter(m=>!m.po&&m.cycle===cycN&&m.g===gid&&m.status==='confirmed');
   confirmed.forEach(m=>{
     const a=byName[m.aName],b=byName[m.bName];if(!a||!b)return;
+    if(m.np){a.nj++;b.nj++;return;}
     let w1=0,w2=0,a_gw=0,a_gl=0;
     m.sets.forEach(([x,y])=>{if(x>y)w1++;else w2++;a_gw+=x;a_gl+=y;});
     a.sg+=w1;a.sp+=w2;b.sg+=w2;b.sp+=w1;
@@ -693,6 +695,7 @@ function computeStats(cycN,gid){
     const h={};group.forEach(s=>h[s.name]={pts:0,sg:0,sp:0,gw:0,gl:0});
     confirmed.forEach(m=>{
       if(!names.has(m.aName)||!names.has(m.bName))return;
+      if(m.np)return;
       let w1=0,w2=0,a_gw=0,a_gl=0;
       m.sets.forEach(([x,y])=>{if(x>y)w1++;else w2++;a_gw+=x;a_gl+=y;});
       h[m.aName].sg+=w1;h[m.aName].sp+=w2;h[m.bName].sg+=w2;h[m.bName].sp+=w1;
@@ -957,7 +960,7 @@ function groupCardHTML(gid){
         const base=ptsForPos(gid,i);
         const pInactive = USERS[s.name]&&USERS[s.name].inactive;
         const inactiveBadge = pInactive?'<span style="font-size:9px;background:#e55;color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px;font-weight:700">INACTIVO</span>':'';
-        return `<tr class="${currentUser&&s.name===currentUser.name?'me-row':''}" style="${pInactive?'opacity:.55':''}"><td>${(!pInactive&&d)?`<span class="dest ${ar}">${ic}${groupName(dn)}</span>`:pInactive?'<span style="font-size:9px;color:#aaa">—</span>':''}</td><td><span class="avatar">${getInitials(s.name)}</span><span class="nm-link" onclick="showPlayerHistory('${esc(s.name)}')">${s.name}</span>${inactiveBadge}</td><td><strong>${s.pts}</strong></td><td>${s.g}</td><td>${s.p}</td><td>${s.nj}</td><td>${s.sg}</td><td>${s.sp}</td><td>${s.sg-s.sp}</td><td>${pInactive?'<span style="font-size:10px;color:#e55;font-weight:700">—</span>':base}</td><td>${ex>0?ex:''}</td><td><strong>${pInactive?'<span style="font-size:10px;color:#e55">inactivo</span>':base+ex}</strong></td></tr>`;
+        return `<tr class="${currentUser&&s.name===currentUser.name?'me-row':''}" style="${pInactive?'opacity:.55':''}"><td>${(!pInactive&&d)?`<span class="dest ${ar}">${ic}${groupName(dn)}</span>`:pInactive?'<span style="font-size:9px;color:#aaa">—</span>':''}</td><td><span class="avatar">${getInitials(s.name)}</span><span class="nm-link" onclick="showPlayerHistory('${esc(s.name)}')">${s.name}</span>${inactiveBadge}</td><td><strong>${s.pts}</strong></td><td>${s.g}</td><td>${s.p}</td><td>${s.nj||''}</td><td>${s.sg}</td><td>${s.sp}</td><td>${s.sg-s.sp}</td><td>${pInactive?'<span style="font-size:10px;color:#e55;font-weight:700">—</span>':base}</td><td>${ex>0?ex:''}</td><td><strong>${pInactive?'<span style="font-size:10px;color:#e55">inactivo</span>':base+ex}</strong></td></tr>`;
       }).join('');
       
       const head=players.map(p=>`<th class="${currentUser&&p===currentUser.name?'me-mtx':''}">${lbl(p)}</th>`).join('');
@@ -965,6 +968,7 @@ function groupCardHTML(gid){
         const cols=players.map((q,j)=>{
           if(i===j)return`<td class="res-black"></td>`;
           const m=findMatch(viewCycle,gid,p,q);
+          if(m&&m.np)return`<td class="cell-locked" style="cursor:pointer;font-size:10px;font-weight:700;color:var(--text2)" onclick="openModal(${m.id})">NJ</td>`;
           if(m&&m.status==='confirmed'){const sc=m.aName===p?m.sets.map(([a,b])=>`${a}-${b}`).join(' '):m.sets.map(([a,b])=>`${b}-${a}`).join(' ');return`<td class="${m.club==='Haza'?'cell-haza':'cell-sohail'}" onclick="openModal(${m.id})">${sc}</td>`;}
           if(m&&m.status==='pending'){const sc=m.aName===p?m.sets.map(([a,b])=>`${a}-${b}`).join(' '):m.sets.map(([a,b])=>`${b}-${a}`).join(' ');return`<td class="cell-pending" onclick="openModal(${m.id})">${sc}⏳</td>`;}
           if(m&&m.status==='disputed')return`<td class="cell-disputed" onclick="openModal(${m.id})">disp.</td>`;
@@ -1155,6 +1159,7 @@ if(c.status==='finished'&&!playoff.started&&!playoff.preview&&currentUser.role!=
         o.innerHTML='<option value="">—</option>';o.disabled=false;poContext=null;
         note.textContent=t('load_note_admin');
       }
+      syncNoJugado();
     };
   }
 
@@ -1174,6 +1179,7 @@ if(c.status==='finished'&&!playoff.started&&!playoff.preview&&currentUser.role!=
       else if(v.startsWith('po:')){
         const parts=v.split(':');fillReporterByPoSection(+parts[1],parts[2]);
       }else{fillReporterByGroup(+v);r.onchange=function(){filterRival(this.value,null);};note.textContent=t('load_note_admin');}
+      syncNoJugado();
     };
     fw.appendChild(lbl);fw.appendChild(sel);
     const cfWrap=document.getElementById('club-fecha-wrap');
@@ -1192,6 +1198,7 @@ if(c.status==='finished'&&!playoff.started&&!playoff.preview&&currentUser.role!=
         else if(v.startsWith('po:')){
           const parts=v.split(':');fillReporterByPoSection(+parts[1],parts[2]);
         }else{fillReporterByGroup(+v);r.onchange=function(){filterRival(this.value,null);};note.textContent=t('load_note_admin');}
+        syncNoJugado();
       };
     }
     filterWrap.style.display='flex';
@@ -1229,6 +1236,7 @@ var ss=document.getElementById('sets-section-lbl');if(ss)ss.textContent=t('sets_
 var rr=document.getElementById('report-result-lbl');if(rr)rr.textContent=t('report_result');}
 function filterRival(repVal,preselect){
   const o=document.getElementById('f-rival');
+  syncNoJugado();
   o.innerHTML='<option value="">—</option>';
   if(!repVal)return;
   const parts=repVal.split('|');
@@ -1337,6 +1345,38 @@ function submitResult(){
   refreshAll();
   if(isAdmin) setTimeout(()=>populateForm(),50);
 }
+// Muestra el botón "No jugado" solo para admin y solo en modo liga (no en playoffs)
+function syncNoJugado(){
+  const b=document.getElementById('btn-nojugado');if(!b)return;
+  const isAdmin=currentUser&&(currentUser.role==='admin'||currentUser.role==='superadmin');
+  const fs=document.getElementById('admin-grp-filter-sel');
+  const poFilter=!!(fs&&fs.value&&fs.value.startsWith('po:'));
+  b.style.display=(isAdmin&&!poContext&&!poFilter)?'':'none';
+}
+// El admin marca un partido de liga como NO JUGADO: ambos suman 1 en NJ y 0 puntos.
+function markNotPlayed(){
+  const isAdmin=currentUser&&(currentUser.role==='admin'||currentUser.role==='superadmin');
+  if(!isAdmin){fAlert('Solo el administrador puede marcar partidos como no jugados.','err');return;}
+  if(poContext){fAlert('“No jugado” no aplica a partidos de Play Offs.','err');return;}
+  const rv=document.getElementById('f-reporter').value,iv=document.getElementById('f-rival').value;
+  if(!rv||!iv){fAlert(t('select_two'),'err');return;}
+  const repVal=rv.startsWith('po:')?rv.split(':')[3]:rv;
+  const a=parseSel(repVal),b=parseSel(iv);
+  if(a.g==null||b.g==null||a.g!==b.g){fAlert(t('same_group'),'err');return;}
+  const gid=a.g,repName=a.name,rivName=b.name;
+  if(repName===rivName){fAlert(t('select_two'),'err');return;}
+  const ex=findMatch(activeN,gid,repName,rivName);
+  if(ex&&ex.status==='disputed'){fAlert('Este partido está en disputa; resolvelo antes de marcarlo como no jugado.','err');return;}
+  if(!confirm('¿Marcar como NO JUGADO el partido '+repName+' vs '+rivName+'?\n\nAmbos jugadores suman 1 en la columna NJ y 0 puntos por este partido. Podés deshacerlo borrando el partido desde la tabla del grupo.'))return;
+  matches=matches.filter(m=>!(m.cycle===activeN&&m.g===gid&&!m.po&&((m.aName===repName&&m.bName===rivName)||(m.aName===rivName&&m.bName===repName))));
+  matches.push({id:matchId++,cycle:activeN,g:gid,aName:repName,bName:rivName,sets:[],np:true,date:'',status:'confirmed',reporter:currentUser.name,club:'',locked:true});
+  addLog('Liga: marcado no jugado',{a:repName,b:rivName,grupo:gid,po:false});
+  clearForm();
+  fAlert('Partido marcado como no jugado.','ok');
+  persist(true);
+  refreshAll();
+  setTimeout(()=>populateForm(),50);
+}
 
 function fAlert(m,t){const e=document.getElementById('form-alert');e.className=`alert alert-${t}`;e.textContent=m;setTimeout(()=>{e.textContent='';e.className='';},6000);}
 function clearForm(){if(currentUser&&currentUser.role==='admin'){const r=document.getElementById('f-reporter');if(r)r.value='';}const rv=document.getElementById('f-rival');if(rv)rv.value='';['s1a','s1b','s2a','s2b','s3a','s3b'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='0';});const sr=document.getElementById('s3-row');if(sr)sr.style.display='none';const stbBtn=document.getElementById('stb-toggle-btn');if(stbBtn)stbBtn.innerHTML='<i class="ti ti-plus"></i> '+t('add_stb');formClub='';const cs=document.getElementById('club-sohail');if(cs)cs.className='club-opt';const ch=document.getElementById('club-haza');if(ch)ch.className='club-opt';const ff=document.getElementById('f-fecha');if(ff){const d=new Date();ff.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}const cp=document.getElementById('club-pick');if(cp)cp.classList.remove('req-empty');const fp2=document.getElementById('f-fecha');if(fp2)fp2.classList.remove('req-empty');}
@@ -1388,11 +1428,12 @@ function openModal(mid){const m=matches.find(x=>x.id===mid);if(!m)return;current
 document.getElementById('modal-title').textContent=(m.status==='confirmed'?t('validated_result'):m.status==='disputed'?t('disputed_result'):t('review_result'))+` · ${tag}`;
 const statusLabel = m.status === 'confirmed' ?
 t('confirmed_label') : m.status === 'disputed' ? t('legend_disputed') : t('legend_pending');
-document.getElementById('modal-body').innerHTML=`<p class="modal-rep">${t('reported_by')} <strong>${rep}</strong>${m.club?` · Club <strong>${m.club}</strong>`:''}</p><div class="modal-score ${m.club==='Haza'?'ms-haza':'ms-sohail'}"><p>${p1} ${sc} ${p2}</p></div><p class="modal-meta">${t('date_field')}: ${fmtDate(m.date)} · ${t('status_field')}: ${statusLabel}${m.locked?' · 🔒 '+t('locked_label'):''}</p>`;
+if(m.np){document.getElementById('modal-body').innerHTML=`<div class="modal-score"><p>${p1} &nbsp;vs&nbsp; ${p2}</p></div><p class="modal-meta" style="text-align:center"><strong>Partido no jugado</strong> · ${t('status_field')}: ${statusLabel}${m.locked?' · 🔒 '+t('locked_label'):''}</p>`;}
+else{document.getElementById('modal-body').innerHTML=`<p class="modal-rep">${t('reported_by')} <strong>${rep}</strong>${m.club?` · Club <strong>${m.club}</strong>`:''}</p><div class="modal-score ${m.club==='Haza'?'ms-haza':'ms-sohail'}"><p>${p1} ${sc} ${p2}</p></div><p class="modal-meta">${t('date_field')}: ${fmtDate(m.date)} · ${t('status_field')}: ${statusLabel}${m.locked?' · 🔒 '+t('locked_label'):''}</p>`;}
 const acts=document.getElementById('modal-actions');let h='';const isAdmin=currentUser&&currentUser.role==='admin';const isPend=m.status==='pending';
 if(isAdmin){
   if(isPend) h+=`<button class="btn btn-success" onclick="confirmM()"><i class="ti ti-check"></i> ${t('validate')}</button>`;
-  if(!m.po) h+=`<button class="btn btn-primary" onclick="adminEdit(${mid})"><i class="ti ti-edit"></i> ${t('edit')}</button>`;
+  if(!m.po&&!m.np) h+=`<button class="btn btn-primary" onclick="adminEdit(${mid})"><i class="ti ti-edit"></i> ${t('edit')}</button>`;
   h+=`<button class="btn btn-danger" onclick="deleteMatch(${mid})"><i class="ti ti-trash"></i> ${t('delete_match')}</button>`;
 } else {
   if(isPend&&involvedPend(m)) h+=`<button class="btn btn-danger" onclick="disputeM()"><i class="ti ti-x"></i> ${t('dispute')}</button>`;
@@ -1848,6 +1889,7 @@ function renderHistorial(){
     'Liga: validado (admin)':'<i class="ti ti-shield-check" style="color:#22c55e"></i>',
     'Liga: editado':'<i class="ti ti-pencil" style="color:#f59e0b"></i>',
     'Liga: eliminado':'<i class="ti ti-trash" style="color:#ef4444"></i>',
+    'Liga: marcado no jugado':'<i class="ti ti-ban" style="color:#64748b"></i>',
     'Liga: en disputa':'<i class="ti ti-alert-triangle" style="color:#ef4444"></i>',
     'Liga: disputa resuelta':'<i class="ti ti-gavel" style="color:#8b5cf6"></i>',
     'Playoff: cargado':'<i class="ti ti-upload" style="color:#3b82f6"></i>',
@@ -2128,6 +2170,7 @@ function exportExcel(){
         players.forEach(q=>{
           if(p===q){row.push('');return;}
           const m=findMatch(cy.n,gid,p,q);
+          if(m&&m.np){row.push('NJ');return;}
           if(m&&m.status==='confirmed'){
             const sc=m.aName===p?m.sets.map(([a,b])=>a+'-'+b).join(' '):m.sets.map(([a,b])=>b+'-'+a).join(' ');
             row.push(sc);
@@ -2152,7 +2195,7 @@ function exportExcel(){
       pAOA.push(['Ronda','Jugador A','Jugador B','Resultado','Ganador']);
       tr.main.forEach((round,ri)=>{
         round.forEach(m=>{
-          const sc=m.sets?m.sets.map(([a,b])=>a+'-'+b).join(' '):'';
+          const sc=m.np?'No jugado':(m.sets?m.sets.map(([a,b])=>a+'-'+b).join(' '):'');
           pAOA.push([rName_export(ri,tr.main.length), m.a||'BYE', m.b||(m.a?'BYE':''), sc, m.w||'']);
         });
       });
@@ -2162,7 +2205,7 @@ function exportExcel(){
         pAOA.push(['Ronda','Jugador A','Jugador B','Resultado','Ganador']);
         tr.cons.forEach((round,ri)=>{
           round.forEach(m=>{
-            const sc=m.sets?m.sets.map(([a,b])=>a+'-'+b).join(' '):'';
+            const sc=m.np?'No jugado':(m.sets?m.sets.map(([a,b])=>a+'-'+b).join(' '):'');
             pAOA.push([rName_export(ri,tr.cons.length), m.a||'BYE', m.b||(m.a?'BYE':''), sc, m.w||'']);
           });
         });
@@ -2335,7 +2378,7 @@ function addSeedUI(ti){const sel=document.getElementById('po-add-'+ti);const nam
 
 function matchBox(m,ti,which,ri,mi,isFirstRound){
   const realMatch=!!(m.a&&m.b);const aw=realMatch&&m.w&&m.w===m.a,bw=realMatch&&m.w&&m.w===m.b;
-  const sc=m.sets?m.sets.map(([a,b])=>a+'-'+b).join(' '):'';
+  const sc=m.np?'No jugado':(m.sets?m.sets.map(([a,b])=>a+'-'+b).join(' '):'');
   const canLoad=m.a&&m.b&&!m.w&&(currentUser&&currentUser.role==='admin'||m.a===currentUser.name||m.b===currentUser.name);
   const emptyTxt=isFirstRound?'BYE':t('tbd');
   const isBYE_A=!m.a&&m.b;const isBYE_B=!m.b&&m.a;
@@ -2767,7 +2810,7 @@ function playerHistoryHTML(name){
   let out='',any=false;
   cycles.slice().sort((a,b)=>b.n-a.n).forEach(cy=>{
     if(!cy.groups)return;
-    const ms=matches.filter(m=>!m.po&&m.cycle===cy.n&&m.status==='confirmed'&&(m.aName===name||m.bName===name)).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.id-a.id));
+    const ms=matches.filter(m=>!m.po&&m.cycle===cy.n&&m.status==='confirmed'&&!m.np&&(m.aName===name||m.bName===name)).sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.id-a.id));
     if(!ms.length)return;
     any=true;let g=0,p=0;
     const rows=ms.map(m=>{
