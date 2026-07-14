@@ -3009,13 +3009,20 @@ function renderPlayerList(players, filter) {
           <div class="form-group"><label>Teléfono</label><input type="tel" id="pe-tel-${esc(p.name)}" value="${esc(p.tel||'')}"></div>
           <div class="form-group"><label>Grupo (Ciclo Activo)</label><select id="pe-grp-${esc(p.name)}"><option value="">Sin grupo</option>${gOpts}</select></div>
         </div>
+        <div class="form-group" style="margin-top:.25rem">
+          <label>Cambiar contraseña</label>
+          <div style="display:flex;gap:6px">
+            <input type="text" id="pe-pass-${esc(p.name)}" placeholder="Nueva contraseña (mín. 4)" autocomplete="new-password" style="flex:1">
+            <button class="btn btn-sm" style="white-space:nowrap" onclick="setPlayerPwd('${esc(p.name)}')"><i class="ti ti-key"></i> Aplicar</button>
+          </div>
+        </div>
    
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px;">
           <button class="btn btn-danger btn-sm" onclick="deletePlayerAdmin('${esc(p.name)}')"><i class="ti ti-trash"></i> ${t('delete_match').split(' ')[0]}</button>
           <div class="gap-sm">
             <button class="btn btn-sm" style="${isInactive?'background:#aaa':'background:#f59e0b'};color:#fff" onclick="toggleInactive('${esc(p.name)}')"><i class="ti ti-${isInactive?'user-check':'user-off'}"></i> ${isInactive?'Activar':'Inactivo'}</button>
             <button class="btn btn-success btn-sm" onclick="savePlayerAdmin('${esc(p.name)}')"><i class="ti ti-device-floppy"></i> ${t('save')}</button>
-            <button class="btn btn-danger btn-sm" onclick="resetPwd('${esc(p.name)}')"><i class="ti ti-refresh"></i> Clave</button>
+            <button class="btn btn-danger btn-sm" onclick="resetPwd('${esc(p.name)}')"><i class="ti ti-refresh"></i> Reset a tenis</button>
           </div>
         </div>
       </div>
@@ -3120,7 +3127,20 @@ function deletePlayerAdmin(name){
   persist(true);renderPerfil();toast(name+' ha sido eliminado.');
 }
 
-function resetPwd(name){const u=USERS[name];if(!u)return;u.pass=DEFAULT_PASS_HASH;persist(true);toast(tf('reset_done',{name}));}
+function resetPwd(name){const u=USERS[name];if(!u)return;if(u.role==='admin'||u.role==='superadmin'){toast('No se puede desde aquí.');return;}if(!confirm('¿Restablecer la contraseña de '+name+' a la clave por defecto "tenis"?'))return;u.pass=DEFAULT_PASS_HASH;persist(true);toast(tf('reset_done',{name}));}
+// El admin le pone una contraseña personalizada a un jugador (hasheada con PBKDF2 v2).
+async function setPlayerPwd(name){
+  const u=USERS[name];if(!u){toast('Jugador no encontrado.');return;}
+  if(u.role==='admin'||u.role==='superadmin'){toast('No se puede cambiar la contraseña del administrador desde aquí.');return;}
+  const inp=document.getElementById('pe-pass-'+name);
+  const pw=inp?(inp.value||'').trim():'';
+  if(!pw||pw.length<4){toast('La contraseña debe tener al menos 4 caracteres.');return;}
+  if(!confirm('¿Cambiar la contraseña de '+name+' a "'+pw+'"?'))return;
+  u.pass=await hashPwV2(pw);
+  if(inp)inp.value='';
+  persist(true);
+  toast(name+': contraseña actualizada.');
+}
 function toggleInactive(name){const u=USERS[name];if(!u)return;u.inactive=!u.inactive;persist(true);renderPerfil();toast(name+(u.inactive?' marcado como inactivo.':' activado.'));}
 function saveProfile(){const name=(document.getElementById('pf-name').value||'').trim();const email=(document.getElementById('pf-email').value||'').trim();const tel=(document.getElementById('pf-tel').value||'').trim();const a=document.getElementById('edit-profile-alert');if(!name){a.className='alert alert-err';a.textContent=t('name_empty');return;}const u=currentUser;const oldName=u.name;u.email=email;u.tel=tel;if(name!==oldName){if(USERS[name]&&name!==oldName){a.className='alert alert-err';a.textContent=t('name_exists');return;}renamePlayerEverywhere(oldName,name);currentUser=USERS[name];}persist(true);a.className='alert alert-ok';a.textContent=t('profile_saved');}
 async function changePw(){
