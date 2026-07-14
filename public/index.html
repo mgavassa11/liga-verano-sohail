@@ -2056,33 +2056,40 @@ function renderAdmin(){
     h+=`</div>`;
 
     h+=`<div class="card"><div class="section-lbl">Exportar / Importar</div>
-      <p class="legend-txt" style="margin-top:0">Exportá los resultados completos o los Play Offs para compartir, o importá resultados desde un Excel con el mismo formato.</p>
-      <div class="gap-sm mt-sm" style="flex-wrap:wrap">`;
+      <div style="margin-top:.35rem">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--text2);margin-bottom:.5rem">Exportar</div>
+      <p class="legend-txt" style="margin-top:0;margin-bottom:.65rem">Descargá los resultados completos o los Play Offs para compartir o imprimir.</p>
+      <div class="gap-sm" style="flex-wrap:wrap">`;
     cycles.forEach(cy => {
-        h += `<button class="btn" onclick="printCycle(${cy.n})"><i class="ti ti-printer"></i> PDF Ciclo ${cy.n}</button>`;
+        h += `<button class="btn btn-sm" onclick="printCycle(${cy.n})"><i class="ti ti-printer"></i> PDF Ciclo ${cy.n}</button>`;
     });
-    h += `<button class="btn" onclick="printPlayoffs()"><i class="ti ti-printer"></i> PDF Play Offs</button>`;
-    h += `<button class="btn btn-success" onclick="exportExcel()"><i class="ti ti-file-spreadsheet"></i> Exportar Excel</button>`;
+    h += `<button class="btn btn-sm" onclick="printPlayoffs()"><i class="ti ti-printer"></i> PDF Play Offs</button>`;
+    h += `<button class="btn btn-success btn-sm" onclick="exportExcel()"><i class="ti ti-file-spreadsheet"></i> Exportar Excel</button>`;
     h += `</div>
-      <div class="grp-sep"></div>
+      </div>
+      <div style="height:1px;background:var(--border);margin:1.1rem 0"></div>
+      <div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--text2);margin-bottom:.5rem">Importar</div>
+      <p class="legend-txt" style="margin-top:0;margin-bottom:.65rem">Cargá resultados de liga desde un Excel con el mismo formato de la plantilla.</p>
       <div class="gap-sm" style="flex-wrap:wrap">
         <button class="btn btn-sm" onclick="descargarPlantillaResultados()"><i class="ti ti-file-download"></i> Plantilla de resultados</button>
         <label class="btn btn-sm" style="cursor:pointer"><i class="ti ti-file-upload"></i> Importar resultados (Excel)
           <input type="file" accept=".xlsx,.xls" style="display:none" onchange="importarResultadosExcel(this)">
         </label>
       </div>
-      <p class="legend-txt" style="margin-bottom:0;font-size:11px">Se importan solo resultados de liga (grupos), no de Play Offs. Los resultados importados quedan validados. Un resultado ya cargado del mismo partido se reemplaza.</p>
+      <p class="legend-txt" style="margin-bottom:0;margin-top:.65rem;font-size:11px">Solo resultados de liga (grupos), no Play Offs. Quedan validados. Un resultado ya cargado del mismo partido se reemplaza.</p>
+      </div>
     </div>`;
 
-    h+=`<div class="card" style="border:1px solid var(--pri)"><div class="section-lbl"><i class="ti ti-shield-check"></i> Copia de seguridad (backup completo)</div>
-      <p class="legend-txt" style="margin-top:0">Descargá un backup con TODA la liga (jugadores, grupos, ciclos, resultados, ascensos/descensos, puntos, colores y nombre). Si algún día se pierde la data, con este archivo restaurás todo en un clic. <b>Recomendado: bajá un backup cada semana.</b></p>
+    h+=`<div class="card" style="border:1.5px solid var(--pri)"><div class="section-lbl"><i class="ti ti-shield-check"></i> Copia de seguridad (backup completo)</div>
+      <p class="legend-txt" style="margin-top:.35rem;margin-bottom:.85rem">Descargá un backup en Excel con TODA la liga (jugadores, grupos, ciclos, resultados, ascensos/descensos, puntos, colores y nombre). Si algún día se pierde la data, con este archivo restaurás todo en un clic. <b>Recomendado: bajá un backup cada semana.</b></p>
       <div class="gap-sm" style="flex-wrap:wrap">
-        <button class="btn btn-success" onclick="exportBackup()"><i class="ti ti-download"></i> Descargar backup (.json)</button>
-        <label class="btn btn-danger" style="cursor:pointer"><i class="ti ti-upload"></i> Restaurar backup (.json)
-          <input type="file" accept=".json,application/json" style="display:none" onchange="importBackup(this)">
+        <button class="btn btn-success btn-sm" onclick="exportBackup()"><i class="ti ti-download"></i> Descargar backup (Excel)</button>
+        <label class="btn btn-danger btn-sm" style="cursor:pointer"><i class="ti ti-upload"></i> Restaurar backup
+          <input type="file" accept=".xlsx,.xls,.json,application/json" style="display:none" onchange="importBackup(this)">
         </label>
       </div>
-      <p class="legend-txt" style="margin-bottom:0;font-size:11px">Restaurar REEMPLAZA todo el estado actual por el del archivo (pide confirmación). Es la forma segura de recuperar la liga completa.</p>
+      <p class="legend-txt" style="margin-bottom:0;margin-top:.7rem;font-size:11px">Restaurar REEMPLAZA todo el estado actual por el del archivo (pide confirmación). Acepta el backup en Excel o los .json viejos. Es la forma segura de recuperar la liga completa.</p>
     </div>`;
 
     h+=`<div class="card"><div class="section-lbl">${tf('edit_groups',{n:activeN})}</div><p class="legend-txt" style="margin-top:0">${t('edit_groups_hint')}</p><div style="margin-bottom:.75rem"><button class="btn btn-primary" onclick="applyGroupsUpdate()"><i class="ti ti-refresh"></i> Actualizar grupos</button></div>`;
@@ -3423,26 +3430,60 @@ function _hydrate(d){try{
 function exportBackup(){
   try{
     const json=_serialize();
-    const blob=new Blob([json],{type:'application/json'});
-    const url=URL.createObjectURL(blob);
+    const wb=XLSX.utils.book_new();
     const d=new Date();const pad=n=>String(n).padStart(2,'0');
     const stamp=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'_'+pad(d.getHours())+pad(d.getMinutes());
-    const a=document.createElement('a');
-    a.href=url;a.download='backup_liga_sohail_'+stamp+'.json';
-    document.body.appendChild(a);a.click();document.body.removeChild(a);
-    setTimeout(()=>URL.revokeObjectURL(url),2000);
-    if(typeof addLog==='function')addLog('Backup completo exportado (JSON)','');
-    toast('Backup completo descargado. Guardalo en un lugar seguro.');
+    // Hoja 1: Resumen (legible)
+    const resumen=[
+      ['Liga', LEAGUE_NAME||''],
+      ['Subtítulo', LEAGUE_SUBTITLE||''],
+      ['Fecha del backup', d.toLocaleString('es-ES')],
+      ['Jugadores', (ALLNAMES||[]).length],
+      ['Ciclos', (cycles||[]).length],
+      ['Partidos', (matches||[]).length],
+      ['', ''],
+      ['Copia de seguridad completa de la liga.', ''],
+      ['Para restaurarla, usá "Restaurar backup" en el panel de administración.', '']
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(resumen), 'Resumen');
+    // Hoja 2: Jugadores (legible)
+    const jug=[['Nombre','Email','Teléfono','Grupo (ciclo activo)','Estado']];
+    (ALLNAMES||[]).slice().sort((a,b)=>String(a).localeCompare(String(b),'es')).forEach(n=>{
+      const u=USERS[n]||{};const loc=(typeof findLoc==='function')?findLoc(n,activeN):null;
+      jug.push([n, u.email||'', u.tel||'', loc?groupName(loc.g):'', u.inactive?'Inactivo':'Activo']);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(jug), 'Jugadores');
+    // Hoja 3: técnica — estado completo para restaurar (NO editar)
+    const CHUNK=30000;
+    const bk=[['LIGA_SOHAIL_BACKUP_V1']];
+    for(let i=0;i<json.length;i+=CHUNK){ bk.push([json.slice(i,i+CHUNK)]); }
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(bk), '_LIGA_BACKUP');
+    XLSX.writeFile(wb,'backup_liga_sohail_'+stamp+'.xlsx');
+    if(typeof addLog==='function')addLog('Backup completo exportado (Excel)','');
+    toast('Backup completo descargado en Excel. Guardalo en un lugar seguro.');
   }catch(e){toast('Error al generar el backup: '+e.message);}
 }
 function importBackup(input){
   const file=input.files&&input.files[0];
   if(!file)return;
   if(!(currentUser&&currentUser.role==='admin')){toast(t('validated_only_admin'));input.value='';return;}
+  const nameLC=(file.name||'').toLowerCase();
+  const isXlsx=nameLC.endsWith('.xlsx')||nameLC.endsWith('.xls');
   const reader=new FileReader();
   reader.onload=async function(e){
     try{
-      const obj=JSON.parse(e.target.result);
+      let obj=null;
+      if(isXlsx){
+        const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+        const ws=wb.Sheets['_LIGA_BACKUP'];
+        if(!ws){toast('El Excel no tiene la hoja de backup. ¿Seguro que es un backup de la liga?');input.value='';return;}
+        const aoa=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+        if(!aoa.length||String((aoa[0]||[])[0]||'')!=='LIGA_SOHAIL_BACKUP_V1'){toast('El Excel no parece un backup válido de la liga.');input.value='';return;}
+        let json='';for(let i=1;i<aoa.length;i++){json+=String((aoa[i]||[])[0]||'');}
+        obj=JSON.parse(json);
+      } else {
+        obj=JSON.parse(e.target.result);
+      }
       if(!obj||typeof obj!=='object'||!obj.cycles||!obj.users){
         toast('El archivo no parece un backup válido de la liga.');input.value='';return;
       }
@@ -3452,13 +3493,14 @@ function importBackup(input){
       const ok=_hydrate(obj);
       if(!ok){toast('No se pudo aplicar el backup (formato inválido).');input.value='';return;}
       _loadOK=true;_dbEmpty=false;_hideLoadError();
-      if(typeof addLog==='function')addLog('Backup completo RESTAURADO (JSON)',{jugadores:nJug,partidos:nPart});
+      if(typeof addLog==='function')addLog('Backup completo RESTAURADO',{jugadores:nJug,partidos:nPart});
       await _doPersist();
       toast('Backup restaurado. Recargando…');
       setTimeout(()=>location.reload(),700);
     }catch(err){toast('Error al leer el backup: '+err.message);input.value='';}
   };
-  reader.readAsText(file);
+  if(isXlsx) reader.readAsArrayBuffer(file);
+  else reader.readAsText(file);
 }
 function initEmptyLeague(){
   if(!(currentUser&&currentUser.role==='admin')){toast(t('validated_only_admin'));return;}
