@@ -2,7 +2,7 @@
 // POST /api/login   { user, pass }  ->  { token, name, role, exp }
 // La contraseña se verifica ACÁ. El hash nunca sale del servidor.
 // =====================================================================
-const { hashV1, hashV2, signToken, readState, writeState, envOK, SESSION_MIN, SUPER_HASH } = require('./_lib');
+const { hashV1, hashV2, signToken, readState, writeState, envOK, filterForSession, SESSION_MIN, SUPER_HASH } = require('./_lib');
 
 // Límite de intentos en memoria. Complementa al coste del propio PBKDF2,
 // que ya hace lenta por diseño cualquier fuerza bruta.
@@ -57,11 +57,25 @@ module.exports = async function handler(req, res){
   fails.delete(user);
 
   // Upgrade silencioso a v2 (antes se hacía en el navegador, con los hashes expuestos).
+  // OJO con el orden: esto tiene que pasar ANTES de filtrar, porque filtrar borra
+  // los hashes del objeto y guardaríamos un estado sin contraseñas.
   if(!isSuper && stored !== v2){
     try { u.pass = v2; await writeState(state); } catch(e){ /* no bloquea el login */ }
   }
 
   const role = u.role || 'player';
   const exp  = Date.now() + SESSION_MIN * 60 * 1000;
-  return res.status(200).json({ token: signToken({ u: user, r: role, exp }), name: user, role, exp });
+  const session = { u: user, r: role, exp };
+
+  // Devolvemos el estado ya filtrado acá mismo. Antes el cliente tenía que hacer
+  // una segunda llamada a /api/state, que releía los mismos 222 KB de la base:
+  // dos viajes y dos arranques en frío para lo mismo.
+  res.setHeader('Cache-Control', 'no-store');
+  return res.status(200).json({
+    token: signToken(session),
+    name: user,
+    role,
+    exp,
+    state: filterForSession(state, session)
+  });
 };
