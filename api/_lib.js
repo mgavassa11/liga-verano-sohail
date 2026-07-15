@@ -54,6 +54,29 @@ function auth(req){
 
 function isAdminRole(r){ return r === 'admin' || r === 'superadmin'; }
 
+// Filtra el estado según quién pregunta. MUTA el objeto recibido: no hace falta
+// copiarlo porque readState() devuelve uno nuevo en cada request, y clonar 222 KB
+// en cada login costaba tiempo y memoria para nada.
+function filterForSession(state, session){
+  const admin = isAdminRole(session.r);
+  const users = state.users || {};
+  for(const name of Object.keys(users)){
+    const u = users[name];
+    if(!u || typeof u !== 'object') continue;
+    if(!admin){
+      // Un jugador NO recibe el hash de nadie (ni el suyo): el login es del servidor.
+      delete u.pass;
+      // Ni los datos de contacto de los demás. Los propios sí.
+      if(name !== session.u){
+        delete u.email;
+        delete u.tel;
+      }
+    }
+    // El admin sí recibe los hashes: los necesita para el panel de contraseñas.
+  }
+  return state;
+}
+
 // --- Acceso a Supabase con la clave secreta (se salta RLS) ---
 // OJO con los headers: las claves NUEVAS (sb_secret_...) no son JWT y Supabase
 // las rechaza si viajan en Authorization: Bearer. Las LEGACY (service_role, que
@@ -103,6 +126,6 @@ function envOK(res){
 }
 
 module.exports = {
-  hashV1, hashV2, signToken, verifyToken, auth, isAdminRole,
+  hashV1, hashV2, signToken, verifyToken, auth, isAdminRole, filterForSession,
   readState, writeState, envOK, SESSION_MIN, SUPER_HASH
 };
