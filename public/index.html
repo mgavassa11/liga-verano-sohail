@@ -5,7 +5,7 @@
   // Restaurar nombre y subtítulo sin flash (se ejecuta en DOMContentLoaded para tener acceso al DOM)
   var lsn=JSON.parse(localStorage.getItem('lsn')||'null');
   if(lsn){document.addEventListener('DOMContentLoaded',function(){var lt=document.getElementById('login-title');if(lt&&lsn.n)lt.textContent=lsn.n;var ls=document.getElementById('login-sub');if(ls&&lsn.s)ls.textContent=lsn.s;var ht=document.getElementById('hdr-title');if(ht&&lsn.n)ht.textContent=lsn.n;if(lsn.n)document.title=lsn.n;},false);}
-}catch(e){}})();</script><meta name="viewport" content="width=device-width,initial-scale=1"><title>Liga de Tenis Sohail</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><style>
+}catch(e){}})();</script><meta name="viewport" content="width=device-width,initial-scale=1"><title>Liga de Tenis Sohail</title><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css"><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--bg:#EEF2F7;--surface:#ffffff;--surface2:#EDF1F6;--text:#1b2433;--text2:#5b6675;--border:#e2e7ef;--border2:#c8d0dc;
 --pri:#1B4F9C;--priD:#0E3470;--soft:#E6F1FB;--acc:#F5C518;--accD:#D9A800;--accT:#0E3470;--winrow:#FAEEDA;--hl:#FFEDD5;
@@ -277,7 +277,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
       <div class="ball"><i class="ti ti-ball-tennis"></i></div><h1 id="login-title"></h1><p id="login-sub"></p>
     </div>
     <div class="login-body"><div class="login-err" id="login-err"></div>
-      <label id="lbl-user">Seleccioná tu usuario</label><select id="login-user"><option value=""></option></select>
+      <label id="lbl-user">Tu nombre de usuario</label><input type="text" id="login-user" placeholder="Nombre y apellido" autocomplete="username" spellcheck="false" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
       <label id="lbl-pass">Contraseña</label><input type="password" id="login-pass" placeholder="••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
       <button class="login-btn" id="login-btn" onclick="doLogin()">Entrar</button>
     </div>
@@ -348,15 +348,16 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
 
 <div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeM()"><div class="modal"><h3 id="modal-title">Resultado</h3><div id="modal-body"></div><div class="gap-sm" style="margin-top:1rem" id="modal-actions"></div></div></div>
 <script>
-const SUPA_URL = "https://lhiglzrttnltsxaqyhtx.supabase.co";
-const SUPA_KEY = "sb_publishable_usn0DucHGt5s2Am_c8M1CA_dLFwIAq7";
+// ===== La app ya NO habla directo con Supabase =====
+// Las claves viven como variables de entorno en Vercel y solo las ve el servidor.
+// Todo pasa por /api/login, /api/state y /api/save.
+let _token = null;   // token de sesión firmado, devuelto por /api/login
 
 // ===== SEGURIDAD: PBKDF2 con sistema de versiones (Web Crypto API) =====
-// v1: = SHA-256 (primera migración), v2: = PBKDF2 100k iteraciones (definitivo)
-// Ningún password se guarda en texto plano — ni en Supabase ni en el código.
+// El login ya NO se valida acá: lo hace el servidor. Estas funciones quedan
+// solo para que el admin pueda fijar contraseñas desde el panel.
 const PBKDF2_SALT      = 'LigaSohailSecure2026';
 const PBKDF2_ITERS     = 100000;
-const SUPER_HASH       = 'v2:cc4723310633dac413f5447c5b1c78417a3add4e308ba4f7bd5878f1dfb7cc2c';
 const DEFAULT_PASS_HASH= 'v1:8f5e91d22e332be45d55724423baad250490285a4e302b9eec0e6fd482164b83'; // hash por defecto v1
 const ADMIN_PASS_HASH  = 'v1:240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9'; // hash admin v1
 
@@ -862,41 +863,47 @@ function updateBadge() {
 }
 
 function initLogin(){
+  // Ya no se listan los usuarios: exponer los 60 nombres, sus grupos y quién es
+  // el super admin a cualquiera que abra la página era una fuga de datos.
   const s=document.getElementById('login-user');if(!s)return;
-  const prev = s.value;
-  s.innerHTML='';
-  const ph=document.createElement('option');ph.value='';ph.textContent=t('select_user');s.appendChild(ph);
-  const admin=document.createElement('option');admin.value='admin';admin.textContent=t('admin_org');s.appendChild(admin);
-  const c=cycles[activeN-1];const grps=(c&&c.groups)?c.groups:C1.map(p=>({players:[...p]}));
-  grps.forEach((g,i)=>{
-    const og=document.createElement('optgroup');og.label=groupName(i+1);
-    (g.players||[]).slice().sort((a,b)=>a.localeCompare(b,'es')).forEach(n=>{const label=USERS[n]&&USERS[n].inactive?n+' (inactivo)':n;og.appendChild(new Option(label,n));});
-    s.appendChild(og);
-  });
-  // Super Admin al final (abajo de todo)
-  const saOg=document.createElement('optgroup');saOg.label='Super Admin';
-  const saOpt=new Option('Super Administrador','superadmin');saOg.appendChild(saOpt);s.appendChild(saOg);
-  if(prev) s.value = prev;
+  s.value='';
+}
+function applyLeagueNameToDOM(){
+  const _lt=document.getElementById('login-title');if(_lt&&LEAGUE_NAME)_lt.textContent=LEAGUE_NAME;
+  const _ls=document.getElementById('login-sub');if(_ls&&LEAGUE_SUBTITLE)_ls.textContent=LEAGUE_SUBTITLE;
+  if(LEAGUE_NAME)document.title=LEAGUE_NAME;
+  // Cacheado para que la próxima pantalla de login ya muestre el nombre correcto
+  try{localStorage.setItem('lsn',JSON.stringify({n:LEAGUE_NAME,s:LEAGUE_SUBTITLE}));}catch(e){}
 }
 async function doLogin(){
-  const uv=document.getElementById('login-user').value,pv=document.getElementById('login-pass').value,e=document.getElementById('login-err');
-  if(!uv||!USERS[uv]){e.textContent=t('invalid_user');e.style.display='block';return;}
-  // Rate limiting check
-  if(!checkLoginAllowed(uv)){return;}
-  // Computar v1 y v2 en paralelo para comparación y posible upgrade
-  const [v1h,v2h]=await Promise.all([hashPwV1(pv),hashPwV2(pv)]);
-  const isSuper=(v2h===SUPER_HASH);
-  const stored=USERS[uv].pass;
-  const passMatch=(stored===v2h)||(stored===v1h);
-  if(!passMatch&&!isSuper){
-    registerFailedAttempt(uv,e);
-    return;
+  const uv=(document.getElementById('login-user').value||'').trim();
+  const pv=document.getElementById('login-pass').value;
+  const e=document.getElementById('login-err');
+  const btn=document.getElementById('login-btn');
+  if(!uv||!pv){e.textContent='Escribí tu usuario y tu contraseña.';e.style.display='block';return;}
+  if(btn){btn.disabled=true;btn.textContent='Entrando…';}
+  try{
+    // La contraseña se verifica en el servidor. Acá no hay ningún hash con qué compararla.
+    const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:uv,pass:pv})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){e.textContent=d.error||'Usuario o contraseña incorrectos.';e.style.display='block';return;}
+    _token=d.token;
+    // Recién con la sesión abierta el servidor nos manda los datos, ya filtrados.
+    await loadState();
+    if(!_loadOK){e.textContent='No se pudieron cargar los datos. Recargá la página.';e.style.display='block';_token=null;return;}
+    const u=USERS[d.name];
+    if(!u){e.textContent='No se encontró tu usuario en la liga.';e.style.display='block';_token=null;return;}
+    if(u.inactive&&d.role==='player'){e.textContent='Tu cuenta está inactiva. Contactá al administrador.';e.style.display='block';_token=null;return;}
+    currentUser=u;
+  }catch(err){
+    e.textContent='No se pudo conectar con el servidor. Probá de nuevo.';e.style.display='block';return;
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent=t('enter')||'Entrar';}
   }
-  clearFailedAttempts(uv);
-  // Upgrade silencioso de v1 a v2 al hacer login
-  if(stored===v1h&&!isSuper){USERS[uv].pass=v2h;persist(true);}
-  if(USERS[uv].inactive&&uv!=='admin'&&!isSuper){e.textContent='Tu cuenta está inactiva. Contactá al administrador.';e.style.display='block';return;}
-  currentUser=USERS[uv];e.style.display='none';
+  const uv2=currentUser.name;
+  e.style.display='none';
+  _lastActivity=Date.now();
+  applyLeagueNameToDOM();
   _lastActivity=Date.now();
   document.getElementById('login-screen').style.display='none';
   document.getElementById('main-app').style.display='block';
@@ -904,14 +911,15 @@ async function doLogin(){
   document.getElementById('cur-role').innerHTML=currentUser.role==='superadmin'?'<span class="role-badge" style="background:#8b5cf6">Super Admin</span>':currentUser.role==='admin'?'<span class="role-badge">'+t('role_admin')+'</span>':t('role_player');
   if(currentUser.role==='player'){const loc=findLoc(currentUser.name,activeN);if(loc)selGroup=loc.g;}
   // Redirigir al lugar correcto según el estado de la liga
-  if(playoff.started||(playoff.preview&&(USERS[uv].role==='admin'||USERS[uv].role==='superadmin'))){
+  if(playoff.started||(playoff.preview&&(currentUser.role==='admin'||currentUser.role==='superadmin'))){
     viewCycle='po';renderShell();showPlayoffView();renderSubTabs();updateHdr();
   } else {
     viewCycle=activeN;renderShell();showSub('grupos');
   }
+  document.getElementById('login-pass').value='';
   clearForm();
 }
-function doLogout(){closeM();clearForm();currentUser=null;_lastActivity=0;_sessionExpiring=false;document.getElementById('main-app').style.display='none';document.getElementById('login-screen').style.display='block';document.getElementById('login-pass').value='';initLogin();}
+function doLogout(){closeM();clearForm();currentUser=null;_token=null;_loadOK=false;_lastActivity=0;_sessionExpiring=false;document.getElementById('main-app').style.display='none';document.getElementById('login-screen').style.display='block';document.getElementById('login-pass').value='';initLogin();}
 function renderShell(){renderCycleBar();renderSubTabs();updateBadge();}
 function renderCycleBar(){const bar=document.getElementById('cycle-bar');let html='';cycles.forEach(c=>{const playable=!!c.groups;const isView=viewCycle===c.n;const icon=c.status==='finished'?'<i class="ti ti-circle-check st"></i>':c.status==='active'?'<i class="ti ti-player-play st"></i>':'<i class="ti ti-lock st"></i>';html+=`<button class="cycle-tab ${playable?'':'locked'} ${isView?'active':''}" onclick="${playable?`viewCyc(${c.n})`:''}">${icon} ${t('cycle')} ${c.n}</button>`;});const showPO=playoff.started||(playoff.preview&&currentUser&&currentUser.role==='admin');const poLabel=showPO?(playoff.preview&&!playoff.started?`<i class="ti ti-eye st"></i> ${t('playoffs_prev')}`:`<i class="ti ti-tournament st"></i> ${t('playoffs')}`):`<i class="ti ti-lock st"></i> ${t('playoffs')}`;html+=`<button class="cycle-tab ${showPO?'':'locked'} ${viewCycle==='po'?'active':''}" onclick="${showPO?`viewCyc('po')`:''}">${poLabel}</button>`;bar.innerHTML=html;}
 function renderSubTabs(){const tabs=document.getElementById('tabs');tabs.style.display='flex';const showPO=playoff.started||(playoff.preview&&currentUser&&currentUser.role==='admin');const inPO=viewCycle==='po';let tabs_def=[];if(showPO){tabs_def.push({id:'po',i:'ti-tournament',l:t('playoffs'),po:true});}else{tabs_def.push({id:'grupos',i:'ti-layout-grid',l:t('tab_grupos')});}tabs_def.push({id:'general',i:'ti-chart-bar',l:t('tab_general')});tabs_def.push({id:'cargar',i:'ti-upload',l:currentUser&&currentUser.role==='admin'?t('tab_cargar_admin'):t('tab_cargar')});tabs_def.push({id:'pendientes',i:'ti-bell',l:currentUser&&currentUser.role==='admin'?t('tab_pendientes_admin'):t('tab_pendientes'),b:true});tabs_def.push({id:'perfil',i:'ti-user',l:t('tab_perfil')});if(currentUser&&(currentUser.role==='admin'||currentUser.role==='superadmin')){tabs_def.push({id:'admin',i:'ti-settings',l:t('tab_admin')});tabs_def.push({id:'historial',i:'ti-history',l:'Historial'});}tabs.innerHTML=tabs_def.map(x=>{if(x.po){const active=inPO;return '<button class="tab'+(active?' active':'')+'" id="tab-po" onclick="viewCyc(\'po\')"><i class="ti ti-tournament" aria-hidden="true"></i> '+x.l+'</button>';}const active=!inPO&&subView===x.id;const extraCls=(x.id==='historial'||x.id==='admin')?' tab-sm':'';return '<button class="tab'+extraCls+(active?' active':'')+'" id="tab-'+x.id+'" onclick="showSub(\''+x.id+'\')" ><i class="ti '+x.i+'" aria-hidden="true"></i> '+x.l+(x.b?' <span class="tab-n" id="pend-n" style="display:none">0</span>':'')+'</button>';}).join('');}
@@ -1860,34 +1868,25 @@ function limpiarParticipantesUI(){ mostrarModalReiniciar(); }
 
 // 4. Nueva liga — genera un index.html listo para nuevo repo + Supabase
 async function nuevaLigaUI(){
-  const info='NUEVA LIGA\n\nEsto genera un archivo index.html configurado para una liga nueva.\n\nNecesitás:\n1. Crear un nuevo proyecto en supabase.com\n2. Copiar la URL y la clave (publishable key)\n3. Ingresar esos datos aquí\n4. Descargar el archivo y subirlo a un nuevo repo de GitHub\n5. Conectar ese repo a Vercel = nueva liga en nuevo URL';
-  if(!confirm(info+' \n\n¿Tenés los datos de Supabase listos?'))return;
-  const supaUrl=prompt('URL de Supabase para la nueva liga:\n(Ejemplo: https://abcxyz123.supabase.co)');
-  if(!supaUrl||!supaUrl.includes('supabase'))return;
-  const supaKey=prompt('Publishable Key de Supabase para la nueva liga:');
-  if(!supaKey)return;
+  const info='NUEVA LIGA\n\nGenera un archivo index.html con el nombre de la liga nueva.\n\nOJO: ahora las credenciales NO van en el archivo, van en Vercel.\n\nPasos:\n1. Crear un proyecto nuevo en supabase.com y correr supabase_lockdown.sql\n2. Subir este archivo + la carpeta /api a un repo nuevo de GitHub\n3. Conectar el repo a Vercel\n4. En Vercel > Settings > Environment Variables cargar:\n   SUPABASE_URL, SUPABASE_SERVICE_KEY, SESSION_SECRET\n5. Listo: nueva liga en nuevo URL, con su propia base aislada';
+  if(!confirm(info+' \n\n¿Seguimos?'))return;
   const nombre=prompt('Nombre de la nueva liga (aparece en el título):','Liga de Tenis');
   if(!nombre)return;
   toast('Generando archivo...');
   try{
     const resp=await fetch(location.href);
     let src=await resp.text();
-    // Reemplazar credenciales
-    src=src.replace(/const SUPA_URL\s*=\s*"[^"]*"/,`const SUPA_URL = "${supaUrl}"`);
-    src=src.replace(/const SUPA_KEY\s*=\s*"[^"]*"/,`const SUPA_KEY = "${supaKey}"`);
-    // Reemplazar título
+    // Solo se reemplaza el título: las credenciales viven en el servidor.
     src=src.replace(/<title>[^<]*<\/title>/,`<title>${nombre}</title>`);
     src=src.replace(/Liga de Tenis Sohail/g,nombre);
-    // Descargar
     const blob=new Blob([src],{type:'text/html'});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
     a.href=url;a.download='index.txt';a.click();
     URL.revokeObjectURL(url);
-    toast('✅ Archivo descargado. Subilo a un nuevo repo de GitHub y conectalo a Vercel. La base de datos de esta liga queda intacta.');
+    toast('✅ Archivo descargado. Subilo con la carpeta /api a un repo nuevo y cargá las variables de entorno en Vercel. La base de esta liga queda intacta.');
   }catch(err){
     toast('Error al generar el archivo: '+err.message);
-    alert('Si el error persiste, descargá el index.html manualmente, reemplazá SUPA_URL y SUPA_KEY, y subilo al nuevo repo.');
   }
 }
 
@@ -3154,9 +3153,16 @@ async function setPlayerPwd(name){
   const pw=inp?(inp.value||'').trim():'';
   if(!pw||pw.length<4){toast('La contraseña debe tener al menos 4 caracteres.');return;}
   if(!confirm('¿Cambiar la contraseña de '+name+' a "'+pw+'"?'))return;
-  u.pass=await hashPwV2(pw);
+  try{
+    const r=await fetch('/api/password',{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+_token},
+      body:JSON.stringify({target:name,newPass:pw})
+    });
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){toast(d.error||'No se pudo cambiar la contraseña.');return;}
+  }catch(e){toast('No se pudo conectar con el servidor.');return;}
   if(inp)inp.value='';
-  persist(true);
   toast(name+': contraseña actualizada.');
 }
 function toggleInactive(name){const u=USERS[name];if(!u)return;u.inactive=!u.inactive;persist(true);renderPerfil();toast(name+(u.inactive?' marcado como inactivo.':' activado.'));}
@@ -3164,18 +3170,20 @@ function saveProfile(){const name=(document.getElementById('pf-name').value||'')
 async function changePw(){
   const o=document.getElementById('pw-old').value,n=document.getElementById('pw-new').value,n2=document.getElementById('pw-new2').value,a=document.getElementById('pw-alert');
   function al(m,cl){a.className='alert alert-'+cl;a.textContent=m;}
-  const [oldV1,oldV2]=await Promise.all([hashPwV1(o),hashPwV2(o)]);
-  const stored=currentUser.pass;
-  const oldOk=(stored===oldV2)||(stored===oldV1)||(oldV2===SUPER_HASH&&currentUser.role==='admin');
-  if(!oldOk){al(t('pass_wrong'),'err');return;}
   if(!n||n.length<4){al(t('pass_short'),'err');return;}
   if(n!==n2){al(t('pass_no_match'),'err');return;}
-  const newHash=await hashPwV2(n); // siempre guardar como v2
-  const key=currentUser.role==='admin'?'admin':currentUser.name;
-  USERS[key].pass=newHash;currentUser.pass=newHash;
+  // La contraseña anterior la verifica el servidor: acá ya no hay ningún hash.
+  try{
+    const r=await fetch('/api/password',{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+_token},
+      body:JSON.stringify({oldPass:o,newPass:n})
+    });
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){al(d.error||t('pass_wrong'),'err');return;}
+  }catch(e){al('No se pudo conectar con el servidor.','err');return;}
   al(t('pass_ok'),'ok');
   ['pw-old','pw-new','pw-new2'].forEach(id=>document.getElementById(id).value='');
-  persist(true);
 }
 
 let poFormClub = '';
@@ -3376,7 +3384,7 @@ function applyPoPending(rec){storePo(rec.ti,rec.which,rec.poNames[0],rec.poNames
 let _toastTimer=null;function toast(m){let t=document.getElementById('_toast');if(!t){t=document.createElement('div');t.id='_toast';t.className='toast';document.body.appendChild(t);}t.textContent=m;t.style.opacity='1';if(_toastTimer)clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>{t.style.opacity='0';_toastTimer=null;},3800);}
 
 // ===== CONEXIÓN A SUPABASE — guardado instantáneo =====
-let _sb=null,_lastSaved=null,_saving=false,_pendingForce=false,_loadOK=false,_dbEmpty=false;
+let _lastSaved=null,_saving=false,_pendingForce=false,_loadOK=false,_dbEmpty=false;
 function _serialize(){
   return JSON.stringify({cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,PO_FECHAS,ALLNAMES,users:USERS,PUNTOS,LOG,LEAGUE_NAME,LEAGUE_SUBTITLE,LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC,LEAGUE_COLOR_HL});
 }
@@ -3538,30 +3546,29 @@ async function migratePasswords(){
 
 try{const sl=localStorage.getItem('liga_lang');if(sl&&(sl==='es'||sl==='en'))LANG=sl;}catch(e){}
 
-function initSupabase(){
-  try{
-    if(typeof window!=='undefined'&&window.supabase&&typeof SUPA_URL==='string'&&SUPA_URL&&SUPA_URL.indexOf('PEGA_')<0){
-      _sb=window.supabase.createClient(SUPA_URL,SUPA_KEY);
-      console.log('✅ Supabase conectado a:',SUPA_URL);
-    }else{
-      console.warn('⚠️ Supabase NO conectado — revisá SUPA_URL y SUPA_KEY');
-    }
-  }catch(e){_sb=null;console.error('❌ Error al conectar Supabase:',e);}
-}
+// initSupabase() eliminado: la app ya no se conecta a Supabase desde el navegador.
 
 async function loadState(){
-  if(!_sb){console.warn('⚠️ loadState: sin conexión a Supabase');_showLoadError('Sin conexión con la base de datos. No se guardará nada hasta reconectar.');return;}
-  console.log('🔄 Cargando estado desde Supabase...');
-  let r;
-  try{r=await _sb.from('liga_state').select('data').eq('id',1).maybeSingle();}
-  catch(e){console.error('❌ Excepción al leer estado:',e);_showLoadError('No se pudo leer la base de datos. Para proteger tus datos NO se guardará nada. Recargá en unos segundos.');throw e;}
-  if(r.error){console.error('❌ Error al cargar estado:',r.error);_showLoadError('Error al leer la base de datos. Para proteger tus datos NO se guardará nada. Recargá en unos segundos.');throw r.error;}
-  if(r.data&&r.data.data){
-    const ok=_hydrate(typeof r.data.data==='string'?JSON.parse(r.data.data):r.data.data);
+  if(!_token){console.warn('⚠️ loadState sin sesión');return;}
+  console.log('🔄 Cargando estado desde el servidor...');
+  let d;
+  try{
+    const r=await fetch('/api/state',{headers:{Authorization:'Bearer '+_token},cache:'no-store'});
+    if(r.status===401){_token=null;_showLoadError('Tu sesión expiró. Volvé a entrar.');return;}
+    d=await r.json().catch(()=>({}));
+    if(!r.ok){_showLoadError(d.error||'Error al leer la base de datos. Para proteger tus datos NO se guardará nada.');return;}
+  }catch(e){
+    console.error('❌ Excepción al leer estado:',e);
+    _showLoadError('No se pudo leer la base de datos. Para proteger tus datos NO se guardará nada. Recargá en unos segundos.');
+    return;
+  }
+  if(d&&d.state){
+    const ok=_hydrate(d.state);
     if(!ok){console.error('❌ Hydrate falló — autosave BLOQUEADO');_showLoadError('Los datos se leyeron pero no se pudieron aplicar. Para proteger tu información NO se guardará nada. Recargá.');return;}
     _lastSaved=_serialize();
     _loadOK=true;
-    console.log('✅ Estado cargado correctamente desde Supabase');
+    _hideLoadError();
+    console.log('✅ Estado cargado correctamente');
   }else{
     // Lectura VACÍA: puede ser un fallo transitorio, NO necesariamente una liga vacía real.
     // NUNCA sobrescribimos acá. El autosave queda bloqueado (_loadOK sigue false).
@@ -3572,21 +3579,27 @@ async function loadState(){
 }
 
 async function _doPersist(){
-  if(!_sb)return;
+  if(!_token)return;
   const json=_serialize();
   try{
-    const r=await _sb.from('liga_state').upsert({id:1,data:json});
-    if(!r.error){
+    const r=await fetch('/api/save',{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:'Bearer '+_token},
+      body:JSON.stringify({state:JSON.parse(json)})
+    });
+    if(r.ok){
       _lastSaved=json;
-      console.log('✅ Guardado en Supabase OK ('+ new Date().toLocaleTimeString()+')');
+      console.log('✅ Guardado OK ('+ new Date().toLocaleTimeString()+')');
     }else{
-      console.error('❌ Error al guardar en Supabase:',r.error);
+      const d=await r.json().catch(()=>({}));
+      if(r.status===401){_token=null;_showLoadError('Tu sesión expiró. Volvé a entrar para seguir guardando.');}
+      console.error('❌ Error al guardar:',d.error||r.status);
     }
   }catch(e){console.error('❌ Excepción al guardar:',e);}
 }
 
 async function persist(force){
-  if(!_sb)return;
+  if(!_token)return;
   if(!_loadOK){console.warn('⛔ persist bloqueado: el estado no se cargó correctamente. No se guarda para no pisar datos buenos.');return;}
   const json=_serialize();
   if(!force&&json===_lastSaved)return;
@@ -3596,11 +3609,7 @@ async function persist(force){
   }
   _saving=true;
   _pendingForce=false;
-  try{
-    const r=await _sb.from('liga_state').upsert({id:1,data:json});
-    if(!r.error){_lastSaved=json;}
-    else{console.warn('Supabase save error:',r.error);}
-  }catch(e){console.warn('Supabase save exception:',e);}
+  await _doPersist();
   _saving=false;
   if(_pendingForce){
     _pendingForce=false;
@@ -3618,16 +3627,11 @@ if(typeof window!=='undefined'&&window.addEventListener){
   window.addEventListener('beforeunload',function(){persist(true);});
 }
 
-initSupabase();
-(async function(){
-  try{await loadState();await migratePasswords();
-    // Aplicar nombre/subtítulo al DOM antes de mostrar login
-    const _lt=document.getElementById('login-title');if(_lt&&LEAGUE_NAME)_lt.textContent=LEAGUE_NAME;
-    const _ls=document.getElementById('login-sub');if(_ls&&LEAGUE_SUBTITLE)_ls.textContent=LEAGUE_SUBTITLE;
-    if(LEAGUE_NAME)document.title=LEAGUE_NAME;
-  }catch(e){console.warn('Supabase load error:',e);}
+// La app arranca SIN datos. Nada se pide al servidor hasta que alguien entre.
+// El nombre y el subtítulo de la liga los aplica el script del <head> desde
+// localStorage, así la pantalla de login no necesita leer la base.
+(function(){
   initLogin();
   updateLangUI();
-  if(typeof currentUser!=='undefined'&&currentUser){renderAll();}
 })();
 </script></body></html>
