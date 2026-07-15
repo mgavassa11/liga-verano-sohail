@@ -892,13 +892,15 @@ async function initLogin(){
   const opt=u=>new Option(u.i?u.v+' (inactivo)':u.v,u.v);
   // 1) El administrador, arriba de todo
   const admin=document.createElement('option');admin.value='admin';admin.textContent=t('admin_org');s.appendChild(admin);
-  // 2) Los grupos del ciclo activo, cada uno con sus jugadores en orden alfabético
-  (d.groups||[]).forEach(g=>{
-    const og=document.createElement('optgroup');og.label=groupName(g.g);
-    (g.players||[]).forEach(u=>og.appendChild(opt(u)));
+  // 2) Las secciones: grupos del ciclo activo, o cuadros si están los playoffs
+  const esPO=d.mode==='po';
+  (d.sections||[]).forEach(sec=>{
+    const og=document.createElement('optgroup');
+    og.label=esPO?('Cuadro '+sec.k):groupName(sec.k);
+    (sec.players||[]).forEach(u=>og.appendChild(opt(u)));
     s.appendChild(og);
   });
-  // 3) Jugadores que no están en ningún grupo del ciclo activo (si los hubiera)
+  // 3) Jugadores que no cayeron en ninguna sección (si los hubiera)
   if((d.loose||[]).length){
     const og=document.createElement('optgroup');og.label='Sin grupo';
     d.loose.forEach(u=>og.appendChild(opt(u)));
@@ -909,6 +911,10 @@ async function initLogin(){
   saOg.appendChild(new Option('Super Administrador','superadmin'));
   s.appendChild(saOg);
   if(prev)s.value=prev;
+  // Precalentar /api/login: un GET devuelve 405 al instante sin tocar la base,
+  // pero deja la función levantada. Así el arranque en frío no se lo come el
+  // jugador cuando aprieta Entrar.
+  fetch('/api/login',{method:'GET'}).catch(()=>{});
 }
 function applyLeagueNameToDOM(){
   const _lt=document.getElementById('login-title');if(_lt&&LEAGUE_NAME)_lt.textContent=LEAGUE_NAME;
@@ -930,8 +936,16 @@ async function doLogin(){
     const d=await r.json().catch(()=>({}));
     if(!r.ok){e.textContent=d.error||'Usuario o contraseña incorrectos.';e.style.display='block';return;}
     _token=d.token;
-    // Recién con la sesión abierta el servidor nos manda los datos, ya filtrados.
-    await loadState();
+    // El estado ya viene en la respuesta del login: no hace falta una segunda
+    // llamada a /api/state, que releía los mismos 222 KB de la base.
+    if(d.state){
+      const ok=_hydrate(d.state);
+      if(!ok){e.textContent='Los datos se leyeron pero no se pudieron aplicar. Recargá la página.';e.style.display='block';_token=null;return;}
+      _lastSaved=_serialize();
+      _loadOK=true;
+    }else{
+      await loadState();
+    }
     if(!_loadOK){e.textContent='No se pudieron cargar los datos. Recargá la página.';e.style.display='block';_token=null;return;}
     const u=USERS[d.name];
     if(!u){e.textContent='No se encontró tu usuario en la liga.';e.style.display='block';_token=null;return;}
