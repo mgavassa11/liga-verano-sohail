@@ -866,15 +866,30 @@ async function initLogin(){
   // La lista sale de /api/users, que devuelve SOLO nombres: ni grupos, ni roles,
   // ni quién es el super admin, ni emails, ni hashes.
   const s=document.getElementById('login-user');if(!s)return;
+  const e=document.getElementById('login-err');
   const prev=s.value;
   s.innerHTML='';
   const ph=document.createElement('option');ph.value='';ph.textContent=t('select_user');s.appendChild(ph);
   let list=[];
   try{
     const r=await fetch('/api/users',{cache:'no-store'});
+    if(!r.ok){
+      const d=await r.json().catch(()=>({}));
+      const msg=r.status===404
+        ? 'Falta el archivo api/users.js en el repo (404).'
+        : 'El servidor devolvió '+r.status+'. '+(d.error||'');
+      if(e){e.textContent='No se pudo cargar la lista de usuarios. '+msg;e.style.display='block';}
+      console.error('/api/users →',r.status,d);
+      return;
+    }
     const d=await r.json().catch(()=>({}));
     list=Array.isArray(d.users)?d.users:[];
-  }catch(e){console.warn('No se pudo cargar la lista de usuarios:',e);}
+    if(e)e.style.display='none';
+  }catch(err){
+    if(e){e.textContent='El navegador bloqueó la llamada a /api/users. Revisá que vercel.json tenga connect-src \'self\'.';e.style.display='block';}
+    console.error('fetch /api/users falló (probable CSP):',err);
+    return;
+  }
   list.sort((a,b)=>String(a.l||'').localeCompare(String(b.l||''),'es'));
   list.forEach(u=>{s.appendChild(new Option(u.i?u.l+' (inactivo)':u.l,u.v));});
   if(prev)s.value=prev;
