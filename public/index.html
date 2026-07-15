@@ -277,7 +277,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
       <div class="ball"><i class="ti ti-ball-tennis"></i></div><h1 id="login-title"></h1><p id="login-sub"></p>
     </div>
     <div class="login-body"><div class="login-err" id="login-err"></div>
-      <label id="lbl-user">Tu nombre de usuario</label><input type="text" id="login-user" placeholder="Nombre y apellido" autocomplete="username" spellcheck="false" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+      <label id="lbl-user">Seleccioná tu usuario</label><select id="login-user"><option value=""></option></select>
       <label id="lbl-pass">Contraseña</label><input type="password" id="login-pass" placeholder="••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
       <button class="login-btn" id="login-btn" onclick="doLogin()">Entrar</button>
     </div>
@@ -862,11 +862,22 @@ function updateBadge() {
   }
 }
 
-function initLogin(){
-  // Ya no se listan los usuarios: exponer los 60 nombres, sus grupos y quién es
-  // el super admin a cualquiera que abra la página era una fuga de datos.
+async function initLogin(){
+  // La lista sale de /api/users, que devuelve SOLO nombres: ni grupos, ni roles,
+  // ni quién es el super admin, ni emails, ni hashes.
   const s=document.getElementById('login-user');if(!s)return;
-  s.value='';
+  const prev=s.value;
+  s.innerHTML='';
+  const ph=document.createElement('option');ph.value='';ph.textContent=t('select_user');s.appendChild(ph);
+  let list=[];
+  try{
+    const r=await fetch('/api/users',{cache:'no-store'});
+    const d=await r.json().catch(()=>({}));
+    list=Array.isArray(d.users)?d.users:[];
+  }catch(e){console.warn('No se pudo cargar la lista de usuarios:',e);}
+  list.sort((a,b)=>String(a.l||'').localeCompare(String(b.l||''),'es'));
+  list.forEach(u=>{s.appendChild(new Option(u.i?u.l+' (inactivo)':u.l,u.v));});
+  if(prev)s.value=prev;
 }
 function applyLeagueNameToDOM(){
   const _lt=document.getElementById('login-title');if(_lt&&LEAGUE_NAME)_lt.textContent=LEAGUE_NAME;
@@ -2670,7 +2681,10 @@ function addPlayerUI(){
   const idxA = ALLNAMES.indexOf(full);
   if(idxA>=0) ALLNAMES.splice(idxA,1);
   addPlayerToCycle(full,gid);
-  initLogin();renderPerfil();toast(tf('add_done',{name:full,g:groupName(gid)}));persist(true);
+  renderPerfil();toast(tf('add_done',{name:full,g:groupName(gid)}));
+  // Primero guardar, DESPUÉS refrescar la lista: /api/users lee de la base,
+  // así que si refrescáramos antes traeríamos la lista sin el jugador nuevo.
+  persist(true).then(initLogin);
 }
 function setDestino(gid,pos,val){ensureDestino(gid,pos+1);DESTINO[gid][pos]='G'+val;if(subView==='admin')renderAdmin();toast(groupName(gid)+' · '+(pos+1)+'º → '+groupName(+val));persist(true);}
 function destinoCard(){
