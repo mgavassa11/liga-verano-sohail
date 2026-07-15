@@ -863,35 +863,51 @@ function updateBadge() {
 }
 
 async function initLogin(){
-  // La lista sale de /api/users, que devuelve SOLO nombres: ni grupos, ni roles,
-  // ni quién es el super admin, ni emails, ni hashes.
+  // La estructura (quién está en qué grupo del ciclo activo) la arma /api/users.
+  // Las etiquetas las pone el navegador con groupName(), que es solo "Grupo N".
   const s=document.getElementById('login-user');if(!s)return;
   const e=document.getElementById('login-err');
   const prev=s.value;
   s.innerHTML='';
   const ph=document.createElement('option');ph.value='';ph.textContent=t('select_user');s.appendChild(ph);
-  let list=[];
+  let d={};
   try{
     const r=await fetch('/api/users',{cache:'no-store'});
     if(!r.ok){
-      const d=await r.json().catch(()=>({}));
+      const err=await r.json().catch(()=>({}));
       const msg=r.status===404
         ? 'Falta el archivo api/users.js en el repo (404).'
-        : 'El servidor devolvió '+r.status+'. '+(d.error||'');
+        : 'El servidor devolvió '+r.status+'. '+(err.error||'');
       if(e){e.textContent='No se pudo cargar la lista de usuarios. '+msg;e.style.display='block';}
-      console.error('/api/users →',r.status,d);
+      console.error('/api/users →',r.status,err);
       return;
     }
-    const d=await r.json().catch(()=>({}));
-    list=Array.isArray(d.users)?d.users:[];
+    d=await r.json().catch(()=>({}));
     if(e)e.style.display='none';
   }catch(err){
     if(e){e.textContent='El navegador bloqueó la llamada a /api/users. Revisá que vercel.json tenga connect-src \'self\'.';e.style.display='block';}
     console.error('fetch /api/users falló (probable CSP):',err);
     return;
   }
-  list.sort((a,b)=>String(a.l||'').localeCompare(String(b.l||''),'es'));
-  list.forEach(u=>{s.appendChild(new Option(u.i?u.l+' (inactivo)':u.l,u.v));});
+  const opt=u=>new Option(u.i?u.v+' (inactivo)':u.v,u.v);
+  // 1) El administrador, arriba de todo
+  const admin=document.createElement('option');admin.value='admin';admin.textContent=t('admin_org');s.appendChild(admin);
+  // 2) Los grupos del ciclo activo, cada uno con sus jugadores en orden alfabético
+  (d.groups||[]).forEach(g=>{
+    const og=document.createElement('optgroup');og.label=groupName(g.g);
+    (g.players||[]).forEach(u=>og.appendChild(opt(u)));
+    s.appendChild(og);
+  });
+  // 3) Jugadores que no están en ningún grupo del ciclo activo (si los hubiera)
+  if((d.loose||[]).length){
+    const og=document.createElement('optgroup');og.label='Sin grupo';
+    d.loose.forEach(u=>og.appendChild(opt(u)));
+    s.appendChild(og);
+  }
+  // 4) Super Admin, abajo de todo
+  const saOg=document.createElement('optgroup');saOg.label='Super Admin';
+  saOg.appendChild(new Option('Super Administrador','superadmin'));
+  s.appendChild(saOg);
   if(prev)s.value=prev;
 }
 function applyLeagueNameToDOM(){
