@@ -2,32 +2,11 @@
 // GET /api/state    (Authorization: Bearer <token>)  ->  { state }
 // Devuelve el estado FILTRADO según quién pregunta.
 // Sin token válido no devuelve absolutamente nada.
+//
+// El login ya trae el estado en su propia respuesta, así que esto queda
+// para recargas y para cualquier refresco posterior.
 // =====================================================================
-const { auth, readState, envOK, isAdminRole } = require('./_lib');
-
-function filterForSession(state, session){
-  const admin = isAdminRole(session.r);
-  const out   = JSON.parse(JSON.stringify(state));
-  const users = out.users || {};
-
-  for(const name of Object.keys(users)){
-    const u = users[name];
-    if(!u || typeof u !== 'object') continue;
-
-    if(!admin){
-      // Un jugador NO recibe el hash de nadie (ni el suyo): el login es del servidor.
-      delete u.pass;
-      // Ni los datos de contacto de los demás. Los propios sí.
-      if(name !== session.u){
-        delete u.email;
-        delete u.tel;
-      }
-    }
-    // El admin sí recibe los hashes, porque los necesita para el panel de
-    // gestión de contraseñas. Es el único rol que los ve.
-  }
-  return out;
-}
+const { auth, readState, envOK, filterForSession } = require('./_lib');
 
 module.exports = async function handler(req, res){
   if(!envOK(res)) return;
