@@ -58,8 +58,8 @@ module.exports = async function handler(req, res){
   }
   incoming._v = curV + 1;
 
-  const admin    = sesionEsAdmin(session);
   const curUsers = current.users || {};
+  const admin    = sesionEsAdmin(session, curUsers);
 
   // =====================================================================
   // EL SUPER ADMINISTRADOR ES ÚNICO E INTRANSFERIBLE
