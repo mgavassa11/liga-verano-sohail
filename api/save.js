@@ -72,10 +72,17 @@ module.exports = async function handler(req, res){
     .filter(n => o[n] && o[n].role === 'superadmin')
     .sort().join('|');
 
-  if(supers(curUsers) !== supers(incoming.users)){
-    return res.status(403).json({
-      error: 'El super administrador es único: no se puede crear, duplicar, transferir ni eliminar.'
-    });
+  const superAntes = supers(curUsers), superAhora = supers(incoming.users);
+  if(superAntes !== superAhora){
+    // Única excepción: una base vieja que no tiene superadmin y el cliente crea
+    // el primero (la migración de _hydrate). Solo con la clave canónica: así un
+    // admin no puede aprovechar el hueco para coronarse a sí mismo.
+    const esMigracion = superAntes === '' && superAhora === 'superadmin';
+    if(!esMigracion){
+      return res.status(403).json({
+        error: 'El super administrador es único: no se puede crear, duplicar, transferir ni eliminar.'
+      });
+    }
   }
 
   // =====================================================================
@@ -95,6 +102,22 @@ module.exports = async function handler(req, res){
   for(const n of Object.keys(incoming.users)){
     const cu = curUsers[n];
     if(cu && incoming.users[n]) incoming.users[n].pass = cu.pass;
+  }
+
+  // Los roles válidos son solo estos tres. Y 'superadmin' ya está blindado arriba,
+  // así que un admin solo puede mover gente entre 'player' y 'admin'.
+  for(const n of Object.keys(incoming.users)){
+    const r = incoming.users[n] && incoming.users[n].role;
+    if(r !== 'player' && r !== 'admin' && r !== 'superadmin'){
+      return res.status(400).json({ error: 'Rol inválido para "' + n.slice(0, 40) + '".' });
+    }
+  }
+
+  // Siempre tiene que quedar al menos un admin: si no, nadie puede volver a
+  // administrar la liga salvo el super admin.
+  const cuentaAdmins = o => Object.keys(o || {}).filter(n => o[n] && o[n].role === 'admin').length;
+  if(cuentaAdmins(curUsers) > 0 && cuentaAdmins(incoming.users) === 0){
+    return res.status(403).json({ error: 'Tiene que quedar al menos un administrador.' });
   }
 
   if(!admin){
