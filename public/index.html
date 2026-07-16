@@ -3545,7 +3545,14 @@ function _hydrate(d){try{
   });
 }
   if(Array.isArray(d.ALLNAMES))ALLNAMES=d.ALLNAMES;
-  if(d.users){Object.keys(USERS).forEach(k=>delete USERS[k]);Object.assign(USERS,d.users);}
+  if(d.users){Object.keys(USERS).forEach(k=>delete USERS[k]);Object.assign(USERS,d.users);
+    // USERS se reemplaza entero, así que currentUser quedaba apuntando al objeto
+    // VIEJO: si mientras tanto le quitaron el rol de admin, su navegador seguía
+    // mostrándole los botones con el isAdmin viejo. Se lo re-apunta al fresco.
+    if(currentUser && currentUser.key && USERS[currentUser.key]){
+      const _k=currentUser.key; currentUser=USERS[_k]; currentUser.key=_k;
+    }
+  }
   // Migración: un jugador ascendido con la versión anterior quedó con role:'admin'
   // y desapareció de los grupos, la clasificación y su historial. Se lo devuelve
   // a 'player' conservándole la capacidad de administrar.
