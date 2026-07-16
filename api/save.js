@@ -3,7 +3,7 @@
 // Sin token no se escribe nada. Y lo que un jugador nunca vio,
 // tampoco lo puede pisar: se reinyecta desde la base.
 // =====================================================================
-const { auth, readState, writeState, envOK, isAdminRole } = require('./_lib');
+const { auth, readState, writeState, envOK, isAdminRole, renewIfStale, blockedUser } = require('./_lib');
 
 module.exports = async function handler(req, res){
   if(req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
@@ -17,6 +17,22 @@ module.exports = async function handler(req, res){
     return res.status(400).json({ error: 'Estado inválido: no se guarda.' });
   }
 
+  // Techo de tamaño: sin esto, cualquiera con sesión puede inflar la base.
+  const bytes = JSON.stringify(incoming).length;
+  if(bytes > 8 * 1024 * 1024){
+    return res.status(413).json({ error: 'El estado es demasiado grande. No se guardó.' });
+  }
+
+  // Los nombres se concatenan dentro de innerHTML en todo el cliente. La función
+  // esc() del cliente SOLO escapa apóstrofos (para los onclick), no HTML: por eso
+  // se filtra acá, en la puerta, en vez de en 61 sitios distintos.
+  // El apóstrofo NO se bloquea: esc() ya lo maneja y apellidos como O'Brien son reales.
+  for(const name of Object.keys(incoming.users)){
+    if(/[<>"`\\]/.test(name)){
+      return res.status(400).json({ error: 'El nombre "' + name.slice(0, 40) + '" tiene caracteres no permitidos: < > " ` \\' });
+    }
+  }
+
   let current;
   try { current = await readState(); }
   catch(e){ return res.status(503).json({ error: 'No se pudo leer la base de datos; no se guardó nada.' }); }
@@ -25,8 +41,50 @@ module.exports = async function handler(req, res){
   // tenía el cliente contra el incidente de "liga vacía".
   if(!current) return res.status(409).json({ error: 'La base respondió vacía; no se sobrescribe.' });
 
+  const blocked = blockedUser(current, session);
+  if(blocked) return res.status(403).json({ error: blocked });
+
+  // BLOQUEO OPTIMISTA. Todo el estado es un único bloque y cada guardado lo
+  // reescribe entero: si dos personas tienen la app abierta, la segunda en
+  // guardar pisaba el resultado de la primera y NADIE se enteraba.
+  // Ahora, si la versión no coincide, se rechaza y el cliente recarga.
+  const curV = current._v || 0;
+  const inV  = incoming._v || 0;
+  if(inV !== curV){
+    return res.status(409).json({
+      error: 'Otra persona guardó un cambio mientras cargabas el tuyo. Recargá la página y volvé a cargarlo.',
+      conflict: true
+    });
+  }
+  incoming._v = curV + 1;
+
   const admin    = isAdminRole(session.r);
   const curUsers = current.users || {};
+
+  // =====================================================================
+  // EL SUPER ADMINISTRADOR ES ÚNICO E INTRANSFERIBLE
+  // Esto va FUERA del if(!admin) a propósito: aplica también a los admins.
+  // Sin esto un admin podía (a) darse el rol a sí mismo, (b) borrar al super
+  // y crear otro, o (c) pisarle el hash y entrar como él. Las tres vías
+  // esquivaban la validación, porque toda vivía dentro de if(!admin).
+  // =====================================================================
+  const supers = o => Object.keys(o || {})
+    .filter(n => o[n] && o[n].role === 'superadmin')
+    .sort().join('|');
+
+  if(supers(curUsers) !== supers(incoming.users)){
+    return res.status(403).json({
+      error: 'El super administrador es único: no se puede crear, duplicar, transferir ni eliminar.'
+    });
+  }
+
+  // Y su contraseña solo la cambia él mismo. Ni un admin puede pisarla.
+  for(const n of Object.keys(incoming.users)){
+    const cu = curUsers[n];
+    if(cu && cu.role === 'superadmin' && session.u !== n && incoming.users[n]){
+      incoming.users[n].pass = cu.pass;
+    }
+  }
 
   if(!admin){
     // Un jugador no puede alterar el padrón: ni crear, ni borrar, ni renombrar.
@@ -45,10 +103,60 @@ module.exports = async function handler(req, res){
       if('email' in curU) inU.email = curU.email; else delete inU.email;
       if('tel'   in curU) inU.tel   = curU.tel;   else delete inU.tel;
     }
+
+    // La configuración de la liga se reinyecta desde la base. Un jugador no tiene
+    // ningún motivo legítimo para tocarla, y sin esto podía reescribir la tabla
+    // de puntos, los grupos o el cuadro de playoffs con un solo curl.
+    const CONGELADO = ['cycles','activeN','playoff','DESTINO','FECHAS','PO_FECHAS',
+                       'ALLNAMES','PUNTOS','LEAGUE_NAME','LEAGUE_SUBTITLE',
+                       'LEAGUE_COLOR_PRI','LEAGUE_COLOR_ACC','LEAGUE_COLOR_HL'];
+    for(const k of CONGELADO){
+      if(k in current) incoming[k] = current[k]; else delete incoming[k];
+    }
+
+    // Los partidos: solo los propios. Antes un jugador podía borrar el que perdió,
+    // invertir un resultado, inventarse victorias o vaciar la liga entera.
+    const soyYo = m => !!m && (m.aName === session.u || m.bName === session.u);
+    const curM  = new Map((current.matches  || []).map(m => [m.id, m]));
+    const inM   = new Map((incoming.matches || []).map(m => [m.id, m]));
+
+    // Borrados: solo los propios, y solo si todavía no están confirmados.
+    for(const [id, m] of curM){
+      if(inM.has(id)) continue;
+      if(!soyYo(m)) return res.status(403).json({ error: 'No podés borrar partidos de otros jugadores.' });
+      if(m.status === 'confirmed'){
+        return res.status(403).json({ error: 'No podés borrar un resultado ya confirmado. Pedíselo al administrador.' });
+      }
+    }
+    // Altas y modificaciones.
+    for(const [id, m] of inM){
+      const antes = curM.get(id);
+      if(!antes){
+        if(!soyYo(m)) return res.status(403).json({ error: 'No podés cargar partidos de otros jugadores.' });
+        if(m.status === 'confirmed') return res.status(403).json({ error: 'Solo el administrador confirma resultados.' });
+        continue;
+      }
+      if(JSON.stringify(antes) === JSON.stringify(m)) continue;   // sin cambios
+      if(!soyYo(antes) || !soyYo(m)){
+        return res.status(403).json({ error: 'No podés modificar partidos de otros jugadores.' });
+      }
+      if(antes.status === 'confirmed'){
+        // Lo ÚNICO que un jugador puede hacerle a un confirmado propio es disputarlo.
+        // Sin esto podía invertir su derrota y ponerse ganador.
+        const soloDisputa = m.status === 'disputed' &&
+          JSON.stringify(Object.assign({}, antes, { status: 0 })) ===
+          JSON.stringify(Object.assign({}, m,    { status: 0 }));
+        if(!soloDisputa){
+          return res.status(403).json({ error: 'Un resultado confirmado solo lo cambia el administrador. Podés disputarlo.' });
+        }
+      }else if(m.status === 'confirmed'){
+        return res.status(403).json({ error: 'Solo el administrador confirma resultados.' });
+      }
+    }
   }
 
   try { await writeState(incoming); }
   catch(e){ return res.status(503).json({ error: 'No se pudo guardar: ' + e.message }); }
 
-  return res.status(200).json({ ok: true });
+  return res.status(200).json({ ok: true, token: renewIfStale(session) || undefined });
 };
