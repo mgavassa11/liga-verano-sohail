@@ -58,7 +58,7 @@ function auth(req){
 function renewIfStale(session){
   const total = SESSION_MIN * 60 * 1000;
   if(session.exp - Date.now() > total / 2) return null;   // todavía fresco
-  return signToken({ u: session.u, r: session.r, exp: Date.now() + total });
+  return signToken({ u: session.u, r: session.r, a: session.a, exp: Date.now() + total });
 }
 
 // Una cuenta dada de baja pierde el acceso aunque tenga un token vivo.
@@ -71,11 +71,34 @@ function blockedUser(state, session){
 
 function isAdminRole(r){ return r === 'admin' || r === 'superadmin'; }
 
+// ¿La sesión puede administrar? El rol dice QUÉ es en la liga; el flag 'a' del
+// token dice si PUEDE ADMINISTRARLA. Un jugador ascendido es role:'player' + a:true.
+// El fallback a isAdminRole mantiene vivos los tokens emitidos antes de este cambio.
+function sesionEsAdmin(session, users){
+  if(!session) return false;
+  // Las cuentas del sistema mandan por rol: eso no cambia nunca.
+  if(isAdminRole(session.r)) return true;
+  // El flag de un jugador ascendido se lee de la BASE, no del token. Si se leyera
+  // del token, quitarle el rol no surtiría efecto hasta que expirara su sesión —
+  // y como renewIfStale copia el flag hacia adelante, un jugador activo se
+  // quedaba de administrador para siempre.
+  if(users && users[session.u]) return users[session.u].isAdmin === true;
+  // Sin la base a mano no se asume nada: se niega.
+  return false;
+}
+
+// Solo la cuenta original 'admin' y el super admin reparten el rol de administrador.
+// Un admin ascendido no puede crear más: si le roban la cuenta, no puede dejarse
+// una puerta trasera que sobreviva al cambio de contraseña.
+function puedeGestionarAdmins(session){
+  return !!session && (session.u === 'admin' || session.r === 'superadmin');
+}
+
 // Filtra el estado según quién pregunta. MUTA el objeto recibido: no hace falta
 // copiarlo porque readState() devuelve uno nuevo en cada request, y clonar 222 KB
 // en cada login costaba tiempo y memoria para nada.
 function filterForSession(state, session){
-  const admin = isAdminRole(session.r);
+  const admin = sesionEsAdmin(session, state && state.users);
   const users = state.users || {};
   for(const name of Object.keys(users)){
     const u = users[name];
@@ -143,6 +166,6 @@ function envOK(res){
 }
 
 module.exports = {
-  hashV1, hashV2, signToken, verifyToken, auth, isAdminRole, filterForSession, renewIfStale, blockedUser,
+  hashV1, hashV2, signToken, verifyToken, auth, isAdminRole, sesionEsAdmin, puedeGestionarAdmins, filterForSession, renewIfStale, blockedUser,
   readState, writeState, envOK, SESSION_MIN, SUPER_HASH
 };
