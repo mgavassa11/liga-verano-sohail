@@ -6,7 +6,7 @@
 // Existe porque el jugador ya no recibe ningún hash: la verificación de la
 // contraseña anterior tiene que ocurrir del lado del servidor.
 // =====================================================================
-const { hashV1, hashV2, auth, readState, writeState, envOK, isAdminRole, SUPER_HASH } = require('./_lib');
+const { hashV1, hashV2, auth, readState, writeState, envOK, isAdminRole, sesionEsAdmin, SUPER_HASH } = require('./_lib');
 
 module.exports = async function handler(req, res){
   if(req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
@@ -18,7 +18,6 @@ module.exports = async function handler(req, res){
   const body    = (req.body && typeof req.body === 'object') ? req.body : {};
   const newPass = String(body.newPass || '');
   const target  = body.target ? String(body.target) : null;
-  const admin   = isAdminRole(session.r);
 
   if(newPass.length < 4) return res.status(400).json({ error: 'La contraseña debe tener al menos 4 caracteres.' });
   if(target && !admin)   return res.status(403).json({ error: 'No tenés permiso para cambiar la contraseña de otro jugador.' });
@@ -26,6 +25,9 @@ module.exports = async function handler(req, res){
   let state;
   try { state = await readState(); }
   catch(e){ return res.status(503).json({ error: 'No se pudo leer la base de datos.' }); }
+
+  // Se decide DESPUÉS de leer la base: el permiso sale del estado, no del token.
+  const admin   = sesionEsAdmin(session, state && state.users);
   if(!state || !state.users) return res.status(503).json({ error: 'La base de datos no tiene datos.' });
 
   const name = target || session.u;
