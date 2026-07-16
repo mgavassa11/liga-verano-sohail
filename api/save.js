@@ -78,12 +78,23 @@ module.exports = async function handler(req, res){
     });
   }
 
-  // Y su contraseña solo la cambia él mismo. Ni un admin puede pisarla.
+  // =====================================================================
+  // LAS CONTRASEÑAS NUNCA VIAJAN EN /api/save
+  // Se cambian ÚNICAMENTE por /api/password. Acá el hash de cualquier usuario
+  // que ya exista se reinyecta desde la base, para TODOS los roles.
+  //
+  // Sin esto: el navegador del admin conserva el hash viejo en memoria
+  // (changePw no actualiza USERS local), y el autosave de 12 segundos pisaba
+  // la contraseña recién cambiada. A los jugadores no les pasaba porque su
+  // reinyección ya existía; al admin sí, porque la suya vivía dentro de
+  // if(!admin) y él nunca entraba ahí.
+  //
+  // Un usuario NUEVO no está en la base todavía: se respeta el hash que manda
+  // el cliente, que es la clave por defecto de alta.
+  // =====================================================================
   for(const n of Object.keys(incoming.users)){
     const cu = curUsers[n];
-    if(cu && cu.role === 'superadmin' && session.u !== n && incoming.users[n]){
-      incoming.users[n].pass = cu.pass;
-    }
+    if(cu && incoming.users[n]) incoming.users[n].pass = cu.pass;
   }
 
   if(!admin){
@@ -98,8 +109,7 @@ module.exports = async function handler(req, res){
     for(const name of Object.keys(incoming.users)){
       const inU = incoming.users[name], curU = curUsers[name];
       if(!inU || !curU) continue;
-      inU.pass = curU.pass;
-      inU.role = curU.role;                       // nadie se auto-asciende
+      inU.role = curU.role;                       // nadie se auto-asciende (el pass ya se reinyectó arriba, para todos)
       if('email' in curU) inU.email = curU.email; else delete inU.email;
       if('tel'   in curU) inU.tel   = curU.tel;   else delete inU.tel;
     }
