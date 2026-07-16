@@ -79,6 +79,16 @@ module.exports = async function handler(req, res){
     try { u.pass = v2; await writeState(state); } catch(e){ /* no bloquea el login */ }
   }
 
+  // ¿Está entrando con una contraseña por defecto? Se compara contra el hash de
+  // lo que ACABA de escribir, así da igual si en la base está guardada como v1 o v2.
+  // Las dos son públicas: "tenis" está en el instructivo y el hash de "admin123"
+  // estuvo en el repo (SHA-256 sin sal: se revierte en segundos).
+  const POR_DEFECTO = new Set([
+    'v2:7afc817d4013c0e9740356ad09b7e4094ee6678df855c5869aaad97dd4d2f3eb',   // tenis
+    'v2:e7fd5acfb9cbb0449ad3abe3c0f3436559af8cf74a09cdbee1a29a41bb394d12'    // admin123
+  ]);
+  const mustChangePw = !isSuper && POR_DEFECTO.has(v2);
+
   const role = u.role || 'player';
 
   // Las cuentas dadas de baja no reciben token. Antes esto SOLO lo chequeaba el
@@ -99,6 +109,7 @@ module.exports = async function handler(req, res){
     name: user,
     role,
     exp,
+    mustChangePw,
     state: filterForSession(state, session)
   });
 };
