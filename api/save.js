@@ -3,7 +3,7 @@
 // Sin token no se escribe nada. Y lo que un jugador nunca vio,
 // tampoco lo puede pisar: se reinyecta desde la base.
 // =====================================================================
-const { auth, readState, writeState, envOK, isAdminRole, renewIfStale, blockedUser } = require('./_lib');
+const { auth, readState, writeState, envOK, sesionEsAdmin, puedeGestionarAdmins, renewIfStale, blockedUser } = require('./_lib');
 
 module.exports = async function handler(req, res){
   if(req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
@@ -58,7 +58,7 @@ module.exports = async function handler(req, res){
   }
   incoming._v = curV + 1;
 
-  const admin    = isAdminRole(session.r);
+  const admin    = sesionEsAdmin(session);
   const curUsers = current.users || {};
 
   // =====================================================================
@@ -111,6 +111,14 @@ module.exports = async function handler(req, res){
     if(r !== 'player' && r !== 'admin' && r !== 'superadmin'){
       return res.status(400).json({ error: 'Rol inválido para "' + n.slice(0, 40) + '".' });
     }
+  }
+
+  // El rol de administrador solo lo reparte la cuenta original o el super admin.
+  // Sin esto, un admin ascendido podía crear más admins: si le roban la cuenta,
+  // se deja una puerta trasera que sobrevive al cambio de contraseña.
+  const flags = o => Object.keys(o || {}).filter(n => o[n] && o[n].isAdmin === true).sort().join('|');
+  if(flags(curUsers) !== flags(incoming.users) && !puedeGestionarAdmins(session)){
+    return res.status(403).json({ error: 'Solo el administrador original y el super admin pueden repartir el rol de administrador.' });
   }
 
   // Siempre tiene que quedar al menos un admin: si no, nadie puede volver a
