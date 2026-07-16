@@ -32,6 +32,13 @@ module.exports = async function handler(req, res){
   const u = state.users[name];
   if(!u) return res.status(404).json({ error: 'No se encontró ese usuario.' });
 
+  // La contraseña del super administrador solo la cambia él mismo. Antes acá
+  // solo se chequeaba que quien pedía fuera admin, no A QUIÉN apuntaba: un
+  // admin podía fijarle la clave al super y entrar como él.
+  if(u.role === 'superadmin' && session.u !== name){
+    return res.status(403).json({ error: 'La contraseña del super administrador solo la puede cambiar él mismo.' });
+  }
+
   // Cambiando la propia: hay que probar que sabés la anterior.
   if(!target){
     const oldPass  = String(body.oldPass || '');
