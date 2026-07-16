@@ -393,48 +393,6 @@ if(typeof document!=='undefined'){
 const LOGIN_MAX_ATTEMPTS=5;
 const LOGIN_LOCKOUT_MS=5*60*1000; // 5 minutos
 const _loginAttempts={}; // {username: {count, lockedUntil}}
-function checkLoginAllowed(uv){
-  const e=document.getElementById('login-err');
-  const rec=_loginAttempts[uv]||{count:0,lockedUntil:0};
-  if(rec.lockedUntil&&Date.now()<rec.lockedUntil){
-    const secs=Math.ceil((rec.lockedUntil-Date.now())/1000);
-    const mins=Math.floor(secs/60), s=secs%60;
-    e.textContent='Demasiados intentos fallidos. Esperá '+mins+'m '+s+'s antes de volver a intentar.';
-    e.style.display='block';
-    return false;
-  }
-  return true;
-}
-function registerFailedAttempt(uv,e){
-  if(!_loginAttempts[uv])_loginAttempts[uv]={count:0,lockedUntil:0};
-  _loginAttempts[uv].count++;
-  const rem=LOGIN_MAX_ATTEMPTS-_loginAttempts[uv].count;
-  if(_loginAttempts[uv].count>=LOGIN_MAX_ATTEMPTS){
-    _loginAttempts[uv].lockedUntil=Date.now()+LOGIN_LOCKOUT_MS;
-    e.textContent='Cuenta bloqueada por 5 minutos por demasiados intentos fallidos.';
-  } else {
-    e.textContent=t('wrong_pass')+(rem>0?' ('+rem+' intento'+(rem===1?'':'s')+' restante'+(rem===1?'':'s')+')':'');
-  }
-  e.style.display='block';
-}
-function clearFailedAttempts(uv){delete _loginAttempts[uv];}
-
-async function hashPwV1(pw){
-  if(!pw)return 'v1:';
-  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pw));
-  return 'v1:'+Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-async function hashPwV2(pw){
-  if(!pw)return 'v2:';
-  const enc=new TextEncoder();
-  const keyMat=await crypto.subtle.importKey('raw',enc.encode(pw),{name:'PBKDF2'},false,['deriveBits']);
-  const bits=await crypto.subtle.deriveBits(
-    {name:'PBKDF2',salt:enc.encode(PBKDF2_SALT),iterations:PBKDF2_ITERS,hash:'SHA-256'},
-    keyMat,256
-  );
-  return 'v2:'+Array.from(new Uint8Array(bits)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-async function hashPw(pw){ return hashPwV2(pw); }
 // ===== TRADUCCIONES & ESTADO =====
 let demoBackup=null;
 let LANG='es';
@@ -456,7 +414,7 @@ function updateLangUI(){
 
 const TRANSLATIONS={
 es:{
-app_title:'Liga de Tenis Sohail',app_subtitle:'Verano 2026',select_user:'Seleccione su usuario',admin_org:'admin (Organización)',password:'Contraseña',enter:'Entrar',invalid_user:'Seleccioná un usuario válido.',wrong_pass:'Contraseña incorrecta.',
+err_need_both:'Escribí tu usuario y tu contraseña.',err_no_server:'No se pudo conectar con el servidor. Probá de nuevo.',err_no_users:'No se pudo cargar la lista de usuarios.',err_users_404:'Falta el archivo api/users.js en el repo (404).',err_users_csp:'El navegador bloqueó la llamada a /api/users.',err_server_said:'El servidor devolvió ',err_hydrate:'Los datos se leyeron pero no se pudieron aplicar. Recargá la página.',err_no_data:'No se pudieron cargar los datos. Recargá la página.',err_no_user_league:'No se encontró tu usuario en la liga.',err_inactive:'Tu cuenta está inactiva. Contactá al administrador.',err_session_expired:'Tu sesión expiró. Volvé a entrar.',err_session_expired_save:'Tu sesión expiró. Volvé a entrar para seguir guardando.',err_no_access:'No tenés acceso.',err_conflict:'Otra persona guardó un cambio mientras cargabas el tuyo. Recargá la página y volvé a cargarlo.',login_working:'Entrando…',app_title:'Liga de Tenis Sohail',app_subtitle:'Verano 2026',select_user:'Seleccione su usuario',admin_org:'admin (Organización)',password:'Contraseña',enter:'Entrar',invalid_user:'Seleccioná un usuario válido.',wrong_pass:'Contraseña incorrecta.',
 exit:'Salir',cycle:'Ciclo',playoffs:'Play Offs',playoffs_prev:'Play Offs (previa)',
 tab_grupos:'Grupos',tab_general:'Clasificación',tab_cargar:'Cargar',tab_cargar_admin:'Cargar',tab_pendientes:'Pendientes',tab_pendientes_admin:'Pendientes / Disputas',tab_perfil:'Perfil & Jugadores',tab_admin:'Admin',
 choose_group:'Elegí el grupo',group:'Grupo',destination:'Destino',player:'Jugador',won:'G',lost:'P',not_played:'NJ',sets_won:'SG',sets_lost:'SP',balance:'Bal',pts_pos:'P.puesto',extra:'Extra',total:'Total',pts_classif:'Puntos para la Clasificación General',players_col:'Jugadores',edit:'Editar',
@@ -517,7 +475,7 @@ undo_demo:'Deshacer simulación',
 toast_demo_undone:'Simulaciones borradas.',
 },
 en:{
-app_title:'Sohail Tennis League',app_subtitle:'Summer 2026',select_user:'Select User',admin_org:'admin (Organisation)',password:'Password',enter:'Log in',invalid_user:'Please select a valid user.',wrong_pass:'Incorrect password.',
+err_need_both:'Enter your username and password.',err_no_server:'Could not reach the server. Please try again.',err_no_users:'Could not load the user list.',err_users_404:'The file api/users.js is missing from the repo (404).',err_users_csp:'The browser blocked the call to /api/users.',err_server_said:'The server returned ',err_hydrate:'Data was read but could not be applied. Please reload the page.',err_no_data:'Could not load the data. Please reload the page.',err_no_user_league:'Your user was not found in the league.',err_inactive:'Your account is inactive. Please contact the administrator.',err_session_expired:'Your session expired. Please log in again.',err_session_expired_save:'Your session expired. Log in again to keep saving.',err_no_access:'You do not have access.',err_conflict:'Someone else saved a change while you were entering yours. Please reload and enter it again.',login_working:'Signing in…',app_title:'Sohail Tennis League',app_subtitle:'Summer 2026',select_user:'Select User',admin_org:'admin (Organisation)',password:'Password',enter:'Log in',invalid_user:'Please select a valid user.',wrong_pass:'Incorrect password.',
 exit:'Log out',cycle:'Cycle',playoffs:'Play Offs',playoffs_prev:'Play Offs (preview)',
 tab_grupos:'Groups',tab_general:'Standings',tab_cargar:'Upload',tab_cargar_admin:'Upload',tab_pendientes:'Pending',tab_pendientes_admin:'Pending / Disputes',tab_perfil:'Profile & Players',tab_admin:'Admin',
 choose_group:'Choose group',group:'Group',destination:'Dest.',player:'Player',won:'W',lost:'L',not_played:'NP',sets_won:'SW',sets_lost:'SL',balance:'Bal',pts_pos:'Pos.pts',extra:'Extra',total:'Total',pts_classif:'Points for the General Standings',players_col:'Players',edit:'Edit',
@@ -880,16 +838,16 @@ async function initLogin(){
     if(!r.ok){
       const err=await r.json().catch(()=>({}));
       const msg=r.status===404
-        ? 'Falta el archivo api/users.js en el repo (404).'
-        : 'El servidor devolvió '+r.status+'. '+(err.error||'');
-      if(e){e.textContent='No se pudo cargar la lista de usuarios. '+msg;e.style.display='block';}
+        ? t('err_users_404')
+        : t('err_server_said')+r.status+'. '+(err.error||'');
+      if(e){e.textContent=t('err_no_users')+' '+msg;e.style.display='block';}
       console.error('/api/users →',r.status,err);
       return;
     }
     d=await r.json().catch(()=>({}));
     if(e)e.style.display='none';
   }catch(err){
-    if(e){e.textContent='El navegador bloqueó la llamada a /api/users. Revisá que vercel.json tenga connect-src \'self\'.';e.style.display='block';}
+    if(e){e.textContent=t('err_users_csp');e.style.display='block';}
     console.error('fetch /api/users falló (probable CSP):',err);
     return;
   }
@@ -932,8 +890,8 @@ async function doLogin(){
   const pv=document.getElementById('login-pass').value;
   const e=document.getElementById('login-err');
   const btn=document.getElementById('login-btn');
-  if(!uv||!pv){e.textContent='Escribí tu usuario y tu contraseña.';e.style.display='block';return;}
-  if(btn){btn.disabled=true;btn.textContent='Entrando…';}
+  if(!uv||!pv){e.textContent=t('err_need_both');e.style.display='block';return;}
+  if(btn){btn.disabled=true;btn.textContent=t('login_working');}
   try{
     // La contraseña se verifica en el servidor. Acá no hay ningún hash con qué compararla.
     const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:uv,pass:pv})});
@@ -944,19 +902,19 @@ async function doLogin(){
     // llamada a /api/state, que releía los mismos 222 KB de la base.
     if(d.state){
       const ok=_hydrate(d.state);
-      if(!ok){e.textContent='Los datos se leyeron pero no se pudieron aplicar. Recargá la página.';e.style.display='block';_token=null;return;}
+      if(!ok){e.textContent=t('err_hydrate');e.style.display='block';_token=null;return;}
       _lastSaved=_serialize();
       _loadOK=true;
     }else{
       await loadState();
     }
-    if(!_loadOK){e.textContent='No se pudieron cargar los datos. Recargá la página.';e.style.display='block';_token=null;return;}
+    if(!_loadOK){e.textContent=t('err_no_data');e.style.display='block';_token=null;return;}
     const u=USERS[d.name];
-    if(!u){e.textContent='No se encontró tu usuario en la liga.';e.style.display='block';_token=null;return;}
-    if(u.inactive&&d.role==='player'){e.textContent='Tu cuenta está inactiva. Contactá al administrador.';e.style.display='block';_token=null;return;}
+    if(!u){e.textContent=t('err_no_user_league');e.style.display='block';_token=null;return;}
+    if(u.inactive&&d.role==='player'){e.textContent=t('err_inactive');e.style.display='block';_token=null;return;}
     currentUser=u;
   }catch(err){
-    e.textContent='No se pudo conectar con el servidor. Probá de nuevo.';e.style.display='block';return;
+    e.textContent=t('err_no_server');e.style.display='block';return;
   }finally{
     if(btn){btn.disabled=false;btn.textContent=t('enter')||'Entrar';}
   }
@@ -3229,7 +3187,6 @@ async function setPlayerPwd(name){
   toast(name+': contraseña actualizada.');
 }
 function toggleInactive(name){const u=USERS[name];if(!u)return;u.inactive=!u.inactive;persist(true);renderPerfil();toast(name+(u.inactive?' marcado como inactivo.':' activado.'));}
-function saveProfile(){const name=(document.getElementById('pf-name').value||'').trim();const email=(document.getElementById('pf-email').value||'').trim();const tel=(document.getElementById('pf-tel').value||'').trim();const a=document.getElementById('edit-profile-alert');if(!name){a.className='alert alert-err';a.textContent=t('name_empty');return;}const u=currentUser;const oldName=u.name;u.email=email;u.tel=tel;if(name!==oldName){if(USERS[name]&&name!==oldName){a.className='alert alert-err';a.textContent=t('name_exists');return;}renamePlayerEverywhere(oldName,name);currentUser=USERS[name];}persist(true);a.className='alert alert-ok';a.textContent=t('profile_saved');}
 async function changePw(){
   const o=document.getElementById('pw-old').value,n=document.getElementById('pw-new').value,n2=document.getElementById('pw-new2').value,a=document.getElementById('pw-alert');
   function al(m,cl){a.className='alert alert-'+cl;a.textContent=m;}
@@ -3448,11 +3405,15 @@ let _toastTimer=null;function toast(m){let t=document.getElementById('_toast');i
 
 // ===== CONEXIÓN A SUPABASE — guardado instantáneo =====
 let _lastSaved=null,_saving=false,_pendingForce=false,_loadOK=false,_dbEmpty=false;
+// Versión del estado. La incrementa el servidor en cada guardado: si dos personas
+// tienen la app abierta, la segunda en guardar recibe 409 en vez de pisar a la primera.
+let _stateV=0;
 function _serialize(){
-  return JSON.stringify({cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,PO_FECHAS,ALLNAMES,users:USERS,PUNTOS,LOG,LEAGUE_NAME,LEAGUE_SUBTITLE,LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC,LEAGUE_COLOR_HL});
+  return JSON.stringify({_v:_stateV,cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,PO_FECHAS,ALLNAMES,users:USERS,PUNTOS,LOG,LEAGUE_NAME,LEAGUE_SUBTITLE,LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC,LEAGUE_COLOR_HL});
 }
 
 function _hydrate(d){try{
+  _stateV=(typeof d._v==='number')?d._v:0;
   if(d.cycles)cycles=d.cycles;
   if(Array.isArray(d.matches))matches=d.matches;
   if(typeof d.matchId==='number')matchId=d.matchId;
@@ -3591,34 +3552,16 @@ function _showLoadError(msg){
 }
 function _hideLoadError(){var b=document.getElementById('_loaderr');if(b)b.remove();}
 
-async function migratePasswords(){
-  let changed=false;
-  for(const key of Object.keys(USERS)){
-    const u=USERS[key];
-    if(u&&u.pass&&!isHashed(u.pass)){
-      // Texto plano → v1 (SHA-256). El upgrade a v2 ocurre en el próximo login.
-      u.pass=await hashPwV1(u.pass);
-      changed=true;
-    }
-  }
-  if(changed){
-    console.log('🔐 Passwords migrados a v1 (SHA-256). Se upgradarán a v2 (PBKDF2) en el próximo login.');
-    persist(true);
-  }
-}
-
-try{const sl=localStorage.getItem('liga_lang');if(sl&&(sl==='es'||sl==='en'))LANG=sl;}catch(e){}
-
-// initSupabase() eliminado: la app ya no se conecta a Supabase desde el navegador.
-
 async function loadState(){
   if(!_token){console.warn('⚠️ loadState sin sesión');return;}
   console.log('🔄 Cargando estado desde el servidor...');
   let d;
   try{
     const r=await fetch('/api/state',{headers:{Authorization:'Bearer '+_token},cache:'no-store'});
-    if(r.status===401){_token=null;_showLoadError('Tu sesión expiró. Volvé a entrar.');return;}
+    if(r.status===401){_token=null;_showLoadError(t('err_session_expired'));return;}
     d=await r.json().catch(()=>({}));
+    if(r.status===403){_token=null;_showLoadError(d.error||t('err_no_access'));return;}
+    if(d.token)_token=d.token;   // sesión deslizante
     if(!r.ok){_showLoadError(d.error||'Error al leer la base de datos. Para proteger tus datos NO se guardará nada.');return;}
   }catch(e){
     console.error('❌ Excepción al leer estado:',e);
@@ -3648,14 +3591,25 @@ async function _doPersist(){
     const r=await fetch('/api/save',{
       method:'POST',
       headers:{'Content-Type':'application/json',Authorization:'Bearer '+_token},
-      body:JSON.stringify({state:JSON.parse(json)})
+      body:JSON.stringify({state:JSON.parse(json)}),
+      // keepalive: sin esto el navegador cancela la petición al cerrar la
+      // pestaña y el último guardado se pierde.
+      keepalive:true
     });
+    const d=await r.json().catch(()=>({}));
     if(r.ok){
-      _lastSaved=json;
+      _stateV++;                   // el servidor acaba de incrementarla
+      _lastSaved=_serialize();
+      if(d.token)_token=d.token;   // sesión deslizante: el servidor la renovó
       console.log('✅ Guardado OK ('+ new Date().toLocaleTimeString()+')');
+    }else if(r.status===409){
+      // Otra persona guardó mientras tanto. NO reintentamos: pisaríamos su cambio.
+      _loadOK=false;               // corta el autosave hasta recargar
+      _showLoadError(d.error||t('err_conflict'));
+      console.warn('⚠️ Conflicto de versión: no se guardó para no pisar el cambio de otro.');
     }else{
-      const d=await r.json().catch(()=>({}));
-      if(r.status===401){_token=null;_showLoadError('Tu sesión expiró. Volvé a entrar para seguir guardando.');}
+      if(r.status===401){_token=null;_showLoadError(t('err_session_expired_save'));}
+      if(r.status===403){_token=null;_showLoadError(d.error||t('err_no_access'));}
       console.error('❌ Error al guardar:',d.error||r.status);
     }
   }catch(e){console.error('❌ Excepción al guardar:',e);}
