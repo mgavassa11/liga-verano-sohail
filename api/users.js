@@ -14,13 +14,25 @@
 // =====================================================================
 const { readState, envOK } = require('./_lib');
 
+// Caché en memoria. Este endpoint es público y leía los ~125 KB completos de la
+// base en CADA carga del login: un script apuntándole agotaba el egress gratis
+// de Supabase en unas 40.000 peticiones. Con 30 segundos, mil visitas seguidas
+// cuestan una sola lectura, y un jugador nuevo igual aparece casi al instante.
+let cache = null, cacheAt = 0;
+const CACHE_MS = 30 * 1000;
+
 module.exports = async function handler(req, res){
   if(!envOK(res)) return;
+
+  if(cache && (Date.now() - cacheAt) < CACHE_MS){
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(200).json(cache);
+  }
 
   let state;
   try { state = await readState(); }
   catch(e){ return res.status(503).json({ error: 'No se pudo leer la lista de usuarios.' }); }
-  if(!state || !state.users) return res.status(200).json({ mode: 'cyc', sections: [], loose: [] });
+  if(!state || !state.users) return res.status(200).json({ mode: 'cyc', sections: [], loose: [] });  // sin cachear: puede ser un fallo transitorio
 
   const users = state.users;
   const inact = n => (users[n] && users[n].inactive) ? 1 : 0;
@@ -66,6 +78,8 @@ module.exports = async function handler(req, res){
     .sort(abc)
     .map(n => ({ v: n, i: inact(n) }));
 
+  cache = { mode, sections, loose };
+  cacheAt = Date.now();
   res.setHeader('Cache-Control', 'no-store');
-  return res.status(200).json({ mode, sections, loose });
+  return res.status(200).json(cache);
 };
