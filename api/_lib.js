@@ -52,6 +52,23 @@ function auth(req){
   return verifyToken(h.startsWith('Bearer ') ? h.slice(7) : '');
 }
 
+// Sesión deslizante: si al token le queda menos de la mitad de vida, se emite
+// uno nuevo. Sin esto, un admin trabajando 2 horas seguidas veía cómo los
+// guardados empezaban a fallar aunque el cliente creyera la sesión viva.
+function renewIfStale(session){
+  const total = SESSION_MIN * 60 * 1000;
+  if(session.exp - Date.now() > total / 2) return null;   // todavía fresco
+  return signToken({ u: session.u, r: session.r, exp: Date.now() + total });
+}
+
+// Una cuenta dada de baja pierde el acceso aunque tenga un token vivo.
+function blockedUser(state, session){
+  const u = (state.users || {})[session.u];
+  if(!u) return 'Tu usuario ya no existe en la liga.';
+  if(u.inactive && (u.role || 'player') === 'player') return 'Tu cuenta está inactiva. Contactá al administrador.';
+  return null;
+}
+
 function isAdminRole(r){ return r === 'admin' || r === 'superadmin'; }
 
 // Filtra el estado según quién pregunta. MUTA el objeto recibido: no hace falta
@@ -126,6 +143,6 @@ function envOK(res){
 }
 
 module.exports = {
-  hashV1, hashV2, signToken, verifyToken, auth, isAdminRole, filterForSession,
+  hashV1, hashV2, signToken, verifyToken, auth, isAdminRole, filterForSession, renewIfStale, blockedUser,
   readState, writeState, envOK, SESSION_MIN, SUPER_HASH
 };
