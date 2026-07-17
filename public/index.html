@@ -414,7 +414,7 @@ function updateLangUI(){
 
 const TRANSLATIONS={
 es:{
-role_only_owner:'Solo el administrador original y el super admin pueden repartir el rol.',admins_section:'Administradores de la liga',admins_hint:'Además de la cuenta Organización, estas personas pueden administrar la liga. Siguen siendo jugadores: mantienen su grupo y sus partidos.',admins_none:'No hay ningún jugador con permisos de administrador.',role_section:'Rol en la liga',role_is_admin:'Administrador',role_is_player:'Jugador',role_make_admin:'Hacer administrador',role_make_player:'Quitar administrador',role_confirm_up:'¿Dar permisos de administrador a {n}? Va a poder confirmar resultados, editar jugadores y cambiar la configuración de la liga.',role_confirm_down:'¿Quitarle los permisos de administrador a {n}? Vuelve a ser un jugador normal.',role_done:'Rol de {n} actualizado.',role_last_admin:'Tiene que quedar al menos un administrador.',reset_not_here:'No se puede desde aquí.',reset_confirm:'¿Restablecer la contraseña de {n} a la clave por defecto "tenis"? Se le va a pedir que la cambie al entrar.',reset_ok:'Contraseña de {n} restablecida. Al entrar se le va a pedir una nueva.',reset_err:'No se pudo restablecer la contraseña.',pwf_title:'Cambiá tu contraseña',pwf_why:'Estás usando la contraseña por defecto, que es pública. Elegí una nueva para continuar.',pwf_new:'Contraseña nueva',pwf_rep:'Repetila',pwf_save:'Guardar y continuar',pwf_short:'Tiene que tener al menos 6 caracteres.',pwf_same:'No puede ser la misma que ya tenías.',pwf_nomatch:'Las dos contraseñas no coinciden.',pwf_err:'No se pudo cambiar. Probá de nuevo.',err_need_both:'Escribí tu usuario y tu contraseña.',err_no_server:'No se pudo conectar con el servidor. Probá de nuevo.',err_no_users:'No se pudo cargar la lista de usuarios.',err_users_404:'Falta el archivo api/users.js en el repo (404).',err_users_csp:'El navegador bloqueó la llamada a /api/users.',err_server_said:'El servidor devolvió ',err_hydrate:'Los datos se leyeron pero no se pudieron aplicar. Recargá la página.',err_no_data:'No se pudieron cargar los datos. Recargá la página.',err_no_user_league:'No se encontró tu usuario en la liga.',err_inactive:'Tu cuenta está inactiva. Contactá al administrador.',err_session_expired:'Tu sesión expiró. Volvé a entrar.',err_session_expired_save:'Tu sesión expiró. Volvé a entrar para seguir guardando.',err_no_access:'No tenés acceso.',err_conflict:'Otra persona guardó un cambio mientras cargabas el tuyo. Recargá la página y volvé a cargarlo.',login_working:'Entrando…',app_title:'Liga de Tenis Sohail',app_subtitle:'Verano 2026',select_user:'Seleccione su usuario',admin_org:'admin (Organización)',password:'Contraseña',enter:'Entrar',invalid_user:'Seleccioná un usuario válido.',wrong_pass:'Contraseña incorrecta.',
+confirm_all_skipped:'Pendientes validados. Se saltearon {n} porque los jugaste vos: los tiene que confirmar otro administrador.',own_match_admin:'No podés arbitrar un partido que jugaste vos. Lo tiene que confirmar otro administrador.',wo_not_yours:'No podés marcar W.O. en un partido que jugás vos. Lo tiene que resolver otro administrador.',role_only_owner:'Solo el administrador original y el super admin pueden repartir el rol.',admins_section:'Administradores de la liga',admins_hint:'Además de la cuenta Organización, estas personas pueden administrar la liga. Siguen siendo jugadores: mantienen su grupo y sus partidos.',admins_none:'No hay ningún jugador con permisos de administrador.',role_section:'Rol en la liga',role_is_admin:'Administrador',role_is_player:'Jugador',role_make_admin:'Hacer administrador',role_make_player:'Quitar administrador',role_confirm_up:'¿Dar permisos de administrador a {n}? Va a poder confirmar resultados, editar jugadores y cambiar la configuración de la liga.',role_confirm_down:'¿Quitarle los permisos de administrador a {n}? Vuelve a ser un jugador normal.',role_done:'Rol de {n} actualizado.',role_last_admin:'Tiene que quedar al menos un administrador.',reset_not_here:'No se puede desde aquí.',reset_confirm:'¿Restablecer la contraseña de {n} a la clave por defecto "tenis"? Se le va a pedir que la cambie al entrar.',reset_ok:'Contraseña de {n} restablecida. Al entrar se le va a pedir una nueva.',reset_err:'No se pudo restablecer la contraseña.',pwf_title:'Cambiá tu contraseña',pwf_why:'Estás usando la contraseña por defecto, que es pública. Elegí una nueva para continuar.',pwf_new:'Contraseña nueva',pwf_rep:'Repetila',pwf_save:'Guardar y continuar',pwf_short:'Tiene que tener al menos 6 caracteres.',pwf_same:'No puede ser la misma que ya tenías.',pwf_nomatch:'Las dos contraseñas no coinciden.',pwf_err:'No se pudo cambiar. Probá de nuevo.',err_need_both:'Escribí tu usuario y tu contraseña.',err_no_server:'No se pudo conectar con el servidor. Probá de nuevo.',err_no_users:'No se pudo cargar la lista de usuarios.',err_users_404:'Falta el archivo api/users.js en el repo (404).',err_users_csp:'El navegador bloqueó la llamada a /api/users.',err_server_said:'El servidor devolvió ',err_hydrate:'Los datos se leyeron pero no se pudieron aplicar. Recargá la página.',err_no_data:'No se pudieron cargar los datos. Recargá la página.',err_no_user_league:'No se encontró tu usuario en la liga.',err_inactive:'Tu cuenta está inactiva. Contactá al administrador.',err_session_expired:'Tu sesión expiró. Volvé a entrar.',err_session_expired_save:'Tu sesión expiró. Volvé a entrar para seguir guardando.',err_no_access:'No tenés acceso.',err_conflict:'Otra persona guardó un cambio mientras cargabas el tuyo. Recargá la página y volvé a cargarlo.',login_working:'Entrando…',app_title:'Liga de Tenis Sohail',app_subtitle:'Verano 2026',select_user:'Seleccione su usuario',admin_org:'admin (Organización)',password:'Contraseña',enter:'Entrar',invalid_user:'Seleccioná un usuario válido.',wrong_pass:'Contraseña incorrecta.',
 exit:'Salir',cycle:'Ciclo',playoffs:'Play Offs',playoffs_prev:'Play Offs (previa)',
 tab_grupos:'Grupos',tab_general:'Clasificación',tab_cargar:'Cargar',tab_cargar_admin:'Cargar',tab_pendientes:'Pendientes',tab_pendientes_admin:'Pendientes / Disputas',tab_perfil:'Perfil & Jugadores',tab_admin:'Admin',
 choose_group:'Elegí el grupo',group:'Grupo',destination:'Destino',player:'Jugador',won:'G',lost:'P',not_played:'NJ',sets_won:'SG',sets_lost:'SP',balance:'Bal',pts_pos:'P.puesto',extra:'Extra',total:'Total',pts_classif:'Puntos para la Clasificación General',players_col:'Jugadores',edit:'Editar',
@@ -475,7 +475,7 @@ undo_demo:'Deshacer simulación',
 toast_demo_undone:'Simulaciones borradas.',
 },
 en:{
-role_only_owner:'Only the original administrator and the super admin can grant this role.',admins_section:'League administrators',admins_hint:'Besides the Organización account, these people can administer the league. They are still players: they keep their group and their matches.',admins_none:'No player has administrator rights.',role_section:'League role',role_is_admin:'Administrator',role_is_player:'Player',role_make_admin:'Make administrator',role_make_player:'Remove administrator',role_confirm_up:'Give {n} administrator rights? They will be able to confirm results, edit players and change the league settings.',role_confirm_down:'Remove {n}\'s administrator rights? They go back to being a regular player.',role_done:'{n}\'s role updated.',role_last_admin:'At least one administrator must remain.',reset_not_here:'Not available from here.',reset_confirm:'Reset {n}\'s password to the default "tenis"? They will be asked to change it on their next login.',reset_ok:'{n}\'s password was reset. They will be asked for a new one on login.',reset_err:'Could not reset the password.',pwf_title:'Change your password',pwf_why:'You are using the default password, which is public. Choose a new one to continue.',pwf_new:'New password',pwf_rep:'Repeat it',pwf_save:'Save and continue',pwf_short:'It must be at least 6 characters.',pwf_same:'It cannot be the same one you had.',pwf_nomatch:'The two passwords do not match.',pwf_err:'Could not change it. Please try again.',err_need_both:'Enter your username and password.',err_no_server:'Could not reach the server. Please try again.',err_no_users:'Could not load the user list.',err_users_404:'The file api/users.js is missing from the repo (404).',err_users_csp:'The browser blocked the call to /api/users.',err_server_said:'The server returned ',err_hydrate:'Data was read but could not be applied. Please reload the page.',err_no_data:'Could not load the data. Please reload the page.',err_no_user_league:'Your user was not found in the league.',err_inactive:'Your account is inactive. Please contact the administrator.',err_session_expired:'Your session expired. Please log in again.',err_session_expired_save:'Your session expired. Log in again to keep saving.',err_no_access:'You do not have access.',err_conflict:'Someone else saved a change while you were entering yours. Please reload and enter it again.',login_working:'Signing in…',app_title:'Sohail Tennis League',app_subtitle:'Summer 2026',select_user:'Select User',admin_org:'admin (Organisation)',password:'Password',enter:'Log in',invalid_user:'Please select a valid user.',wrong_pass:'Incorrect password.',
+confirm_all_skipped:'Pending matches validated. {n} were skipped because you played in them: another administrator must confirm them.',own_match_admin:'You cannot referee a match you played in. Another administrator must confirm it.',wo_not_yours:'You cannot mark W.O. on a match you are playing in. Ask another administrator.',role_only_owner:'Only the original administrator and the super admin can grant this role.',admins_section:'League administrators',admins_hint:'Besides the Organización account, these people can administer the league. They are still players: they keep their group and their matches.',admins_none:'No player has administrator rights.',role_section:'League role',role_is_admin:'Administrator',role_is_player:'Player',role_make_admin:'Make administrator',role_make_player:'Remove administrator',role_confirm_up:'Give {n} administrator rights? They will be able to confirm results, edit players and change the league settings.',role_confirm_down:'Remove {n}\'s administrator rights? They go back to being a regular player.',role_done:'{n}\'s role updated.',role_last_admin:'At least one administrator must remain.',reset_not_here:'Not available from here.',reset_confirm:'Reset {n}\'s password to the default "tenis"? They will be asked to change it on their next login.',reset_ok:'{n}\'s password was reset. They will be asked for a new one on login.',reset_err:'Could not reset the password.',pwf_title:'Change your password',pwf_why:'You are using the default password, which is public. Choose a new one to continue.',pwf_new:'New password',pwf_rep:'Repeat it',pwf_save:'Save and continue',pwf_short:'It must be at least 6 characters.',pwf_same:'It cannot be the same one you had.',pwf_nomatch:'The two passwords do not match.',pwf_err:'Could not change it. Please try again.',err_need_both:'Enter your username and password.',err_no_server:'Could not reach the server. Please try again.',err_no_users:'Could not load the user list.',err_users_404:'The file api/users.js is missing from the repo (404).',err_users_csp:'The browser blocked the call to /api/users.',err_server_said:'The server returned ',err_hydrate:'Data was read but could not be applied. Please reload the page.',err_no_data:'Could not load the data. Please reload the page.',err_no_user_league:'Your user was not found in the league.',err_inactive:'Your account is inactive. Please contact the administrator.',err_session_expired:'Your session expired. Please log in again.',err_session_expired_save:'Your session expired. Log in again to keep saving.',err_no_access:'You do not have access.',err_conflict:'Someone else saved a change while you were entering yours. Please reload and enter it again.',login_working:'Signing in…',app_title:'Sohail Tennis League',app_subtitle:'Summer 2026',select_user:'Select User',admin_org:'admin (Organisation)',password:'Password',enter:'Log in',invalid_user:'Please select a valid user.',wrong_pass:'Incorrect password.',
 exit:'Log out',cycle:'Cycle',playoffs:'Play Offs',playoffs_prev:'Play Offs (preview)',
 tab_grupos:'Groups',tab_general:'Standings',tab_cargar:'Upload',tab_cargar_admin:'Upload',tab_pendientes:'Pending',tab_pendientes_admin:'Pending / Disputes',tab_perfil:'Profile & Players',tab_admin:'Admin',
 choose_group:'Choose group',group:'Group',destination:'Dest.',player:'Player',won:'W',lost:'L',not_played:'NP',sets_won:'SW',sets_lost:'SL',balance:'Bal',pts_pos:'Pos.pts',extra:'Extra',total:'Total',pts_classif:'Points for the General Standings',players_col:'Players',edit:'Edit',
@@ -1017,6 +1017,26 @@ function groupCardHTML(gid){
   }
 }
 
+// ¿Puede esta persona VALIDAR este partido al cargarlo?
+// Es admin, sí — pero no si lo jugó ella. Un jugador ascendido que carga su propio
+// resultado lo dejaba 'confirmed' al instante y su rival no podía ni disputarlo
+// (un confirmado ya no admite disputa). Ahora va a 'pending' como el de cualquiera:
+// su rival puede disputarlo, y lo confirma OTRO administrador. Confirmar es acción
+// de admin: el rival no tiene ese botón, solo el de disputa.
+// ¿Este partido lo jugué yo? Sirve para todas las acciones de admin: validar,
+// marcar no jugado, resolver una disputa. Un admin que además juega no debe
+// arbitrar sus propios partidos: lo hace su rival o cualquier otro admin.
+function esMiPartido(m){
+  if(!m || !currentUser) return false;
+  const yo = currentUser.name;
+  if(m.po) return !!(m.poNames && m.poNames.includes(yo));
+  return m.aName === yo || m.bName === yo;
+}
+function validaAlCargar(a, b){
+  if(!esAdmin(currentUser)) return false;
+  const yo = currentUser.name;
+  return yo !== a && yo !== b;
+}
 function esc(s){return String(s).replace(/'/g,"\\'");}
 function renderGrupos(){
   try {
@@ -1320,7 +1340,7 @@ function submitResult(){
     const ti=poContext.ti,which=poContext.which,ri=poContext.ri,mi=poContext.mi;
     const tr=playoff.tramos[ti];if(!tr||!tr[which])return;
     const m=tr[which][ri][mi];if(!m)return;
-    const isAdmin=esAdmin(currentUser);
+    const isAdmin=validaAlCargar(m.a,m.b);
     // Guardar resultado en matches igual que submitPo
     matches=matches.filter(x=>!(x.po&&x.ti===ti&&x.which===which&&x.poNames&&x.poNames.includes(m.a)&&x.poNames.includes(m.b)));
     // Calcular ganador igual que submitPo
@@ -1365,7 +1385,7 @@ function submitResult(){
   if(!v.ok){fAlert('✕ '+v.msg,'err');return;}
   
   matches=matches.filter(m=>!(m.cycle===activeN&&m.g===gid&&!m.po&&((m.aName===repName&&m.bName===rivName)||(m.aName===rivName&&m.bName===repName))));
-  const isAdmin=esAdmin(currentUser);
+  const isAdmin=validaAlCargar(repName,rivName);
   matches.push({id:matchId++,cycle:activeN,g:gid,aName:repName,bName:rivName,sets:s,date:fecha,status:isAdmin?'confirmed':'pending',reporter:repName,club:formClub,locked:isAdmin});
   addLog(isAdmin?'Liga: validado (admin)':'Liga: cargado',{a:repName,b:rivName,sets:s,grupo:gid,po:false});
   clearForm();
@@ -1396,6 +1416,8 @@ function markNotPlayed(){
   if(repName===rivName){fAlert(t('select_two'),'err');return;}
   const ex=findMatch(activeN,gid,repName,rivName);
   if(ex&&ex.status==='disputed'){fAlert('Este partido está en disputa; resolvelo antes de marcarlo como no jugado.','err');return;}
+  // Marcar NJ le saca los 3 puntos al rival. No se hace sobre un partido propio.
+  if(currentUser.name===repName||currentUser.name===rivName){fAlert(t('own_match_admin'),'err');return;}
   if(!confirm('¿Marcar como NO JUGADO el partido '+repName+' vs '+rivName+'?\n\nAmbos jugadores suman 1 en la columna NJ y 0 puntos por este partido. Podés deshacerlo borrando el partido desde la tabla del grupo.'))return;
   matches=matches.filter(m=>!(m.cycle===activeN&&m.g===gid&&!m.po&&((m.aName===repName&&m.bName===rivName)||(m.aName===rivName&&m.bName===repName))));
   matches.push({id:matchId++,cycle:activeN,g:gid,aName:repName,bName:rivName,sets:[],np:true,date:'',status:'confirmed',reporter:currentUser.name,club:'',locked:true});
@@ -1461,7 +1483,10 @@ if(m.np){document.getElementById('modal-body').innerHTML=`<div class="modal-scor
 else{document.getElementById('modal-body').innerHTML=`<p class="modal-rep">${t('reported_by')} <strong>${rep}</strong>${m.club?` · Club <strong>${m.club}</strong>`:''}</p><div class="modal-score ${m.club==='Haza'?'ms-haza':'ms-sohail'}"><p>${p1} ${sc} ${p2}</p></div><p class="modal-meta">${t('date_field')}: ${fmtDate(m.date)} · ${t('status_field')}: ${statusLabel}${m.locked?' · 🔒 '+t('locked_label'):''}</p>`;}
 const acts=document.getElementById('modal-actions');let h='';const isAdmin=esAdmin(currentUser);const isPend=m.status==='pending';
 if(isAdmin){
-  if(isPend) h+=`<button class="btn btn-success" onclick="confirmM()"><i class="ti ti-check"></i> ${t('validate')}</button>`;
+  // El botón no se dibuja si el partido es propio: confirmM() lo rechazaría igual,
+  // y un botón que existe pero no funciona confunde más que no tenerlo.
+  if(isPend && !esMiPartido(m)) h+=`<button class="btn btn-success" onclick="confirmM()"><i class="ti ti-check"></i> ${t('validate')}</button>`;
+  if(isPend && esMiPartido(m) && involvedPend(m)) h+=`<button class="btn btn-danger" onclick="disputeM()"><i class="ti ti-x"></i> ${t('dispute')}</button>`;
   if(!m.po&&!m.np) h+=`<button class="btn btn-primary" onclick="adminEdit(${mid})"><i class="ti ti-edit"></i> ${t('edit')}</button>`;
   h+=`<button class="btn btn-danger" onclick="deleteMatch(${mid})"><i class="ti ti-trash"></i> ${t('delete_match')}</button>`;
 } else {
@@ -1472,7 +1497,7 @@ h+=`<button class="btn" onclick="closeM()">${t('close')}</button>`;acts.innerHTM
 function closeM(){document.getElementById('modal-bg').classList.remove('open');}
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeM();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeM();});
-function confirmM(){if(!(esAdmin(currentUser))){toast(t('validated_only_admin'));return;}const m=matches.find(x=>x.id===currentModal);if(m){m.status='confirmed';m.locked=true;if(m.po){applyPoPending(m);const tr=playoff.tramos[m.ti];const rnd=(()=>{const rounds=m.which==='main'?tr.main:tr.cons;const fe=rounds.length-1-m.ri;return fe===0?'Final':fe===1?'Semifinal':fe===2?'Cuartos':fe===3?'Octavos':'Ronda '+(m.ri+1);})();addLog('Playoff: confirmado',{a:m.poNames[0],b:m.poNames[1],sets:m.sets,winner:m.winner,po:true,cuadro:tr.label,which:m.which,round:rnd});}else{addLog('Liga: confirmado',{a:m.aName,b:m.bName,sets:m.sets,grupo:m.g,po:false});}}closeM();refreshAll();toast(t('toast_confirmed'));persist(true);}
+function confirmM(){if(!(esAdmin(currentUser))){toast(t('validated_only_admin'));return;}const m=matches.find(x=>x.id===currentModal);if(esMiPartido(m)){toast(t('own_match_admin'));return;}if(m){m.status='confirmed';m.locked=true;if(m.po){applyPoPending(m);const tr=playoff.tramos[m.ti];const rnd=(()=>{const rounds=m.which==='main'?tr.main:tr.cons;const fe=rounds.length-1-m.ri;return fe===0?'Final':fe===1?'Semifinal':fe===2?'Cuartos':fe===3?'Octavos':'Ronda '+(m.ri+1);})();addLog('Playoff: confirmado',{a:m.poNames[0],b:m.poNames[1],sets:m.sets,winner:m.winner,po:true,cuadro:tr.label,which:m.which,round:rnd});}else{addLog('Liga: confirmado',{a:m.aName,b:m.bName,sets:m.sets,grupo:m.g,po:false});}}closeM();refreshAll();toast(t('toast_confirmed'));persist(true);}
 function disputeM(){const m=matches.find(x=>x.id===currentModal);if(m)m.status='disputed';closeM();refreshAll();toast(t('toast_disputed'));persist(true);}
 function deleteMatch(mid){if(confirm(t('confirm_delete'))){const dm=matches.find(x=>x.id===mid);if(dm){if(dm.po){const tr=playoff.tramos[dm.ti];addLog('Playoff: eliminado',{a:dm.poNames[0],b:dm.poNames[1],sets:dm.sets,po:true,cuadro:tr?tr.label:'',which:dm.which});}else{addLog('Liga: eliminado',{a:dm.aName,b:dm.bName,sets:dm.sets,grupo:dm.g,po:false});}}matches=matches.filter(x=>x.id!==mid);closeM();refreshAll();toast(t('match_deleted'));persist(true);}}
 function adminEdit(mid){const m=matches.find(x=>x.id===mid);closeM();showSub('cargar');populateForm(m.g,m.aName,m.bName);pickClub(m.club);['s1a','s1b','s2a','s2b','s3a','s3b'].forEach(id=>document.getElementById(id).value='');document.getElementById('s3-row').style.display='none';m.sets.forEach((s,i)=>{const a=document.getElementById(`s${i+1}a`),b=document.getElementById(`s${i+1}b`);if(a)a.value=s[0];if(b)b.value=s[1];if(i===2)document.getElementById('s3-row').style.display='flex';});document.getElementById('f-fecha').value=m.date;}
@@ -1639,6 +1664,12 @@ function importarJugadoresExcel(input){
         if(!nom&&!ape){errors.push('Fila '+(idx+2)+': sin nombre');return;}
         const full=(nom+' '+ape).trim();
         if(USERS[full]){dupes.push(full);return;}
+        // Los mismos caracteres que rechaza /api/save. Sin este chequeo el import
+        // decía "importado correctamente" y después el guardado moría con un 400:
+        // el jugador aparecía en pantalla y se perdía al recargar.
+        if(/[<>"`\\]/.test(full)||/[<>"`\\]/.test(email)||/[<>"`\\]/.test(tel)){
+          errors.push('Fila '+(idx+2)+': caracteres no permitidos (< > \" ` \\)');return;
+        }
         if(grp<1||grp>c.groups.length){errors.push('Fila '+(idx+2)+': grupo '+grp+' inválido');return;}
         USERS[full]={role:'player',pass:DEFAULT_PASS_HASH,name:full,email,tel};
         if(!ALLNAMES.includes(full))ALLNAMES.push(full);
@@ -2395,7 +2426,10 @@ function importarResultadosExcel(input){
         fecha=toISODate(fecha)||new Date().toISOString().slice(0,10);
         const exist=findMatch(cicN,gid,pa,pb);
         if(exist){matches=matches.filter(m=>m!==exist);replaced++;}
-        matches.push({id:matchId++,cycle:cicN,g:gid,aName:pa,bName:pb,sets:sets,date:fecha,status:'confirmed',reporter:pa,club:club,locked:true});
+        // Un admin que además juega no valida sus propios partidos ni por Excel:
+        // era la última puerta que quedaba abierta para saltearse la regla.
+        const propio=!validaAlCargar(pa,pb);
+        matches.push({id:matchId++,cycle:cicN,g:gid,aName:pa,bName:pb,sets:sets,date:fecha,status:propio?'pending':'confirmed',reporter:pa,club:club,locked:!propio});
         imported++;
       });
       addLog('Liga: import de resultados',{importados:imported,reemplazados:replaced,errores:errors.length});
@@ -2726,6 +2760,7 @@ function renderCargarDisputas(){ }
 function resolveD(mid){
   const m=matches.find(x=>x.id===mid);
   if(!m)return;
+  if(esMiPartido(m)){toast(t('own_match_admin'));return;}
   m.status='confirmed';
   m.locked=true;
   if(m.po){applyPoPending(m);const tr=playoff.tramos[m.ti];addLog('Playoff: disputa resuelta',{a:m.poNames[0],b:m.poNames[1],sets:m.sets,winner:m.winner,po:true,cuadro:tr?tr.label:'',which:m.which});}
@@ -2736,10 +2771,17 @@ function resolveD(mid){
 }
 
 function forceConfirmAll(){
-  matches.forEach(m=>{if(m.status==='pending'){m.status='confirmed';m.locked=true;if(m.po)applyPoPending(m);}});
+  // Los partidos propios se saltean: si no, este botón desarma de un click todas
+  // las reglas de arbitraje propio. Los resuelve el rival u otro administrador.
+  let saltados=0;
+  matches.forEach(m=>{
+    if(m.status!=='pending')return;
+    if(esMiPartido(m)){saltados++;return;}
+    m.status='confirmed';m.locked=true;if(m.po)applyPoPending(m);
+  });
   persist(true);
   refreshAll();
-  toast(t('toast_pending_confirmed'));
+  toast(saltados ? t('confirm_all_skipped').replace('{n}',saltados) : t('toast_pending_confirmed'));
 }
 
 function demoFillUI(){
@@ -3091,7 +3133,8 @@ function renderPlayerList(players, filter) {
     </div>`;
   }).join('');
 }
-function filterPlayerList(){const f=document.getElementById('player-search').value;const players=Object.values(USERS).filter(u=>u&&u.role!=='admin'&&u.role!=='superadmin').sort((a,b)=>(a.name||'').localeCompare(b.name||'','es'));document.getElementById('player-list').innerHTML=renderPlayerList(players,f);}
+function filterPlayerList(){const f=document.getElementById('player-search').value;/* Mismo criterio que renderPerfil: se filtra por CLAVE. Si filtrara por rol,
+   un jugador ascendido desaparecería apenas escribís en el buscador. */const players=Object.entries(USERS).filter(([k,u])=>u&&k!=='admin'&&k!=='superadmin').map(([k,u])=>u).sort((a,b)=>(a.name||'').localeCompare(b.name||'','es'));document.getElementById('player-list').innerHTML=renderPlayerList(players,f);}
 function togglePlayerEdit(name){const el=document.getElementById('pe-'+name);if(el)el.style.display=el.style.display==='none'?'block':'none';}
 
 // Renombra un jugador en TODO el estado (liga + playoffs). Un solo lugar para no olvidar ninguna referencia.
@@ -3201,7 +3244,10 @@ function esAdmin(u){
 // Solo la cuenta original y el super admin reparten el rol: un admin ascendido
 // no puede crear más admins ni dejarse una puerta trasera.
 function puedeGestionarAdmins(u){
-  return !!u && (u.role==='superadmin' || u.key==='admin' || u.name==='Organización');
+  // Se compara por CLAVE, igual que el servidor (session.u === 'admin').
+  // Antes se aceptaba también name==='Organización': un jugador renombrado así
+  // veía el botón de repartir roles y se comía un 403 sin entender por qué.
+  return !!u && (u.role==='superadmin' || u.key==='admin');
 }
 
 function toggleAdminRole(name){
@@ -3417,6 +3463,9 @@ function markPoWO(advanceA){
   const ti=poContext.ti,which=poContext.which,ri=poContext.ri,mi=poContext.mi;
   const tr=playoff.tramos[ti];if(!tr||!tr[which])return;
   const m=tr[which][ri][mi];if(!m||!m.a||!m.b){toast('Faltan jugadores en este partido.');return;}
+  // Un W.O. elimina al rival sin jugar. Si el que lo marca es uno de los dos,
+  // se estaría haciendo avanzar a sí mismo en un playoff. Lo resuelve otro admin.
+  if(currentUser.name===m.a||currentUser.name===m.b){toast(t('wo_not_yours'));return;}
   const winnerName=advanceA?m.a:m.b,loser=advanceA?m.b:m.a;
   if(!confirm(winnerName+' avanza por W.O. (walkover).\n\n'+loser+' queda eliminado por no presentarse. No se registra ningún resultado.\n\n¿Confirmás?'))return;
   // Reemplazar cualquier resultado/partido previo de este cruce
@@ -3490,7 +3539,7 @@ function submitPo(){
   }
   matches = matches.filter(x => !(x.po && x.ti === ti && x.which === which && ((x.poNames[0] === m.a && x.poNames[1] === m.b) || (x.poNames[0] === m.b && x.poNames[1] === m.a))));
   
-  if(esAdmin(currentUser)){
+  if(validaAlCargar(m.a, m.b)){
     storePo(ti, which, m.a, m.b, s, winner);
     matches.push({id: matchId++, po: true, ti, which, tLabel: playoff.tramos[ti].label, poNames: [m.a, m.b], sets: s, status: 'confirmed', reporter: currentUser.name, winner, date: fecha, club: poFormClub, locked: true});
     rebuildTramo(ti);
