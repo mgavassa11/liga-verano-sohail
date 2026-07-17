@@ -90,6 +90,10 @@ module.exports = async function handler(req, res){
   const mustChangePw = !isSuper && POR_DEFECTO.has(v2);
 
   const role = u.role || 'player';
+  // El token lleva la capacidad de administrar aparte del rol: así un jugador
+  // ascendido (role:'player' + isAdmin:true) es admin para el servidor sin
+  // perder su lugar en la liga.
+  const puedeAdmin = role === 'admin' || role === 'superadmin' || u.isAdmin === true;
 
   // Las cuentas dadas de baja no reciben token. Antes esto SOLO lo chequeaba el
   // navegador, así que un jugador inactivo podía saltearse la app y usar la API.
@@ -98,6 +102,8 @@ module.exports = async function handler(req, res){
   }
 
   const exp  = Date.now() + SESSION_MIN * 60 * 1000;
+  // El token NO lleva el permiso de admin: se lee de la base en cada pedido.
+  // puedeAdmin solo se usa abajo, para que el cliente dibuje la UI correcta.
   const session = { u: user, r: role, exp };
 
   // Devolvemos el estado ya filtrado acá mismo. Antes el cliente tenía que hacer
@@ -106,6 +112,7 @@ module.exports = async function handler(req, res){
   res.setHeader('Cache-Control', 'no-store');
   return res.status(200).json({
     token: signToken(session),
+    isAdmin: puedeAdmin,
     name: user,
     role,
     exp,
