@@ -27,9 +27,19 @@ module.exports = async function handler(req, res){
   // esc() del cliente SOLO escapa apóstrofos (para los onclick), no HTML: por eso
   // se filtra acá, en la puerta, en vez de en 61 sitios distintos.
   // El apóstrofo NO se bloquea: esc() ya lo maneja y apellidos como O'Brien son reales.
+  const PELIGRO = /[<>"`\\]/;
   for(const name of Object.keys(incoming.users)){
-    if(/[<>"`\\]/.test(name)){
+    if(PELIGRO.test(name)){
       return res.status(400).json({ error: 'El nombre "' + name.slice(0, 40) + '" tiene caracteres no permitidos: < > " ` \\' });
+    }
+    // email y tel también se dibujan en la pantalla, dentro de value="...".
+    // esc() no escapa la comilla doble, así que un email como  " onfocus="...
+    // rompía el atributo. Se cierra acá, en la puerta, igual que el nombre.
+    const u = incoming.users[name] || {};
+    for(const campo of ['email', 'tel']){
+      if(u[campo] && PELIGRO.test(String(u[campo]))){
+        return res.status(400).json({ error: 'El campo ' + campo + ' de "' + name.slice(0, 40) + '" tiene caracteres no permitidos: < > " ` \\' });
+      }
     }
   }
 
@@ -118,14 +128,64 @@ module.exports = async function handler(req, res){
   // se deja una puerta trasera que sobrevive al cambio de contraseña.
   const flags = o => Object.keys(o || {}).filter(n => o[n] && o[n].isAdmin === true).sort().join('|');
   if(flags(curUsers) !== flags(incoming.users) && !puedeGestionarAdmins(session)){
+    // Borrar a un jugador que además es admin también cambia la lista de flags.
+    // Se distingue el caso: el bloqueo es correcto, pero el mensaje tiene que
+    // decir la verdad en vez de hablar de repartir roles que nadie repartió.
+    const borrados = Object.keys(curUsers).filter(n => curUsers[n] && curUsers[n].isAdmin === true && !incoming.users[n]);
+    if(borrados.length){
+      return res.status(403).json({ error: 'No podés eliminar a ' + borrados[0].slice(0, 40) + ': tiene rol de administrador. Quitáselo primero, o pedíselo al administrador original.' });
+    }
     return res.status(403).json({ error: 'Solo el administrador original y el super admin pueden repartir el rol de administrador.' });
   }
 
   // Siempre tiene que quedar al menos un admin: si no, nadie puede volver a
   // administrar la liga salvo el super admin.
-  const cuentaAdmins = o => Object.keys(o || {}).filter(n => o[n] && o[n].role === 'admin').length;
+  // Cuenta admins EFECTIVOS: la cuenta del sistema y los jugadores ascendidos.
+  // Antes solo miraba role==='admin', así que con 5 ascendidos igual creía que
+  // la liga se quedaba sin nadie.
+  const cuentaAdmins = o => Object.keys(o || {}).filter(n => o[n] && (o[n].role === 'admin' || o[n].isAdmin === true)).length;
   if(cuentaAdmins(curUsers) > 0 && cuentaAdmins(incoming.users) === 0){
     return res.status(403).json({ error: 'Tiene que quedar al menos un administrador.' });
+  }
+
+  // Un admin que además JUEGA no arbitra sus propios partidos. Las comprobaciones
+  // del navegador son ayuda visual: sin este bloque, un curl las saltea todas.
+  // Solo aplica a jugadores ascendidos; la cuenta del sistema no juega.
+  const quien = session.u;
+  const soyJugador = !!(curUsers[quien] && curUsers[quien].role === 'player');
+  if(admin && soyJugador){
+    const mio = m => !!m && (m.po
+      ? Array.isArray(m.poNames) && m.poNames.includes(quien)
+      : (m.aName === quien || m.bName === quien));
+    const previos = new Map((current.matches || []).map(m => [m.id, m]));
+    for(const m of (incoming.matches || [])){
+      if(!mio(m)) continue;
+      const prev = previos.get(m.id);
+      const yaEstaba = prev && prev.status === 'confirmed';
+      // Un partido propio no puede PASAR a confirmado por mano del que lo jugó.
+      if(m.status === 'confirmed' && !yaEstaba){
+        return res.status(403).json({ error: 'No podés validar un partido que jugaste vos. Lo confirma otro administrador.' });
+      }
+      // Ni marcarse un W.O. o un "no jugado" a favor.
+      if((m.wo || m.np) && !prev){
+        return res.status(403).json({ error: 'No podés marcar W.O. ni "no jugado" en un partido que jugás vos. Lo resuelve otro administrador.' });
+      }
+    }
+  }
+
+  // La configuración de la liga (puntos, ciclos, playoff, fechas, nombre) la toca
+  // SOLO el administrador original o el super admin. El panel ya lo gatea en pantalla,
+  // pero eso es un botón escondido, no un permiso: un jugador ascendido podía
+  // reescribir por curl la tabla de PUNTOS y darle 35 puntos a su propio grupo.
+  if(!puedeGestionarAdmins(session)){
+    const CONFIG = ['cycles','activeN','playoff','DESTINO','FECHAS','PO_FECHAS',
+                    'ALLNAMES','PUNTOS','LEAGUE_NAME','LEAGUE_SUBTITLE',
+                    'LEAGUE_COLOR_PRI','LEAGUE_COLOR_ACC','LEAGUE_COLOR_HL'];
+    for(const k of CONFIG){
+      if(JSON.stringify(incoming[k]) !== JSON.stringify(current[k])){
+        return res.status(403).json({ error: 'La configuración de la liga solo la cambia el administrador original o el super admin.' });
+      }
+    }
   }
 
   if(!admin){
