@@ -58,7 +58,10 @@ function auth(req){
 function renewIfStale(session){
   const total = SESSION_MIN * 60 * 1000;
   if(session.exp - Date.now() > total / 2) return null;   // todavía fresco
-  return signToken({ u: session.u, r: session.r, a: session.a, exp: Date.now() + total });
+  // El campo 'a' se eliminó a propósito: el permiso de admin se lee de la base en
+  // cada pedido (ver sesionEsAdmin). Si viajara en el token, renovarlo lo
+  // perpetuaría y quitarle el rol a alguien no surtiría efecto nunca.
+  return signToken({ u: session.u, r: session.r, exp: Date.now() + total });
 }
 
 // Una cuenta dada de baja pierde el acceso aunque tenga un token vivo.
