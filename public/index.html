@@ -431,7 +431,7 @@ not_in_cycle:'No estás en el ciclo activo.',load_note_player:'Cargás partidos 
 select_two:'Seleccioná los dos jugadores.',same_group:'Ambos deben ser del mismo grupo.',validated_admin_only:'Ese resultado ya fue validado. Solo el admin puede editarlo.',result_sent_admin:'✓ Resultado válido y validado (admin).',result_sent_player:'✓ Resultado válido enviado. El admin lo validará.',select_club:'Elegí el club (Sohail o Haza).',select_date:'Completá la fecha del partido.',
 disputes_title:'Disputas activas (resuelve el admin)',no_disputes:'No hay disputas',validate:'Validar',
 pending_title:'Pendientes de confirmación',no_pending:'No hay pendientes',waiting_rival:'Esperando al rival',review:'Revisar',
-validated_result:'Resultado validado',disputed_result:'Resultado disputado',review_result:'Revisar resultado',reported_by:'Reportado por',date_field:'Fecha',status_field:'Estado',confirmed_label:'Confirmado',locked_label:'Validado',confirm:'Confirmar',dispute:'Disputar',close:'Cerrar',validated_only_admin:'Validado — solo el admin edita',waiting_admin:'Esperando validación del admin',my_history:'Mi historial de partidos',hist_title:'Historial de partidos',hist_no_matches:'Sin partidos jugados todavía.',hist_won:'Ganó',hist_lost:'Perdió',
+validated_result:'Resultado validado',disputed_result:'Resultado disputado',review_result:'Revisar resultado',validated_by:'Validado por',reported_by:'Reportado por',date_field:'Fecha',status_field:'Estado',confirmed_label:'Confirmado',locked_label:'Validado',confirm:'Confirmar',dispute:'Disputar',close:'Cerrar',validated_only_admin:'Validado — solo el admin edita',waiting_admin:'Esperando validación del admin',my_history:'Mi historial de partidos',hist_title:'Historial de partidos',hist_no_matches:'Sin partidos jugados todavía.',hist_won:'Ganó',hist_lost:'Perdió',
 admin_cycle_status:'Estado del ciclo',validated_count:'{done}/{need} partidos validados',ready_close:'✓ Listo para cerrar el ciclo.',missing_results:'Faltan validar resultados.',close_cycle:'Cerrar ciclo e iniciar siguiente',finish_last_cycle:'Finalizar último ciclo (habilita Play Offs)',simulate:'Simular y validar todos',confirm_pending:'Confirmar pendientes',
 cycle_dates:'Fechas de los ciclos',cycle_date_hint:'Editá el período de cada ciclo.',
 promotions_title:'Ascensos y descensos — a qué grupo pasa cada puesto',promotions_hint:'Para cada grupo, elegí a qué grupo va cada puesto al cerrar el ciclo. Las filas se ajustan solas a la cantidad de jugadores de cada grupo.',pos_goes_to:'{pos}º →',
@@ -492,7 +492,7 @@ not_in_cycle:'You are not in the active cycle.',load_note_player:'Upload your ma
 select_two:'Please select two players.',same_group:'Both players must be in the same group.',validated_admin_only:'That result is already validated. Only the admin can edit it.',result_sent_admin:'✓ Valid result — validated (admin).',result_sent_player:'✓ Valid result submitted. The admin will validate it.',select_club:'Please choose a club (Sohail or Haza).',select_date:'Please fill in the match date.',
 disputes_title:'Active disputes (resolved by admin)',no_disputes:'No disputes',validate:'Validate',
 pending_title:'Pending Confirmation',no_pending:'No pending items',waiting_rival:'Waiting for opponent',review:'Review',
-validated_result:'Validated result',disputed_result:'Disputed result',review_result:'Review result',reported_by:'Reported by',date_field:'Date',status_field:'Status',confirmed_label:'Confirmed',locked_label:'Validated',confirm:'Confirm',dispute:'Dispute',close:'Close',validated_only_admin:'Validated — only admin can edit',waiting_admin:'Waiting for admin validation',my_history:'My match history',hist_title:'Match history',hist_no_matches:'No matches played yet.',hist_won:'Won',hist_lost:'Lost',
+validated_result:'Validated result',disputed_result:'Disputed result',review_result:'Review result',validated_by:'Validated by',reported_by:'Reported by',date_field:'Date',status_field:'Status',confirmed_label:'Confirmed',locked_label:'Validated',confirm:'Confirm',dispute:'Dispute',close:'Close',validated_only_admin:'Validated — only admin can edit',waiting_admin:'Waiting for admin validation',my_history:'My match history',hist_title:'Match history',hist_no_matches:'No matches played yet.',hist_won:'Won',hist_lost:'Lost',
 admin_cycle_status:'Cycle status',validated_count:'{done}/{need} matches validated',ready_close:'✓ Ready to close the cycle.',missing_results:'Some results still need validating.',close_cycle:'Close cycle and start next',finish_last_cycle:'Finish last cycle (enables Play Offs)',simulate:'Simulate and validate all',confirm_pending:'Confirm pending',
 cycle_dates:'Cycle dates',cycle_date_hint:"Edit each cycle's period.",
 promotions_title:'Promotions & relegations — where each position goes',promotions_hint:'For each group, choose which group each finishing position goes to when the cycle closes.',pos_goes_to:'{pos} →',
@@ -1397,7 +1397,7 @@ function submitResult(){
     // Calcular ganador igual que submitPo
     let w1=0,w2=0;s.forEach(([a,b])=>{if(a>b)w1++;else w2++;});
     const winner=w1>w2?m.a:m.b;
-    const newM={id:matchId++,po:true,ti,which,ri,mi,tLabel:playoff.tramos[ti].label,poNames:[m.a,m.b],sets:s,date:fecha,club:formClub||'',status:isAdmin?'confirmed':'pending',reporter:currentUser.name,winner,locked:isAdmin};
+    const newM={id:matchId++,po:true,ti,which,ri,mi,tLabel:playoff.tramos[ti].label,poNames:[m.a,m.b],sets:s,date:fecha,club:formClub||'',status:isAdmin?'confirmed':'pending',vBy:isAdmin?currentUser.name:undefined,reporter:currentUser.name,winner,locked:isAdmin};
     matches.push(newM);
     if(isAdmin){
       storePo(ti,which,m.a,m.b,s,winner);
@@ -1437,7 +1437,7 @@ function submitResult(){
   
   matches=matches.filter(m=>!(m.cycle===activeN&&m.g===gid&&!m.po&&((m.aName===repName&&m.bName===rivName)||(m.aName===rivName&&m.bName===repName))));
   const isAdmin=validaAlCargar(repName,rivName);
-  matches.push({id:matchId++,cycle:activeN,g:gid,aName:repName,bName:rivName,sets:s,date:fecha,status:isAdmin?'confirmed':'pending',reporter:repName,club:formClub,locked:isAdmin});
+  matches.push({id:matchId++,cycle:activeN,g:gid,aName:repName,bName:rivName,sets:s,date:fecha,status:isAdmin?'confirmed':'pending',vBy:isAdmin?currentUser.name:undefined,reporter:repName,club:formClub,locked:isAdmin});
   addLog(isAdmin?'Liga: validado (admin)':'Liga: cargado',{a:repName,b:rivName,sets:s,grupo:gid,po:false});
   clearForm();
   fAlert(isAdmin?t('result_sent_admin'):t('result_sent_player'),'ok');
@@ -1531,7 +1531,7 @@ document.getElementById('modal-title').textContent=(m.status==='confirmed'?t('va
 const statusLabel = m.status === 'confirmed' ?
 t('confirmed_label') : m.status === 'disputed' ? t('legend_disputed') : t('legend_pending');
 if(m.np){document.getElementById('modal-body').innerHTML=`<div class="modal-score"><p>${p1} &nbsp;vs&nbsp; ${p2}</p></div><p class="modal-meta" style="text-align:center"><strong>Partido no jugado</strong> · ${t('status_field')}: ${statusLabel}${m.locked?' · 🔒 '+t('locked_label'):''}</p>`;}
-else{document.getElementById('modal-body').innerHTML=`<p class="modal-rep">${t('reported_by')} <strong>${rep}</strong>${m.club?` · Club <strong>${m.club}</strong>`:''}</p><div class="modal-score ${m.club==='Haza'?'ms-haza':'ms-sohail'}"><p>${p1} ${sc} ${p2}</p></div><p class="modal-meta">${t('date_field')}: ${fmtDate(m.date)} · ${t('status_field')}: ${statusLabel}${m.locked?' · 🔒 '+t('locked_label'):''}</p>`;}
+else{document.getElementById('modal-body').innerHTML=`<p class="modal-rep">${t('reported_by')} <strong>${rep}</strong>${m.vBy?` · ${t('validated_by')} <strong>${attr(m.vBy)}</strong>`:''}${m.club?` · Club <strong>${m.club}</strong>`:''}</p><div class="modal-score ${m.club==='Haza'?'ms-haza':'ms-sohail'}"><p>${p1} ${sc} ${p2}</p></div><p class="modal-meta">${t('date_field')}: ${fmtDate(m.date)} · ${t('status_field')}: ${statusLabel}${m.locked?' · 🔒 '+t('locked_label'):''}</p>`;}
 const acts=document.getElementById('modal-actions');let h='';const isAdmin=esAdmin(currentUser);const isPend=m.status==='pending';
 if(isAdmin){
   // El botón no se dibuja si el partido es propio: confirmM() lo rechazaría igual,
@@ -1548,7 +1548,7 @@ h+=`<button class="btn" onclick="closeM()">${t('close')}</button>`;acts.innerHTM
 function closeM(){document.getElementById('modal-bg').classList.remove('open');}
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeM();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeM();});
-function confirmM(){if(!(esAdmin(currentUser))){toast(t('validated_only_admin'));return;}const m=matches.find(x=>x.id===currentModal);if(esMiPartido(m)){toast(t('own_match_admin'));return;}if(m){m.status='confirmed';m.locked=true;if(m.po){applyPoPending(m);const tr=playoff.tramos[m.ti];const rnd=(()=>{const rounds=m.which==='main'?tr.main:tr.cons;const fe=rounds.length-1-m.ri;return fe===0?'Final':fe===1?'Semifinal':fe===2?'Cuartos':fe===3?'Octavos':'Ronda '+(m.ri+1);})();addLog('Playoff: confirmado',{a:m.poNames[0],b:m.poNames[1],sets:m.sets,winner:m.winner,po:true,cuadro:tr.label,which:m.which,round:rnd});}else{addLog('Liga: confirmado',{a:m.aName,b:m.bName,sets:m.sets,grupo:m.g,po:false});}}closeM();refreshAll();toast(t('toast_confirmed'));persist(true);}
+function confirmM(){if(!(esAdmin(currentUser))){toast(t('validated_only_admin'));return;}const m=matches.find(x=>x.id===currentModal);if(esMiPartido(m)){toast(t('own_match_admin'));return;}if(m){m.vBy=currentUser.name;m.status='confirmed';m.locked=true;if(m.po){applyPoPending(m);const tr=playoff.tramos[m.ti];const rnd=(()=>{const rounds=m.which==='main'?tr.main:tr.cons;const fe=rounds.length-1-m.ri;return fe===0?'Final':fe===1?'Semifinal':fe===2?'Cuartos':fe===3?'Octavos':'Ronda '+(m.ri+1);})();addLog('Playoff: confirmado',{a:m.poNames[0],b:m.poNames[1],sets:m.sets,winner:m.winner,po:true,cuadro:tr.label,which:m.which,round:rnd});}else{addLog('Liga: confirmado',{a:m.aName,b:m.bName,sets:m.sets,grupo:m.g,po:false});}}closeM();refreshAll();toast(t('toast_confirmed'));persist(true);}
 function disputeM(){const m=matches.find(x=>x.id===currentModal);if(m)m.status='disputed';closeM();refreshAll();toast(t('toast_disputed'));persist(true);}
 function deleteMatch(mid){if(confirm(t('confirm_delete'))){const dm=matches.find(x=>x.id===mid);if(dm){if(dm.po){const tr=playoff.tramos[dm.ti];addLog('Playoff: eliminado',{a:dm.poNames[0],b:dm.poNames[1],sets:dm.sets,po:true,cuadro:tr?tr.label:'',which:dm.which});}else{addLog('Liga: eliminado',{a:dm.aName,b:dm.bName,sets:dm.sets,grupo:dm.g,po:false});}}matches=matches.filter(x=>x.id!==mid);closeM();refreshAll();toast(t('match_deleted'));persist(true);}}
 function adminEdit(mid){const m=matches.find(x=>x.id===mid);closeM();showSub('cargar');populateForm(m.g,m.aName,m.bName);pickClub(m.club);['s1a','s1b','s2a','s2b','s3a','s3b'].forEach(id=>document.getElementById(id).value='');document.getElementById('s3-row').style.display='none';m.sets.forEach((s,i)=>{const a=document.getElementById(`s${i+1}a`),b=document.getElementById(`s${i+1}b`);if(a)a.value=s[0];if(b)b.value=s[1];if(i===2)document.getElementById('s3-row').style.display='flex';});document.getElementById('f-fecha').value=m.date;}
@@ -2481,7 +2481,7 @@ function importarResultadosExcel(input){
         // Un admin que además juega no valida sus propios partidos ni por Excel:
         // era la última puerta que quedaba abierta para saltearse la regla.
         const propio=!validaAlCargar(pa,pb);
-        matches.push({id:matchId++,cycle:cicN,g:gid,aName:pa,bName:pb,sets:sets,date:fecha,status:propio?'pending':'confirmed',reporter:pa,club:club,locked:!propio});
+        matches.push({id:matchId++,cycle:cicN,g:gid,aName:pa,bName:pb,sets:sets,date:fecha,status:propio?'pending':'confirmed',vBy:propio?undefined:currentUser.name,reporter:pa,club:club,locked:!propio});
         imported++;
       });
       addLog('Liga: import de resultados',{importados:imported,reemplazados:replaced,errores:errors.length});
@@ -2813,6 +2813,7 @@ function resolveD(mid){
   const m=matches.find(x=>x.id===mid);
   if(!m)return;
   if(esMiPartido(m)){toast(t('own_match_admin'));return;}
+  m.vBy=currentUser.name;
   m.status='confirmed';
   m.locked=true;
   if(m.po){applyPoPending(m);const tr=playoff.tramos[m.ti];addLog('Playoff: disputa resuelta',{a:m.poNames[0],b:m.poNames[1],sets:m.sets,winner:m.winner,po:true,cuadro:tr?tr.label:'',which:m.which});}
@@ -2829,7 +2830,7 @@ function forceConfirmAll(){
   matches.forEach(m=>{
     if(m.status!=='pending')return;
     if(esMiPartido(m)){saltados++;return;}
-    m.status='confirmed';m.locked=true;if(m.po)applyPoPending(m);
+    m.vBy=currentUser.name;m.status='confirmed';m.locked=true;if(m.po)applyPoPending(m);
   });
   persist(true);
   refreshAll();
