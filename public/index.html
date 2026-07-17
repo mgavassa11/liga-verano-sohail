@@ -1016,7 +1016,7 @@ function groupCardHTML(gid){
         const base=ptsForPos(gid,i);
         const pInactive = USERS[s.name]&&USERS[s.name].inactive;
         const inactiveBadge = pInactive?'<span style="font-size:9px;background:#e55;color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px;font-weight:700">INACTIVO</span>':'';
-        return `<tr class="${currentUser&&s.name===currentUser.name?'me-row':''}" style="${pInactive?'opacity:.55':''}"><td>${(!pInactive&&d)?`<span class="dest ${ar}">${ic}${groupName(dn)}</span>`:pInactive?'<span style="font-size:9px;color:#aaa">—</span>':''}</td><td><span class="avatar">${getInitials(s.name)}</span><span class="nm-link" onclick="showPlayerHistory('${esc(s.name)}')">${s.name}</span>${inactiveBadge}</td><td><strong>${s.pts}</strong></td><td>${s.g}</td><td>${s.p}</td><td>${s.nj||''}</td><td>${s.sg}</td><td>${s.sp}</td><td>${s.sg-s.sp}</td><td>${pInactive?'<span style="font-size:10px;color:#e55;font-weight:700">—</span>':base}</td><td>${ex>0?ex:''}</td><td><strong>${pInactive?'<span style="font-size:10px;color:#e55">inactivo</span>':base+ex}</strong></td></tr>`;
+        return `<tr class="${currentUser&&s.name===currentUser.name?'me-row':''}" style="${pInactive?'opacity:.55':''}"><td>${(!pInactive&&d)?`<span class="dest ${ar}">${ic}${groupName(dn)}</span>`:pInactive?'<span style="font-size:9px;color:#aaa">—</span>':''}</td><td><span class="avatar">${getInitials(s.name)}</span><span class="nm-link" onclick="showPlayerHistory('${jsq(s.name)}')">${s.name}</span>${inactiveBadge}</td><td><strong>${s.pts}</strong></td><td>${s.g}</td><td>${s.p}</td><td>${s.nj||''}</td><td>${s.sg}</td><td>${s.sp}</td><td>${s.sg-s.sp}</td><td>${pInactive?'<span style="font-size:10px;color:#e55;font-weight:700">—</span>':base}</td><td>${ex>0?ex:''}</td><td><strong>${pInactive?'<span style="font-size:10px;color:#e55">inactivo</span>':base+ex}</strong></td></tr>`;
       }).join('');
       
       const head=players.map(p=>`<th class="${currentUser&&p===currentUser.name?'me-mtx':''}">${lbl(p)}</th>`).join('');
@@ -1028,7 +1028,7 @@ function groupCardHTML(gid){
           if(m&&m.status==='confirmed'){const sc=m.aName===p?m.sets.map(([a,b])=>`${a}-${b}`).join(' '):m.sets.map(([a,b])=>`${b}-${a}`).join(' ');return`<td class="${m.club==='Haza'?'cell-haza':'cell-sohail'}" onclick="openModal(${m.id})">${sc}</td>`;}
           if(m&&m.status==='pending'){const sc=m.aName===p?m.sets.map(([a,b])=>`${a}-${b}`).join(' '):m.sets.map(([a,b])=>`${b}-${a}`).join(' ');return`<td class="cell-pending" onclick="openModal(${m.id})">${sc}⏳</td>`;}
           if(m&&m.status==='disputed')return`<td class="cell-disputed" onclick="openModal(${m.id})">disp.</td>`;
-          if(isActive&&canCreate(gid,p,q))return`<td class="cell-empty" onclick="prefill(${gid},'${esc(p)}','${esc(q)}')">+</td>`;
+          if(isActive&&canCreate(gid,p,q))return`<td class="cell-empty" onclick="prefill(${gid},'${jsq(p)}','${jsq(q)}')">+</td>`;
           return`<td class="cell-locked">·</td>`;
         }).join('');
         return`<tr><td class="${currentUser&&p===currentUser.name?'me-mtx':''}">${lbl(p)}</td>${cols}</tr>`;
@@ -1064,7 +1064,31 @@ function validaAlCargar(a, b){
   const yo = currentUser.name;
   return yo !== a && yo !== b;
 }
-function esc(s){return String(s).replace(/'/g,"\\'");}
+// Dos escapes distintos, porque son dos problemas distintos.
+//
+// jsq(): para meter un valor DENTRO de un string de JavaScript, que a su vez vive
+// dentro de un atributo:  onclick="verFicha('${jsq(nombre)}')"
+// Solo tiene que neutralizar el apóstrofo, que es lo que cierra ese string.
+// Nació por los apellidos tipo O'Brien, que rompían el onclick.
+//
+// attr(): para meter un valor como VALOR de un atributo HTML:
+//   value="${attr(email)}"   id="pe-name-${attr(nombre)}"
+// Acá el peligro es la comilla doble, que cierra el atributo y deja inyectar
+// otro (por ejemplo onfocus=). El apóstrofo no molesta, pero se escapa igual.
+//
+// Antes ambas cosas las hacía una sola función llamada esc(), que solo tocaba el
+// apóstrofo: correcta para los 15 casos de JS, inútil para los 13 de atributos.
+// El nombre sugería "escape de HTML" y no lo era: una trampa para el que viniera
+// después. La validación del servidor tapa el agujero, pero el nombre mentía.
+function jsq(s){ return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function attr(s){
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
 function renderGrupos(){
   try {
       const c=cycles[viewCycle-1];
@@ -1099,7 +1123,7 @@ const th_p=document.getElementById('gen-th-player');if(th_p)th_p.textContent=t('
 const th_g=document.getElementById('gen-th-group');if(th_g)th_g.textContent=t('current_group');
 const th_t=document.getElementById('gen-th-total');if(th_t)th_t.textContent=t('total');
 const title=document.getElementById('gen-title');if(title)title.textContent=t('general_title');
-document.getElementById('gen-body').innerHTML=all.map((p,i)=>{const me=currentUser&&currentUser.role==='player'&&p.name===currentUser.name;const loc=findLoc(p.name,activeN);return'<tr class="'+(me?'me-row':'')+'"><td><span class="pos '+(pc[i]||'pn')+'">'+(i+1)+'</span></td><td><span class="avatar">'+getInitials(p.name)+'</span><span class="nm-link" onclick="showPlayerHistory(\''+esc(p.name)+'\')">'+p.name+'</span>'+(me?' <span class="badge badge-ok">'+t('me_label')+'</span>':'')+'</td><td>'+(loc?groupName(loc.g):'—')+'</td><td><strong>'+p.total+'</strong></td></tr>';}).join('');}
+document.getElementById('gen-body').innerHTML=all.map((p,i)=>{const me=currentUser&&currentUser.role==='player'&&p.name===currentUser.name;const loc=findLoc(p.name,activeN);return'<tr class="'+(me?'me-row':'')+'"><td><span class="pos '+(pc[i]||'pn')+'">'+(i+1)+'</span></td><td><span class="avatar">'+getInitials(p.name)+'</span><span class="nm-link" onclick="showPlayerHistory(\''+jsq(p.name)+'\')">'+p.name+'</span>'+(me?' <span class="badge badge-ok">'+t('me_label')+'</span>':'')+'</td><td>'+(loc?groupName(loc.g):'—')+'</td><td><strong>'+p.total+'</strong></td></tr>';}).join('');}
 
 function pickClub(c){formClub=c;document.getElementById('club-sohail').className='club-opt'+(c==='Sohail'?' sel-sohail':'');document.getElementById('club-haza').className='club-opt'+(c==='Haza'?' sel-haza':'');document.getElementById('club-pick').classList.remove('req-empty');}
 function getMyPoMatch(){
@@ -2012,7 +2036,7 @@ function renderHistorial(){
   h+='<select id="hist-filter" onchange="renderHistorial()" style="padding:5px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:13px">';
   h+='<option value="all">Todos</option><option value="liga" '+(filter==='liga'?'selected':'')+'>Solo liga</option><option value="playoff" '+(filter==='playoff'?'selected':'')+'>Solo playoff</option>';
   h+='</select>';
-  h+='<input id="hist-search" placeholder="Buscar jugador o acción..." value="'+esc(search)+'" oninput="renderHistorial()" style="flex:1;min-width:160px;padding:5px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:13px">';
+  h+='<input id="hist-search" placeholder="Buscar jugador o acción..." value="'+attr(search)+'" oninput="renderHistorial()" style="flex:1;min-width:160px;padding:5px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);font-size:13px">';
   h+='</div>';
   if(!rows.length){h+='<p style="color:var(--text2);font-style:italic;text-align:center;padding:2rem 0">Sin entradas en el historial todavía.</p></div>';el.innerHTML=h;return;}
   h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">';
@@ -2175,7 +2199,7 @@ function renderAdmin(){
       const gid=gi+1;
       const players = g.players || [];
       return `<div class="ge-group"><div class="ge-gtitle">${groupName(gid)} (${players.length})</div>`+
-      players.map(n=>`<div class="ge-row"><span class="ge-nm">${n}</span><select class="ge-sel" onchange="movePlayerUI('${esc(n)}',${gid},this.value)"><option value="">${t('move_to')}</option>${grps.map((_,k)=>k+1!==gid?`<option value="${k+1}">${groupName(k+1)}</option>`:'').join('')}</select><button class="btn btn-danger btn-sm" onclick="removePlayerUI('${esc(n)}',${gid})">${t('remove')}</button></div>`).join('')+`</div>`;
+      players.map(n=>`<div class="ge-row"><span class="ge-nm">${n}</span><select class="ge-sel" onchange="movePlayerUI('${jsq(n)}',${gid},this.value)"><option value="">${t('move_to')}</option>${grps.map((_,k)=>k+1!==gid?`<option value="${k+1}">${groupName(k+1)}</option>`:'').join('')}</select><button class="btn btn-danger btn-sm" onclick="removePlayerUI('${jsq(n)}',${gid})">${t('remove')}</button></div>`).join('')+`</div>`;
     }).join('')+`</div></div>`;
     h+=destinoCard();
 
@@ -2506,8 +2530,8 @@ function matchBox(m,ti,which,ri,mi,isFirstRound){
   const iA=!m.a?'color:var(--text2);font-style:italic;':'';
   const iB=!m.b&&m.a?'color:var(--text2);font-style:italic;':'';
   const nmA=m.a||emptyTxt;const nmB=m.b||(m.a?'BYE':emptyTxt);
-  const clA=m.a?'<span class="nm-link" onclick="event.stopPropagation();showPlayerHistory(\''+esc(m.a)+'\')">'+nmA+'</span>':nmA;
-  const clB=m.b?'<span class="nm-link" onclick="event.stopPropagation();showPlayerHistory(\''+esc(m.b)+'\')">'+nmB+'</span>':nmB;
+  const clA=m.a?'<span class="nm-link" onclick="event.stopPropagation();showPlayerHistory(\''+jsq(m.a)+'\')">'+nmA+'</span>':nmA;
+  const clB=m.b?'<span class="nm-link" onclick="event.stopPropagation();showPlayerHistory(\''+jsq(m.b)+'\')">'+nmB+'</span>':nmB;
   const seedA=m.sid[0]||'';const seedB=m.sid[1]||'';
   function fn(n){return n?n.split(' ')[0]:'';}
   const fA=fn(m.a),fB=fn(m.b);
@@ -2600,8 +2624,8 @@ function bracketHTML(rounds,ti,which){
       const isSingle=pf.type==='single';
       const selHtml='<select onchange="setPoFechaType(\''+rk+'\',this.value);showPlayoffView()" style="font-size:10px;padding:2px 4px;border-radius:5px;border:1px solid var(--border2);background:var(--surface);margin-bottom:3px;width:100%"><option value="single" '+(isSingle?'selected':'')+'>Fecha única</option><option value="range" '+(!isSingle?'selected':'')+'>Rango de fechas</option></select>';
       const inpHtml=isSingle
-        ?'<input type="date" value="'+esc(pf.date||'')+'" onchange="setPoFecha(\''+rk+'\',\'date\',this.value)" style="font-size:10px;padding:2px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--surface);width:100%">'
-        :'<div style="display:flex;gap:4px;align-items:center"><input type="date" value="'+esc(pf.from||'')+'" onchange="setPoFecha(\''+rk+'\',\'from\',this.value)" style="flex:1;font-size:10px;padding:2px 4px;border-radius:5px;border:1px solid var(--border2);background:var(--surface)"><span style="font-size:10px;color:var(--text2)">→</span><input type="date" value="'+esc(pf.to||'')+'" onchange="setPoFecha(\''+rk+'\',\'to\',this.value)" style="flex:1;font-size:10px;padding:2px 4px;border-radius:5px;border:1px solid var(--border2);background:var(--surface)"></div>';
+        ?'<input type="date" value="'+attr(pf.date||'')+'" onchange="setPoFecha(\''+rk+'\',\'date\',this.value)" style="font-size:10px;padding:2px 6px;border-radius:5px;border:1px solid var(--border2);background:var(--surface);width:100%">'
+        :'<div style="display:flex;gap:4px;align-items:center"><input type="date" value="'+attr(pf.from||'')+'" onchange="setPoFecha(\''+rk+'\',\'from\',this.value)" style="flex:1;font-size:10px;padding:2px 4px;border-radius:5px;border:1px solid var(--border2);background:var(--surface)"><span style="font-size:10px;color:var(--text2)">→</span><input type="date" value="'+attr(pf.to||'')+'" onchange="setPoFecha(\''+rk+'\',\'to\',this.value)" style="flex:1;font-size:10px;padding:2px 4px;border-radius:5px;border:1px solid var(--border2);background:var(--surface)"></div>';
       dateLine='<div style="margin-top:2px">'+selHtml+inpHtml+'</div>';
     } else if(dateStr){
       dateLine='<span style="font-size:11px;font-weight:700;color:var(--pri);letter-spacing:.03em">'+dateStr+'</span>';
@@ -2664,7 +2688,7 @@ function showPlayoffView(){
     const inOtherBrackets=standingsOrder.filter(n=>inPo[n]!==undefined&&inPo[n]!==ti);
     function rank(n){const r=standingsOrder.indexOf(n);return r>=0?r+1:'';}
     html+=`<div class="card"><div class="section-lbl">${tf('po_seeds_title',{l:tr.label})}</div>
-    <div class="seed-list">${tr.seeds.map(n=>`<span class="seed-chip" style="${(USERS[n]&&USERS[n].inactive)?'background:#FCEBEB':''}"><span style="color:var(--text2);font-size:10px;min-width:18px;display:inline-block">#${rank(n)}</span> ${availLabel(n)} <button class="rm" onclick="removeSeedUI(${ti},'${esc(n)}')" aria-label="Quitar"><i class="ti ti-x"></i></button></span>`).join('')}</div>
+    <div class="seed-list">${tr.seeds.map(n=>`<span class="seed-chip" style="${(USERS[n]&&USERS[n].inactive)?'background:#FCEBEB':''}"><span style="color:var(--text2);font-size:10px;min-width:18px;display:inline-block">#${rank(n)}</span> ${availLabel(n)} <button class="rm" onclick="removeSeedUI(${ti},'${jsq(n)}')" aria-label="Quitar"><i class="ti ti-x"></i></button></span>`).join('')}</div>
     <div class="form-row" style="margin-top:.6rem">
       <div class="form-group"><label>${t('po_add_label')}</label><select id="po-add-${ti}"><option value="">${t('po_add_choose')}</option>${avail.map(n=>`<option value="${n}">#${rank(n)} ${availLabel(n)}</option>`).join('')}</select></div>
       <div class="form-group" style="align-self:end"><button class="btn btn-primary btn-sm" onclick="addSeedUI(${ti})"><i class="ti ti-plus"></i> ${t('po_add_btn')}</button></div>
@@ -2677,10 +2701,10 @@ function showPlayoffView(){
   }
 
   const finalM=tr.main&&tr.main.length?tr.main[tr.main.length-1][0]:null;
-  html+=`<div class="card"><div class="po-section-title"><i class="ti ti-trophy"></i> ${tf('po_main_title',{l:tr.label})}</div>${bracketHTML(tr.main,ti,'main')}${finalM&&finalM.w?`<div class="champ-card"><div class="lbl">${tf('po_champ',{l:tr.label})}</div><div class="who"><i class="ti ti-crown"></i> <span class="nm-link" onclick="showPlayerHistory('${esc(finalM.w)}')">${finalM.w}</span></div></div>`:''}</div>`;
+  html+=`<div class="card"><div class="po-section-title"><i class="ti ti-trophy"></i> ${tf('po_main_title',{l:tr.label})}</div>${bracketHTML(tr.main,ti,'main')}${finalM&&finalM.w?`<div class="champ-card"><div class="lbl">${tf('po_champ',{l:tr.label})}</div><div class="who"><i class="ti ti-crown"></i> <span class="nm-link" onclick="showPlayerHistory('${jsq(finalM.w)}')">${finalM.w}</span></div></div>`:''}</div>`;
   if(tr.cons){
     const cf=tr.cons[tr.cons.length-1][0];
-    html+=`<div class="card"><div class="po-section-title po-cons-title"><i class="ti ti-shield"></i> ${tf('po_cons_title',{l:tr.label})}</div>${bracketHTML(tr.cons,ti,'cons')}${cf&&cf.w?`<div class="champ-card champ-cons"><div class="lbl">${tf('po_champ_cons',{l:tr.label})}</div><div class="who"><span class="nm-link" onclick="showPlayerHistory('${esc(cf.w)}')">${cf.w}</span></div></div>`:''}</div>`;
+    html+=`<div class="card"><div class="po-section-title po-cons-title"><i class="ti ti-shield"></i> ${tf('po_cons_title',{l:tr.label})}</div>${bracketHTML(tr.cons,ti,'cons')}${cf&&cf.w?`<div class="champ-card champ-cons"><div class="lbl">${tf('po_champ_cons',{l:tr.label})}</div><div class="who"><span class="nm-link" onclick="showPlayerHistory('${jsq(cf.w)}')">${cf.w}</span></div></div>`:''}</div>`;
   }
 
   html+=`<div class="card legend-card"><p class="legend-txt">${t('po_legend')}</p></div>`;
@@ -3000,11 +3024,11 @@ function renderPerfil(){
         <div class="form-row" style="margin-bottom:.75rem">
           <div class="form-group">
             <label style="font-size:13px;color:var(--text2);margin-bottom:4px;display:block">Nombre de la liga</label>
-            <input id="sa-league-name" type="text" value="${esc(LEAGUE_NAME)}" style="width:100%;padding:8px 12px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);font-size:14px">
+            <input id="sa-league-name" type="text" value="${attr(LEAGUE_NAME)}" style="width:100%;padding:8px 12px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);font-size:14px">
           </div>
           <div class="form-group">
             <label style="font-size:13px;color:var(--text2);margin-bottom:4px;display:block">Subtítulo</label>
-            <input id="sa-league-sub" type="text" value="${esc(LEAGUE_SUBTITLE)}" style="width:100%;padding:8px 12px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);font-size:14px">
+            <input id="sa-league-sub" type="text" value="${attr(LEAGUE_SUBTITLE)}" style="width:100%;padding:8px 12px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);font-size:14px">
           </div>
         </div>
         <div class="form-row" style="margin-bottom:.75rem">
@@ -3107,22 +3131,22 @@ function renderPlayerList(players, filter) {
     return `<div class="ge-group" style="margin-bottom:.5rem;${isInactive?'opacity:.6':''}">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div class="ge-gtitle">${p.name}${loc ? ` <span class="badge badge-tag">${groupName(loc.g)}</span>` : ''}${isInactive?' <span style="font-size:10px;background:#e55;color:#fff;border-radius:4px;padding:1px 5px;font-weight:700">INACTIVO</span>':''}</div>
-        <button class="btn btn-sm" onclick="togglePlayerEdit('${esc(p.name)}')"><i class="ti ti-edit"></i> ${t('edit')}</button>
+        <button class="btn btn-sm" onclick="togglePlayerEdit('${jsq(p.name)}')"><i class="ti ti-edit"></i> ${t('edit')}</button>
       </div>
     
-      <div id="pe-${esc(p.name)}" style="display:none;margin-top:.5rem">
+      <div id="pe-${attr(p.name)}" style="display:none;margin-top:.5rem">
         <div style="border:1.5px solid var(--border2);border-radius:10px;padding:.65rem .8rem;margin-bottom:.55rem;background:var(--surface)">
         <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);margin-bottom:.55rem"><i class="ti ti-user"></i> Perfil del jugador</div>
         <div class="form-row">
-          <div class="form-group"><label>Nombre completo</label><input type="text" id="pe-name-${esc(p.name)}" value="${esc(p.name)}"></div>
-          <div class="form-group"><label>Email</label><input type="email" id="pe-email-${esc(p.name)}" value="${esc(p.email||'')}"></div>
+          <div class="form-group"><label>Nombre completo</label><input type="text" id="pe-name-${attr(p.name)}" value="${attr(p.name)}"></div>
+          <div class="form-group"><label>Email</label><input type="email" id="pe-email-${attr(p.name)}" value="${attr(p.email||'')}"></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>Teléfono</label><input type="tel" id="pe-tel-${esc(p.name)}" value="${esc(p.tel||'')}"></div>
-          <div class="form-group"><label>Grupo (Ciclo Activo)</label><select id="pe-grp-${esc(p.name)}"><option value="">Sin grupo</option>${gOpts}</select></div>
+          <div class="form-group"><label>Teléfono</label><input type="tel" id="pe-tel-${attr(p.name)}" value="${attr(p.tel||'')}"></div>
+          <div class="form-group"><label>Grupo (Ciclo Activo)</label><select id="pe-grp-${attr(p.name)}"><option value="">Sin grupo</option>${gOpts}</select></div>
         </div>
         <div style="text-align:right;margin-top:.5rem">
-          <button class="btn btn-success btn-sm" onclick="savePlayerAdmin('${esc(p.name)}')"><i class="ti ti-device-floppy"></i> Guardar perfil</button>
+          <button class="btn btn-success btn-sm" onclick="savePlayerAdmin('${jsq(p.name)}')"><i class="ti ti-device-floppy"></i> Guardar perfil</button>
         </div>
         </div>
         ${(p.role==='superadmin'||p.role==='admin'||!puedeGestionarAdmins(currentUser)) ? '' : `
@@ -3130,7 +3154,7 @@ function renderPlayerList(players, filter) {
           <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);margin-bottom:.55rem"><i class="ti ti-shield-lock"></i> ${t('role_section')}</div>
           <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap">
             <span class="badge" style="background:${esAdmin(p)?'var(--pri)':'var(--surface2)'};color:${esAdmin(p)?'#fff':'var(--text2)'}">${esAdmin(p)?t('role_is_admin'):t('role_is_player')}</span>
-            <button class="btn btn-sm" style="background:var(--hl);color:var(--priD)" onclick="toggleAdminRole('${esc(p.name)}')">
+            <button class="btn btn-sm" style="background:var(--hl);color:var(--priD)" onclick="toggleAdminRole('${jsq(p.name)}')">
               <i class="ti ti-shield-${esAdmin(p)?'off':'check'}"></i> ${esAdmin(p)?t('role_make_player'):t('role_make_admin')}
             </button>
           </div>
@@ -3140,20 +3164,20 @@ function renderPlayerList(players, filter) {
         <div class="form-group">
           <label>Poner una nueva contraseña</label>
           <div style="display:flex;gap:6px">
-            <input type="text" id="pe-pass-${esc(p.name)}" placeholder="Mín. 4 caracteres" autocomplete="new-password" style="flex:1">
-            <button class="btn btn-sm" style="white-space:nowrap" onclick="setPlayerPwd('${esc(p.name)}')"><i class="ti ti-key"></i> Aplicar</button>
+            <input type="text" id="pe-pass-${attr(p.name)}" placeholder="Mín. 4 caracteres" autocomplete="new-password" style="flex:1">
+            <button class="btn btn-sm" style="white-space:nowrap" onclick="setPlayerPwd('${jsq(p.name)}')"><i class="ti ti-key"></i> Aplicar</button>
           </div>
         </div>
         <div style="margin-top:.55rem;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <span style="font-size:12px;color:var(--text2)">o restablecer a la clave por defecto:</span>
-          <button class="btn btn-sm" onclick="resetPwd('${esc(p.name)}')"><i class="ti ti-refresh"></i> Reset PSWD - tenis</button>
+          <button class="btn btn-sm" onclick="resetPwd('${jsq(p.name)}')"><i class="ti ti-refresh"></i> Reset PSWD - tenis</button>
         </div>
         </div>
         <div style="border:1.5px solid #e9b8b8;border-radius:10px;padding:.65rem .8rem;background:#fdf5f5">
         <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#b91c1c;margin-bottom:.55rem"><i class="ti ti-alert-triangle"></i> Estado en la liga</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <button class="btn btn-sm" style="${isInactive?'background:#16a34a':'background:#f59e0b'};color:#fff" onclick="toggleInactive('${esc(p.name)}')"><i class="ti ti-${isInactive?'user-check':'user-off'}"></i> ${isInactive?'Reactivar jugador':'Marcar inactivo'}</button>
-          <button class="btn btn-danger btn-sm" onclick="deletePlayerAdmin('${esc(p.name)}')"><i class="ti ti-trash"></i> Eliminar de la liga</button>
+          <button class="btn btn-sm" style="${isInactive?'background:#16a34a':'background:#f59e0b'};color:#fff" onclick="toggleInactive('${jsq(p.name)}')"><i class="ti ti-${isInactive?'user-check':'user-off'}"></i> ${isInactive?'Reactivar jugador':'Marcar inactivo'}</button>
+          <button class="btn btn-danger btn-sm" onclick="deletePlayerAdmin('${jsq(p.name)}')"><i class="ti ti-trash"></i> Eliminar de la liga</button>
         </div>
         </div>
       </div>
@@ -3230,7 +3254,7 @@ function renamePlayerEverywhere(oldName,newName){
 }
 
 function savePlayerAdmin(oldName){
-  if(USERS[oldName]&&(USERS[oldName].role==='admin'||USERS[oldName].role==='superadmin')){toast('No se puede editar al administrador desde aquí.');return;}
+  if(esCuentaSistema(oldName)){toast('No se puede editar al administrador desde aquí.');return;}
   const newName=(document.getElementById('pe-name-'+oldName).value||'').trim();
   const email=(document.getElementById('pe-email-'+oldName).value||'').trim();
   const tel=(document.getElementById('pe-tel-'+oldName).value||'').trim();
@@ -3250,7 +3274,7 @@ function savePlayerAdmin(oldName){
 }
 
 function deletePlayerAdmin(name){
-  if(USERS[name]&&(USERS[name].role==='admin'||USERS[name].role==='superadmin')){toast('No se puede eliminar al administrador.');return;}
+  if(esCuentaSistema(name)){toast('No se puede eliminar al administrador.');return;}
   if(!confirm(`¿Seguro que querés eliminar a ${name} de la liga? Se borrará de los grupos actuales.`))return;
   delete USERS[name];
   const idx=ALLNAMES.indexOf(name);
@@ -3266,6 +3290,14 @@ function deletePlayerAdmin(name){
 // 'isAdmin' dice si PODÉS ADMINISTRARLA. Son dos cosas distintas: un jugador
 // ascendido sigue siendo role:'player' —con su grupo, su fila, sus partidos—
 // y además lleva isAdmin:true. Si le pisáramos el role, desaparecería de la liga.
+// ¿Es una de las dos cuentas del sistema? Se pregunta por la CLAVE, nunca por el
+// rol ni por esAdmin(). 'admin' y 'superadmin' no son personas: no juegan, no se
+// editan ni se borran desde el panel de jugadores.
+// Un jugador ascendido SÍ es una persona: se le edita el perfil, se le resetea la
+// clave y se lo puede dar de baja como a cualquiera. Preguntar esAdmin() acá lo
+// dejaba a mitad de camino: editable y borrable, pero sin poder resetearle la clave.
+function esCuentaSistema(k){ return k==='admin' || k==='superadmin'; }
+
 function esAdmin(u){
   return !!u && (u.role==='admin' || u.role==='superadmin' || u.isAdmin===true);
 }
@@ -3296,7 +3328,7 @@ function toggleAdminRole(name){
 
 async function resetPwd(name){
   const u=USERS[name];if(!u)return;
-  if(esAdmin(u)){toast(t('reset_not_here')||'No se puede desde aquí.');return;}
+  if(esCuentaSistema(name)){toast(t('reset_not_here')||'No se puede desde aquí.');return;}
   if(!confirm(t('reset_confirm').replace('{n}',name)))return;
   // Va por /api/password, NO por /api/save: los hashes ya no viajan en el estado.
   // El servidor lo hashea y, al ser la clave por defecto, en su próximo login
@@ -3313,7 +3345,7 @@ async function resetPwd(name){
 // El admin le pone una contraseña personalizada a un jugador (hasheada con PBKDF2 v2).
 async function setPlayerPwd(name){
   const u=USERS[name];if(!u){toast('Jugador no encontrado.');return;}
-  if(esAdmin(u)){toast('No se puede cambiar la contraseña del administrador desde aquí.');return;}
+  if(esCuentaSistema(name)){toast('No se puede cambiar la contraseña del administrador desde aquí.');return;}
   const inp=document.getElementById('pe-pass-'+name);
   const pw=inp?(inp.value||'').trim():'';
   if(!pw||pw.length<4){toast('La contraseña debe tener al menos 4 caracteres.');return;}
@@ -3469,8 +3501,8 @@ function openPoForm(m,ti){
     <div id="po-wo-opts" style="display:none">
       <p style="font-size:12px;color:var(--text2);margin-bottom:.5rem;text-align:center">Partido no jugado — ¿quién avanza por <strong style="color:var(--priD)">W.O.</strong> (walkover)?</p>
       <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-        <button class="btn btn-sm" onclick="markPoWO(true)" style="background:var(--hl);color:var(--priD);border-color:var(--priD);font-weight:600"><i class="ti ti-arrow-big-right-lines"></i> Avanza ${esc(m.a)}</button>
-        <button class="btn btn-sm" onclick="markPoWO(false)" style="background:var(--hl);color:var(--priD);border-color:var(--priD);font-weight:600"><i class="ti ti-arrow-big-right-lines"></i> Avanza ${esc(m.b)}</button>
+        <button class="btn btn-sm" onclick="markPoWO(true)" style="background:var(--hl);color:var(--priD);border-color:var(--priD);font-weight:600"><i class="ti ti-arrow-big-right-lines"></i> Avanza ${attr(m.a)}</button>
+        <button class="btn btn-sm" onclick="markPoWO(false)" style="background:var(--hl);color:var(--priD);border-color:var(--priD);font-weight:600"><i class="ti ti-arrow-big-right-lines"></i> Avanza ${attr(m.b)}</button>
       </div>
     </div>
   </div>`:''}
