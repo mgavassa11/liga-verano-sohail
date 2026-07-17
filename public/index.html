@@ -739,8 +739,12 @@ function demoFill(){const c=getActive();if(!c||!c.groups)return;const opts=[[[6,
 
 function allCyclesDone(){return cycles.every(c=>c.groups&&c.status==='finished');}
 
+// SOLO dibuja. Antes guardaba acá adentro, y eso significaba que cada repintado
+// disparaba un POST de 125 KB: al entrar, la tabla esperaba a ese guardado que no
+// tenía nada que guardar. 13 de las 15 llamadas ya hacían persist() justo antes,
+// así que además se guardaba dos veces. Ahora quien cambia datos, guarda; quien
+// dibuja, dibuja.
 function refreshAll(){
-  try{if(typeof persist==='function')persist(true);}catch(e){}
   if(viewCycle==='po'){showPlayoffView();renderPend();renderCycleBar();return;}
   if(subView==='grupos')renderGrupos();
   if(subView==='general')renderGeneral();
@@ -824,33 +828,14 @@ function updateBadge() {
   }
 }
 
-async function initLogin(){
-  // La estructura (quién está en qué grupo del ciclo activo) la arma /api/users.
-  // Las etiquetas las pone el navegador con groupName(), que es solo "Grupo N".
+// Pinta el desplegable a partir de una estructura ya conocida. No toca la red:
+// es puro DOM, tarda milisegundos. Mismo patrón que ya usan los colores ('lsc')
+// y el nombre de la liga ('lsn'): dibujar de la caché primero, refrescar después.
+function pintarLogin(d){
   const s=document.getElementById('login-user');if(!s)return;
-  const e=document.getElementById('login-err');
   const prev=s.value;
   s.innerHTML='';
   const ph=document.createElement('option');ph.value='';ph.textContent=t('select_user');s.appendChild(ph);
-  let d={};
-  try{
-    const r=await fetch('/api/users',{cache:'no-store'});
-    if(!r.ok){
-      const err=await r.json().catch(()=>({}));
-      const msg=r.status===404
-        ? t('err_users_404')
-        : t('err_server_said')+r.status+'. '+(err.error||'');
-      if(e){e.textContent=t('err_no_users')+' '+msg;e.style.display='block';}
-      console.error('/api/users →',r.status,err);
-      return;
-    }
-    d=await r.json().catch(()=>({}));
-    if(e)e.style.display='none';
-  }catch(err){
-    if(e){e.textContent=t('err_users_csp');e.style.display='block';}
-    console.error('fetch /api/users falló (probable CSP):',err);
-    return;
-  }
   const opt=u=>new Option(u.i?u.v+' (inactivo)':u.v,u.v);
   // 1) El administrador, arriba de todo
   const admin=document.createElement('option');admin.value='admin';admin.textContent=t('admin_org');s.appendChild(admin);
@@ -873,10 +858,52 @@ async function initLogin(){
   saOg.appendChild(new Option('Super Administrador','superadmin'));
   s.appendChild(saOg);
   if(prev)s.value=prev;
-  // Precalentar /api/login: un GET devuelve 405 al instante sin tocar la base,
-  // pero deja la función levantada. Así el arranque en frío no se lo come el
-  // jugador cuando aprieta Entrar.
+}
+
+async function initLogin(){
+  const e=document.getElementById('login-err');
+
+  // 1) Pintar YA con lo último que sabemos. El desplegable aparece instantáneo
+  //    en recargas y al cambiar de cuenta, sin esperar a la red.
+  let hayCache=false;
+  try{
+    const c=localStorage.getItem('lsu');
+    if(c){ pintarLogin(JSON.parse(c)); hayCache=true; }
+  }catch(_){ /* caché corrupta: se ignora y se pide de nuevo */ }
+
+  // 2) Precalentar las dos funciones en paralelo. Un GET a /api/login devuelve
+  //    405 al instante sin tocar la base, pero deja la función levantada.
   fetch('/api/login',{method:'GET'}).catch(()=>{});
+
+  // 3) Traer la lista de verdad y refrescar por detrás.
+  let d={};
+  try{
+    const r=await fetch('/api/users',{cache:'no-store'});
+    if(!r.ok){
+      const err=await r.json().catch(()=>({}));
+      const msg=r.status===404 ? t('err_users_404') : t('err_server_said')+r.status+'. '+(err.error||'');
+      // Si ya hay algo pintado de la caché, no se rompe la pantalla por un fallo
+      // de refresco: se puede entrar igual y el servidor valida al final.
+      if(e && !hayCache){e.textContent=t('err_no_users')+' '+msg;e.style.display='block';}
+      console.error('/api/users →',r.status,err);
+      return;
+    }
+    d=await r.json().catch(()=>({}));
+    if(e)e.style.display='none';
+  }catch(err){
+    if(e && !hayCache){e.textContent=t('err_users_csp');e.style.display='block';}
+    console.error('fetch /api/users falló:',err);
+    return;
+  }
+
+  // 4) Repintar solo si algo cambió, y guardar para la próxima vez.
+  const nuevo=JSON.stringify(d);
+  let viejo=null; try{ viejo=localStorage.getItem('lsu'); }catch(_){}
+  if(nuevo!==viejo){
+    pintarLogin(d);
+    // Solo nombres y grupos: no viajan hashes ni roles (lo garantiza /api/users).
+    try{ localStorage.setItem('lsu',nuevo); }catch(_){ /* modo privado: sin caché */ }
+  }
 }
 function applyLeagueNameToDOM(){
   const _lt=document.getElementById('login-title');if(_lt&&LEAGUE_NAME)_lt.textContent=LEAGUE_NAME;
@@ -1611,6 +1638,7 @@ function setPlayersPerGroup(val){
 }
 
 function applyGroupsUpdate(){
+  persist(true);  // explícito: refreshAll ya no guarda
   refreshAll();
   persist(true);
   toast('Grupos actualizados.');
@@ -3477,6 +3505,7 @@ function markPoWO(advanceA){
   addLog('Playoff: W.O.',{a:m.a,b:m.b,winner:winnerName,po:true,cuadro:tr.label,which});
   closeM();
   if(typeof showPlayoffView==='function')showPlayoffView();
+  persist(true);  // explícito: refreshAll ya no guarda
   refreshAll();
   toast(winnerName+' avanza por W.O.');
   persist(true);
