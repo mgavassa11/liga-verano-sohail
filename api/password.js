@@ -20,15 +20,21 @@ module.exports = async function handler(req, res){
   const target  = body.target ? String(body.target) : null;
 
   if(newPass.length < 4) return res.status(400).json({ error: 'La contraseña debe tener al menos 4 caracteres.' });
-  if(target && !admin)   return res.status(403).json({ error: 'No tenés permiso para cambiar la contraseña de otro jugador.' });
 
   let state;
   try { state = await readState(); }
   catch(e){ return res.status(503).json({ error: 'No se pudo leer la base de datos.' }); }
 
-  // Se decide DESPUÉS de leer la base: el permiso sale del estado, no del token.
-  const admin   = sesionEsAdmin(session, state && state.users);
   if(!state || !state.users) return res.status(503).json({ error: 'La base de datos no tiene datos.' });
+
+  // Se decide DESPUÉS de leer la base: el permiso sale del estado, no del token.
+  const admin = sesionEsAdmin(session, state.users);
+
+  // Este chequeo TIENE que ir después de declarar admin. Estuvo arriba y, como
+  // 'target && !admin' cortocircuita, solo reventaba cuando había target: o sea,
+  // justo en el reset del administrador. node --check no lo ve porque la sintaxis
+  // es válida; es un ReferenceError de runtime (temporal dead zone).
+  if(target && !admin) return res.status(403).json({ error: 'No tenés permiso para cambiar la contraseña de otro jugador.' });
 
   const name = target || session.u;
   const u = state.users[name];
