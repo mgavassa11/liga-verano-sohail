@@ -148,42 +148,44 @@ module.exports = async function handler(req, res){
     return res.status(403).json({ error: 'Tiene que quedar al menos un administrador.' });
   }
 
-  // Un admin que además JUEGA no arbitra sus propios partidos. Las comprobaciones
-  // del navegador son ayuda visual: sin este bloque, un curl las saltea todas.
-  // Solo aplica a jugadores ascendidos; la cuenta del sistema no juega.
-  const quien = session.u;
-  const soyJugador = !!(curUsers[quien] && curUsers[quien].role === 'player');
-  if(admin && soyJugador){
-    const mio = m => !!m && (m.po
-      ? Array.isArray(m.poNames) && m.poNames.includes(quien)
-      : (m.aName === quien || m.bName === quien));
-    const previos = new Map((current.matches || []).map(m => [m.id, m]));
-    for(const m of (incoming.matches || [])){
-      if(!mio(m)) continue;
-      const prev = previos.get(m.id);
-      const yaEstaba = prev && prev.status === 'confirmed';
-      // Un partido propio no puede PASAR a confirmado por mano del que lo jugó.
-      if(m.status === 'confirmed' && !yaEstaba){
-        return res.status(403).json({ error: 'No podés validar un partido que jugaste vos. Lo confirma otro administrador.' });
-      }
-      // Ni marcarse un W.O. o un "no jugado" a favor.
-      if((m.wo || m.np) && !prev){
-        return res.status(403).json({ error: 'No podés marcar W.O. ni "no jugado" en un partido que jugás vos. Lo resuelve otro administrador.' });
-      }
-    }
-  }
+  // NOTA DE DISEÑO: acá vivía el bloqueo que impedía a un admin-jugador validar
+  // sus propios partidos. Se quitó a pedido del dueño de la liga: el control pasó
+  // de la PROHIBICIÓN a la TRANSPARENCIA. Todo partido confirmado guarda vBy con
+  // el nombre de quien lo validó, visible para cualquiera en el modal, y el
+  // historial registra la acción con autor y rol. En una liga de conocidos, que
+  // un admin que juega tenga que esperar a otro admin trababa más de lo que
+  // protegía. La contención real es a quién se asciende, y queda auditado.
 
   // La configuración de la liga (puntos, ciclos, playoff, fechas, nombre) la toca
   // SOLO el administrador original o el super admin. El panel ya lo gatea en pantalla,
   // pero eso es un botón escondido, no un permiso: un jugador ascendido podía
   // reescribir por curl la tabla de PUNTOS y darle 35 puntos a su propio grupo.
+  // La configuración se parte en dos, porque el riesgo es muy distinto.
+  //
+  // Lo ESTRUCTURAL (puntos, grupos, ciclos, playoff, fechas) sigue siendo del
+  // administrador original y del super admin. Un jugador ascendido que pudiera
+  // tocar PUNTOS se pondría 35 puntos en su propio grupo y se iría a la punta de
+  // la general: es escalada de privilegios disfrazada de configuración.
+  //
+  // Lo COSMÉTICO (colores, nombre, subtítulo) lo puede tocar cualquier admin.
+  // Lo peor que puede pasar es que la liga quede fea, y se deshace en un click.
+  if(!admin){
+    const COSMETICO = ['LEAGUE_NAME','LEAGUE_SUBTITLE','LEAGUE_COLOR_PRI',
+                       'LEAGUE_COLOR_ACC','LEAGUE_COLOR_HL','LEAGUE_COLOR_SOHAIL',
+                       'LEAGUE_COLOR_HAZA','LEAGUE_COLOR_DISP'];
+    for(const k of COSMETICO){
+      if(JSON.stringify(incoming[k]) !== JSON.stringify(current[k])){
+        return res.status(403).json({ error: 'Solo un administrador puede cambiar la apariencia de la liga.' });
+      }
+    }
+  }
+
   if(!puedeGestionarAdmins(session)){
     const CONFIG = ['cycles','activeN','playoff','DESTINO','FECHAS','PO_FECHAS',
-                    'ALLNAMES','PUNTOS','LEAGUE_NAME','LEAGUE_SUBTITLE',
-                    'LEAGUE_COLOR_PRI','LEAGUE_COLOR_ACC','LEAGUE_COLOR_HL'];
+                    'ALLNAMES','PUNTOS'];
     for(const k of CONFIG){
       if(JSON.stringify(incoming[k]) !== JSON.stringify(current[k])){
-        return res.status(403).json({ error: 'La configuración de la liga solo la cambia el administrador original o el super admin.' });
+        return res.status(403).json({ error: 'La configuración estructural (puntos, grupos, ciclos, playoff) solo la cambia el administrador original o el super admin.' });
       }
     }
   }
