@@ -1054,7 +1054,7 @@ function groupCardHTML(gid){
         const cols=players.map((q,j)=>{
           if(i===j)return`<td class="res-black"></td>`;
           const m=findMatch(viewCycle,gid,p,q);
-          if(m&&m.np)return`<td class="cell-locked" style="cursor:pointer;font-size:10px;font-weight:700;color:var(--text2)" onclick="openModal(${m.id})">NJ</td>`;
+          if(m&&m.np)return`<td class="cell-club" style="background:${LEAGUE_COLOR_HL};color:${autoTxt(LEAGUE_COLOR_HL)};font-size:10px;font-weight:700" onclick="openModal(${m.id})">NJ</td>`;
           if(m&&m.status==='confirmed'){const sc=m.aName===p?m.sets.map(([a,b])=>`${a}-${b}`).join(' '):m.sets.map(([a,b])=>`${b}-${a}`).join(' ');return`<td class="cell-club" style="${clubStyle(m.club)}" onclick="openModal(${m.id})">${sc}</td>`;}
           if(m&&m.status==='pending'){const sc=m.aName===p?m.sets.map(([a,b])=>`${a}-${b}`).join(' '):m.sets.map(([a,b])=>`${b}-${a}`).join(' ');return`<td class="cell-pending" onclick="openModal(${m.id})">${sc}⏳</td>`;}
           if(m&&m.status==='disputed')return`<td class="cell-disputed" style="background:${COLOR_DISPUTA};color:${autoTxt(COLOR_DISPUTA)}" onclick="openModal(${m.id})">disp.</td>`;
@@ -1218,8 +1218,12 @@ if(_fw)_fw.style.display=(esAdmin(currentUser))?'flex':'none';
 if(c.status==='finished'&&!playoff.started&&!playoff.preview&&!esAdmin(currentUser)){
   note.innerHTML='<span style="color:var(--text2)">La temporada regular ha finalizado. Esperá que el administrador habilite los Play Offs.</span>';
   r.disabled=true;o.disabled=true;r.className='score-sel-locked';o.className='score-sel-locked';return;
-}if(currentUser.role==='player'){
-  // Si hay playoffs activos y el jugador tiene partido, mostrarlo automáticamente
+}if(currentUser.role==='player' && !esAdmin(currentUser)){
+  // Jugador SIN permisos de admin: solo puede cargar sus propios partidos.
+  // Un jugador que además es admin NO entra acá: cae en la rama else de abajo,
+  // que le deja elegir a cualquiera de los dos jugadores (poder de admin).
+  // Si no, este bloque le bloqueaba el reporter en su propio nombre y no podía
+  // cargar el partido de otros.
   const myPo=getMyPoMatch();
   if(myPo&&!na){
     // Modo playoff: formulario bloqueado con el rival de llaves
@@ -1231,9 +1235,7 @@ if(c.status==='finished'&&!playoff.started&&!playoff.preview&&!esAdmin(currentUs
     o.value=myPo.rival;
     o.disabled=true;o.className='score-sel-locked';
     poContext={ti:myPo.ti,which:myPo.which,ri:myPo.ri,mi:myPo.mi};
-    // Ocultar botón de STB y forzar a openPoForm si lo abre desde aquí
-    document.getElementById('club-sohail').className='club-opt';
-    document.getElementById('club-haza').className='club-opt';
+    renderClubButtons();
     document.getElementById('f-fecha').value=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
     return;
   }
@@ -1382,7 +1384,7 @@ if(c.status==='finished'&&!playoff.started&&!playoff.preview&&!esAdmin(currentUs
     const fs=document.getElementById('admin-grp-filter-sel');if(fs)fs.value=String(gi);
     fillReporterByGroup(gi);
     r.value=`${gi}|${na}`;filterRival(`${gi}|${na}`,nb);
-  }else{filterRival('',null);}}document.getElementById('club-sohail').className='club-opt';document.getElementById('club-haza').className='club-opt';document.getElementById('f-fecha').value=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
+  }else{filterRival('',null);}}formClub='';renderClubButtons();document.getElementById('f-fecha').value=(()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');})();
 var lc=document.getElementById('lbl-club');if(lc)lc.innerHTML=`${t('club_label')} <span class="reqmark">${t('reqmark_label')}</span>`;
 var lf=document.getElementById('lbl-fecha-field');if(lf)lf.innerHTML=`${t('date_label')} <span class="reqmark">${t('reqmark_label')}</span>`;
 var rp=document.getElementById('f-reporter-lbl');if(rp)rp.textContent=t('reporter');
@@ -1417,9 +1419,12 @@ function filterRival(repVal,preselect){
 }
 function prefill(gid,n1,n2){
   showSub('cargar');
-  if(currentUser.role==='player'){
+  if(currentUser.role==='player' && !esAdmin(currentUser)){
+    // Jugador sin permisos de admin: es uno de los dos, se setea el rival.
     document.getElementById('f-rival').value=(currentUser.name===n1?n2:n1);
   }else{
+    // Admin (incluido el jugador-admin): rellena AMBOS jugadores del partido
+    // clickeado, sin asumir que el que carga es uno de ellos.
     const gi=gid-1;
     const repVal=`${gi}|${n1}`;
     const r=document.getElementById('f-reporter');
@@ -1473,9 +1478,12 @@ function submitResult(){
     return;
   }
   let repName,rivName,gid;
-  if(currentUser.role==='player'){
+  if(currentUser.role==='player' && !esAdmin(currentUser)){
+    // Jugador sin permisos de admin: él es el reporter, el rival sale del select.
     repName=currentUser.name;rivName=iv;const loc=findLoc(repName,activeN);gid=loc.g;
   }else{
+    // Admin (incluido el jugador-admin): ambos jugadores salen de los dos selects,
+    // sin asumir que el que envía es uno de ellos.
     const repVal=rv.startsWith('po:')?rv.split(':')[3]:rv;
     const a=parseSel(repVal),b=parseSel(iv);
     if(a.g!==b.g){fAlert(t('same_group'),'err');return;}
@@ -1534,7 +1542,7 @@ function markNotPlayed(){
 }
 
 function fAlert(m,t){const e=document.getElementById('form-alert');e.className=`alert alert-${t}`;e.textContent=m;setTimeout(()=>{e.textContent='';e.className='';},6000);}
-function clearForm(){if(esAdmin(currentUser)){const r=document.getElementById('f-reporter');if(r)r.value='';}const rv=document.getElementById('f-rival');if(rv)rv.value='';['s1a','s1b','s2a','s2b','s3a','s3b'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='0';});const sr=document.getElementById('s3-row');if(sr)sr.style.display='none';const stbBtn=document.getElementById('stb-toggle-btn');if(stbBtn)stbBtn.innerHTML='<i class="ti ti-plus"></i> '+t('add_stb');formClub='';const cs=document.getElementById('club-sohail');if(cs)cs.className='club-opt';const ch=document.getElementById('club-haza');if(ch)ch.className='club-opt';const ff=document.getElementById('f-fecha');if(ff){const d=new Date();ff.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}const cp=document.getElementById('club-pick');if(cp)cp.classList.remove('req-empty');const fp2=document.getElementById('f-fecha');if(fp2)fp2.classList.remove('req-empty');}
+function clearForm(){if(esAdmin(currentUser)){const r=document.getElementById('f-reporter');if(r)r.value='';}const rv=document.getElementById('f-rival');if(rv)rv.value='';['s1a','s1b','s2a','s2b','s3a','s3b'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='0';});const sr=document.getElementById('s3-row');if(sr)sr.style.display='none';const stbBtn=document.getElementById('stb-toggle-btn');if(stbBtn)stbBtn.innerHTML='<i class="ti ti-plus"></i> '+t('add_stb');formClub='';renderClubButtons();const ff=document.getElementById('f-fecha');if(ff){const d=new Date();ff.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}const cp=document.getElementById('club-pick');if(cp)cp.classList.remove('req-empty');const fp2=document.getElementById('f-fecha');if(fp2)fp2.classList.remove('req-empty');}
 function involvedPend(m){if(esAdmin(currentUser))return true;if(m.po)return m.poNames&&m.poNames.includes(currentUser.name)&&m.reporter!==currentUser.name;return (m.aName===currentUser.name||m.bName===currentUser.name)&&m.reporter!==currentUser.name;}
 function renderPend(){
   var _pt=document.getElementById('pend-title');if(_pt)_pt.textContent=t('pending_title');
