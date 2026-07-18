@@ -85,8 +85,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
 .res-table td:first-child{text-align:left;font-weight:600;width:150px;background:var(--soft);color:var(--pri)}
 .res-table th{background:var(--pri);color:#fff;font-weight:600}.res-table th:first-child{text-align:left;width:150px;background:var(--priD);color:#fff}
 .res-black{background:#16243d}
-.cell-sohail{background:var(--sohail);color:var(--sohailT);font-weight:600;cursor:pointer}
-.cell-haza{background:var(--haza);color:var(--hazaT);font-weight:600;cursor:pointer}
+.cell-club{font-weight:600;cursor:pointer}
 .cell-pending{background:#FAEEDA;color:#6b5800;cursor:pointer}.cell-disputed{background:#FCEBEB;color:#791F1F;cursor:pointer}
 .cell-empty{background:var(--surface);cursor:pointer;color:var(--text2)}.cell-empty:hover{background:var(--soft);color:var(--pri)}
 .cell-locked{background:var(--surface2);color:var(--border2)}
@@ -117,7 +116,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
 .score-inp-lg{width:100%;text-align:center;font-size:28px;font-weight:700;border:1.5px solid var(--border2);border-radius:10px;padding:10px 4px;background:var(--surface);color:var(--text);}
 .club-pick{display:flex;gap:8px;border-radius:9px;padding:2px}.club-pick.req-empty{outline:1.5px solid #c0392b;outline-offset:2px;border-radius:9px}
 .club-opt{flex:1;padding:9px;border-radius:8px;border:2px solid #111;text-align:center;cursor:pointer;font-size:13px;font-weight:600}
-.club-opt.sel-sohail{background:var(--sohail);color:var(--sohailT);border-color:var(--sohailT)}.club-opt.sel-haza{background:var(--haza);color:var(--hazaT);border-color:var(--hazaT)}
+.club-opt.club-sel{background:var(--cbg);color:var(--ctx);border-color:var(--ctx)}
 .btn{display:inline-flex;align-items:center;gap:5px;padding:8px 13px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);cursor:pointer;font-size:13px;color:var(--text)}.btn:hover{background:var(--surface2)}
 .btn-primary{background:var(--pri);border-color:var(--pri);color:#fff}.btn-primary:hover{background:var(--priD)}
 .btn-accent{background:var(--acc);border-color:var(--accD);color:var(--accT);font-weight:600}.btn-accent:hover{filter:brightness(.95)}
@@ -126,7 +125,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
 .btn-sm{padding:5px 10px;font-size:12px}.btn:disabled{opacity:.45;cursor:not-allowed}
 .badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
 .badge-pend{background:#FAEEDA;color:#6b5800}.badge-ok{background:#E1F5EE;color:#085041}.badge-disp{background:#FCEBEB;color:#791F1F}
-.badge-tag{background:var(--soft);color:var(--pri)}.badge-sohail{background:var(--sohail);color:var(--sohailT)}.badge-haza{background:var(--haza);color:var(--hazaT)}
+.badge-tag{background:var(--soft);color:var(--pri)}
 .alert{padding:.6rem .875rem;border-radius:8px;font-size:13px;margin-bottom:.625rem}.alert-ok{background:#E1F5EE;color:#085041}.alert-err{background:#FCEBEB;color:#791F1F}.alert-info{background:var(--soft);color:var(--pri)}
 .empty{text-align:center;padding:1.25rem;color:var(--text2);font-size:13px}
 .overflow-x{overflow-x:auto}.mt-sm{margin-top:.5rem}.gap-sm{display:flex;gap:6px;flex-wrap:wrap}
@@ -146,7 +145,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
 .modal h3{font-size:15px;font-weight:700;margin-bottom:1rem;color:var(--pri)}
 .modal-rep{font-size:13px;color:var(--text2);margin-bottom:.5rem}.modal-rep .vs{color:var(--text2)}
 .modal-score{border-radius:8px;padding:.7rem;text-align:center;margin-bottom:.5rem}.modal-score p{font-size:15px;font-weight:600}
-.ms-sohail{background:var(--sohail)}.ms-sohail p{color:var(--sohailT)}.ms-haza{background:var(--haza)}.ms-haza p{color:var(--hazaT)}
+
 .modal-meta{font-size:12px;color:var(--text2)}
 .po-tramos{display:flex;gap:6px;margin-bottom:.6rem;flex-wrap:wrap}
 .po-tab{flex:1;min-width:110px;padding:9px;border:1px solid var(--border);background:var(--surface);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600;text-align:center;color:var(--text)}
@@ -306,7 +305,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
     <div id="cargar-disputes"></div>
     <div class="card"><div class="section-lbl" id="report-result-lbl">Reportar resultado</div><div id="form-alert"></div><p class="lock-note" id="cargar-note" style="margin-bottom:.5rem"></p>
       <!-- Club + Fecha -->
-      <div class="req-wrap" id="club-fecha-wrap" style="margin-bottom:1rem"><div class="form-row" style="margin-bottom:0"><div class="form-group"><label id="lbl-club">Club <span class="reqmark">obligatorio</span></label><div class="club-pick" id="club-pick"><div class="club-opt" id="club-sohail" onclick="pickClub('Sohail')">Sohail</div><div class="club-opt" id="club-haza" onclick="pickClub('Haza')">Haza</div></div></div><div class="form-group"><label id="lbl-fecha-field">Fecha <span class="reqmark">obligatorio</span></label><input type="date" id="f-fecha" class="req"></div></div></div>
+      <div class="req-wrap" id="club-fecha-wrap" style="margin-bottom:1rem"><div class="form-row" style="margin-bottom:0"><div class="form-group"><label id="lbl-club">Club <span class="reqmark">obligatorio</span></label><div class="club-pick" id="club-pick"></div></div><div class="form-group"><label id="lbl-fecha-field">Fecha <span class="reqmark">obligatorio</span></label><input type="date" id="f-fecha" class="req"></div></div></div>
       <!-- El filtro de grupo del admin se inserta aquí por JS (admin-group-filter) — después del club/fecha -->
       <!-- Nombres como headers en recuadro req-wrap -->
       <div class="names-box" id="names-score-wrap">
@@ -414,7 +413,7 @@ function updateLangUI(){
 
 const TRANSLATIONS={
 es:{
-confirm_all_skipped:'Pendientes validados. Se saltearon {n} porque los jugaste vos: los tiene que confirmar otro administrador.',own_match_admin:'No podés arbitrar un partido que jugaste vos. Lo tiene que confirmar otro administrador.',wo_not_yours:'No podés marcar W.O. en un partido que jugás vos. Lo tiene que resolver otro administrador.',role_only_owner:'Solo el administrador original y el super admin pueden repartir el rol.',admins_section:'Administradores de la liga',admins_hint:'Además de la cuenta Organización, estas personas pueden administrar la liga. Siguen siendo jugadores: mantienen su grupo y sus partidos.',admins_none:'No hay ningún jugador con permisos de administrador.',role_section:'Rol en la liga',role_is_admin:'Administrador',role_is_player:'Jugador',role_make_admin:'Hacer administrador',role_make_player:'Quitar administrador',role_confirm_up:'¿Dar permisos de administrador a {n}? Va a poder confirmar resultados, editar jugadores y cambiar la configuración de la liga.',role_confirm_down:'¿Quitarle los permisos de administrador a {n}? Vuelve a ser un jugador normal.',role_done:'Rol de {n} actualizado.',role_last_admin:'Tiene que quedar al menos un administrador.',reset_not_here:'No se puede desde aquí.',reset_confirm:'¿Restablecer la contraseña de {n} a la clave por defecto "tenis"? Se le va a pedir que la cambie al entrar.',reset_ok:'Contraseña de {n} restablecida. Al entrar se le va a pedir una nueva.',reset_err:'No se pudo restablecer la contraseña.',pwf_title:'Cambiá tu contraseña',pwf_why:'Estás usando la contraseña por defecto, que es pública. Elegí una nueva para continuar.',pwf_new:'Contraseña nueva',pwf_rep:'Repetila',pwf_save:'Guardar y continuar',pwf_short:'Tiene que tener al menos 6 caracteres.',pwf_same:'No puede ser la misma que ya tenías.',pwf_nomatch:'Las dos contraseñas no coinciden.',pwf_err:'No se pudo cambiar. Probá de nuevo.',err_need_both:'Escribí tu usuario y tu contraseña.',err_no_server:'No se pudo conectar con el servidor. Probá de nuevo.',err_no_users:'No se pudo cargar la lista de usuarios.',err_users_404:'Falta el archivo api/users.js en el repo (404).',err_users_csp:'El navegador bloqueó la llamada a /api/users.',err_server_said:'El servidor devolvió ',err_hydrate:'Los datos se leyeron pero no se pudieron aplicar. Recargá la página.',err_no_data:'No se pudieron cargar los datos. Recargá la página.',err_no_user_league:'No se encontró tu usuario en la liga.',err_inactive:'Tu cuenta está inactiva. Contactá al administrador.',err_session_expired:'Tu sesión expiró. Volvé a entrar.',err_session_expired_save:'Tu sesión expiró. Volvé a entrar para seguir guardando.',err_no_access:'No tenés acceso.',err_conflict:'Otra persona guardó un cambio mientras cargabas el tuyo. Recargá la página y volvé a cargarlo.',login_working:'Entrando…',app_title:'Liga de Tenis Sohail',app_subtitle:'Verano 2026',select_user:'Seleccione su usuario',admin_org:'admin (Organización)',password:'Contraseña',enter:'Entrar',invalid_user:'Seleccioná un usuario válido.',wrong_pass:'Contraseña incorrecta.',
+appearance_title:'Apariencia de la liga',dispute_color:'Color de disputas',dispute_color_hint:'fondo de partidos en disputa',dispute_short:'En disputa',clubs_title:'Clubes',clubs_hint:'Editá el nombre y color de cada club, agregá o eliminá. El color pinta el sombreado de la tabla de resultados; el texto se oscurece solo para que siempre se lea.',club_add:'Agregar club',club_delete:'Eliminar club',club_name_ph:'Nombre del club',club_short:'Club',club_min_one:'Tiene que quedar al menos un club.',club_delete_confirm:'¿Eliminar el club "{n}"? Los partidos ya cargados con ese club conservan su marcador pero pierden el color.',club_err_empty:'Ningún club puede quedar sin nombre.',club_err_dup:'Hay dos clubes con el mismo nombre.',preview:'Vista previa',save_all:'Guardar todo',reset_colors:'Restablecer colores',confirm_all_skipped:'Pendientes validados. Se saltearon {n} porque los jugaste vos: los tiene que confirmar otro administrador.',own_match_admin:'No podés arbitrar un partido que jugaste vos. Lo tiene que confirmar otro administrador.',wo_not_yours:'No podés marcar W.O. en un partido que jugás vos. Lo tiene que resolver otro administrador.',role_only_owner:'Solo el administrador original y el super admin pueden repartir el rol.',admins_section:'Administradores de la liga',admins_hint:'Además de la cuenta Organización, estas personas pueden administrar la liga. Siguen siendo jugadores: mantienen su grupo y sus partidos.',admins_none:'No hay ningún jugador con permisos de administrador.',role_section:'Rol en la liga',role_is_admin:'Administrador',role_is_player:'Jugador',role_make_admin:'Hacer administrador',role_make_player:'Quitar administrador',role_confirm_up:'¿Dar permisos de administrador a {n}? Va a poder confirmar resultados, editar jugadores y cambiar la configuración de la liga.',role_confirm_down:'¿Quitarle los permisos de administrador a {n}? Vuelve a ser un jugador normal.',role_done:'Rol de {n} actualizado.',role_last_admin:'Tiene que quedar al menos un administrador.',reset_not_here:'No se puede desde aquí.',reset_confirm:'¿Restablecer la contraseña de {n} a la clave por defecto "tenis"? Se le va a pedir que la cambie al entrar.',reset_ok:'Contraseña de {n} restablecida. Al entrar se le va a pedir una nueva.',reset_err:'No se pudo restablecer la contraseña.',pwf_title:'Cambiá tu contraseña',pwf_why:'Estás usando la contraseña por defecto, que es pública. Elegí una nueva para continuar.',pwf_new:'Contraseña nueva',pwf_rep:'Repetila',pwf_save:'Guardar y continuar',pwf_short:'Tiene que tener al menos 6 caracteres.',pwf_same:'No puede ser la misma que ya tenías.',pwf_nomatch:'Las dos contraseñas no coinciden.',pwf_err:'No se pudo cambiar. Probá de nuevo.',err_need_both:'Escribí tu usuario y tu contraseña.',err_no_server:'No se pudo conectar con el servidor. Probá de nuevo.',err_no_users:'No se pudo cargar la lista de usuarios.',err_users_404:'Falta el archivo api/users.js en el repo (404).',err_users_csp:'El navegador bloqueó la llamada a /api/users.',err_server_said:'El servidor devolvió ',err_hydrate:'Los datos se leyeron pero no se pudieron aplicar. Recargá la página.',err_no_data:'No se pudieron cargar los datos. Recargá la página.',err_no_user_league:'No se encontró tu usuario en la liga.',err_inactive:'Tu cuenta está inactiva. Contactá al administrador.',err_session_expired:'Tu sesión expiró. Volvé a entrar.',err_session_expired_save:'Tu sesión expiró. Volvé a entrar para seguir guardando.',err_no_access:'No tenés acceso.',err_conflict:'Otra persona guardó un cambio mientras cargabas el tuyo. Recargá la página y volvé a cargarlo.',login_working:'Entrando…',app_title:'Liga de Tenis Sohail',app_subtitle:'Verano 2026',select_user:'Seleccione su usuario',admin_org:'admin (Organización)',password:'Contraseña',enter:'Entrar',invalid_user:'Seleccioná un usuario válido.',wrong_pass:'Contraseña incorrecta.',
 exit:'Salir',cycle:'Ciclo',playoffs:'Play Offs',playoffs_prev:'Play Offs (previa)',
 tab_grupos:'Grupos',tab_general:'Clasificación',tab_cargar:'Cargar',tab_cargar_admin:'Cargar',tab_pendientes:'Pendientes',tab_pendientes_admin:'Pendientes / Disputas',tab_perfil:'Perfil & Jugadores',tab_admin:'Admin',
 choose_group:'Elegí el grupo',group:'Grupo',destination:'Destino',player:'Jugador',won:'G',lost:'P',not_played:'NJ',sets_won:'SG',sets_lost:'SP',balance:'Bal',pts_pos:'P.puesto',extra:'Extra',total:'Total',pts_classif:'Puntos para la Clasificación General',players_col:'Jugadores',edit:'Editar',
@@ -475,7 +474,7 @@ undo_demo:'Deshacer simulación',
 toast_demo_undone:'Simulaciones borradas.',
 },
 en:{
-confirm_all_skipped:'Pending matches validated. {n} were skipped because you played in them: another administrator must confirm them.',own_match_admin:'You cannot referee a match you played in. Another administrator must confirm it.',wo_not_yours:'You cannot mark W.O. on a match you are playing in. Ask another administrator.',role_only_owner:'Only the original administrator and the super admin can grant this role.',admins_section:'League administrators',admins_hint:'Besides the Organización account, these people can administer the league. They are still players: they keep their group and their matches.',admins_none:'No player has administrator rights.',role_section:'League role',role_is_admin:'Administrator',role_is_player:'Player',role_make_admin:'Make administrator',role_make_player:'Remove administrator',role_confirm_up:'Give {n} administrator rights? They will be able to confirm results, edit players and change the league settings.',role_confirm_down:'Remove {n}\'s administrator rights? They go back to being a regular player.',role_done:'{n}\'s role updated.',role_last_admin:'At least one administrator must remain.',reset_not_here:'Not available from here.',reset_confirm:'Reset {n}\'s password to the default "tenis"? They will be asked to change it on their next login.',reset_ok:'{n}\'s password was reset. They will be asked for a new one on login.',reset_err:'Could not reset the password.',pwf_title:'Change your password',pwf_why:'You are using the default password, which is public. Choose a new one to continue.',pwf_new:'New password',pwf_rep:'Repeat it',pwf_save:'Save and continue',pwf_short:'It must be at least 6 characters.',pwf_same:'It cannot be the same one you had.',pwf_nomatch:'The two passwords do not match.',pwf_err:'Could not change it. Please try again.',err_need_both:'Enter your username and password.',err_no_server:'Could not reach the server. Please try again.',err_no_users:'Could not load the user list.',err_users_404:'The file api/users.js is missing from the repo (404).',err_users_csp:'The browser blocked the call to /api/users.',err_server_said:'The server returned ',err_hydrate:'Data was read but could not be applied. Please reload the page.',err_no_data:'Could not load the data. Please reload the page.',err_no_user_league:'Your user was not found in the league.',err_inactive:'Your account is inactive. Please contact the administrator.',err_session_expired:'Your session expired. Please log in again.',err_session_expired_save:'Your session expired. Log in again to keep saving.',err_no_access:'You do not have access.',err_conflict:'Someone else saved a change while you were entering yours. Please reload and enter it again.',login_working:'Signing in…',app_title:'Sohail Tennis League',app_subtitle:'Summer 2026',select_user:'Select User',admin_org:'admin (Organisation)',password:'Password',enter:'Log in',invalid_user:'Please select a valid user.',wrong_pass:'Incorrect password.',
+appearance_title:'League appearance',dispute_color:'Dispute color',dispute_color_hint:'background of disputed matches',dispute_short:'Disputed',clubs_title:'Clubs',clubs_hint:'Edit each club name and color, add or remove. The color shades the results table; text auto-darkens so it stays readable.',club_add:'Add club',club_delete:'Delete club',club_name_ph:'Club name',club_short:'Club',club_min_one:'At least one club must remain.',club_delete_confirm:'Delete club "{n}"? Matches already saved with this club keep their score but lose the color.',club_err_empty:'No club can be left unnamed.',club_err_dup:'Two clubs have the same name.',preview:'Preview',save_all:'Save all',reset_colors:'Reset colors',confirm_all_skipped:'Pending matches validated. {n} were skipped because you played in them: another administrator must confirm them.',own_match_admin:'You cannot referee a match you played in. Another administrator must confirm it.',wo_not_yours:'You cannot mark W.O. on a match you are playing in. Ask another administrator.',role_only_owner:'Only the original administrator and the super admin can grant this role.',admins_section:'League administrators',admins_hint:'Besides the Organización account, these people can administer the league. They are still players: they keep their group and their matches.',admins_none:'No player has administrator rights.',role_section:'League role',role_is_admin:'Administrator',role_is_player:'Player',role_make_admin:'Make administrator',role_make_player:'Remove administrator',role_confirm_up:'Give {n} administrator rights? They will be able to confirm results, edit players and change the league settings.',role_confirm_down:'Remove {n}\'s administrator rights? They go back to being a regular player.',role_done:'{n}\'s role updated.',role_last_admin:'At least one administrator must remain.',reset_not_here:'Not available from here.',reset_confirm:'Reset {n}\'s password to the default "tenis"? They will be asked to change it on their next login.',reset_ok:'{n}\'s password was reset. They will be asked for a new one on login.',reset_err:'Could not reset the password.',pwf_title:'Change your password',pwf_why:'You are using the default password, which is public. Choose a new one to continue.',pwf_new:'New password',pwf_rep:'Repeat it',pwf_save:'Save and continue',pwf_short:'It must be at least 6 characters.',pwf_same:'It cannot be the same one you had.',pwf_nomatch:'The two passwords do not match.',pwf_err:'Could not change it. Please try again.',err_need_both:'Enter your username and password.',err_no_server:'Could not reach the server. Please try again.',err_no_users:'Could not load the user list.',err_users_404:'The file api/users.js is missing from the repo (404).',err_users_csp:'The browser blocked the call to /api/users.',err_server_said:'The server returned ',err_hydrate:'Data was read but could not be applied. Please reload the page.',err_no_data:'Could not load the data. Please reload the page.',err_no_user_league:'Your user was not found in the league.',err_inactive:'Your account is inactive. Please contact the administrator.',err_session_expired:'Your session expired. Please log in again.',err_session_expired_save:'Your session expired. Log in again to keep saving.',err_no_access:'You do not have access.',err_conflict:'Someone else saved a change while you were entering yours. Please reload and enter it again.',login_working:'Signing in…',app_title:'Sohail Tennis League',app_subtitle:'Summer 2026',select_user:'Select User',admin_org:'admin (Organisation)',password:'Password',enter:'Log in',invalid_user:'Please select a valid user.',wrong_pass:'Incorrect password.',
 exit:'Log out',cycle:'Cycle',playoffs:'Play Offs',playoffs_prev:'Play Offs (preview)',
 tab_grupos:'Groups',tab_general:'Standings',tab_cargar:'Upload',tab_cargar_admin:'Upload',tab_pendientes:'Pending',tab_pendientes_admin:'Pending / Disputes',tab_perfil:'Profile & Players',tab_admin:'Admin',
 choose_group:'Choose group',group:'Group',destination:'Dest.',player:'Player',won:'W',lost:'L',not_played:'NP',sets_won:'SW',sets_lost:'SL',balance:'Bal',pts_pos:'Pos.pts',extra:'Extra',total:'Total',pts_classif:'Points for the General Standings',players_col:'Players',edit:'Edit',
@@ -551,6 +550,37 @@ let LEAGUE_COLOR_PRI='#1B4F9C';   // color primario (azul)
 let LEAGUE_COLOR_ACC='#F5C518';   // color acento (amarillo)
 let LEAGUE_COLOR_HL='#FFEDD5';    // color de resaltado (fondo de botones No jugado / W.O.)
 let ALLNAMES=C1.flat();
+
+// ===== CLUBES (dinámicos) =========================================================
+// Cada club es {id, name, bg}. El color del TEXTO no se guarda: se calcula como una
+// version oscura del fondo (autoTxt), asi el contraste queda garantizado pase lo que
+// pase con el color elegido. Es lo que se ve en la tabla de resultados.
+// El id es estable y NO cambia al renombrar; los partidos guardan el NOMBRE en
+// m.club y clubByName resuelve por nombre.
+let CLUBS = [
+  { id:'sohail', name:'Sohail', bg:'#D6ECFB' },
+  { id:'haza',   name:'Haza',   bg:'#FCE6CF' }
+];
+let COLOR_DISPUTA = '#FDE68A';
+let _clubNamesAtOpen = {};  // snapshot id→nombre para migrar partidos al renombrar
+
+function autoTxt(hex){
+  const h = String(hex||'').replace('#','');
+  if(h.length!==6) return '#222222';
+  // 0.30 = conserva 30% del color, 70% a negro. Da contraste ~7.8 (nivel AAA)
+  // sobre fondos claros como los de los clubes, y mantiene el matiz del color.
+  const f = 0.30;
+  const r = Math.round(parseInt(h.slice(0,2),16)*f);
+  const g = Math.round(parseInt(h.slice(2,4),16)*f);
+  const b = Math.round(parseInt(h.slice(4,6),16)*f);
+  return '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+function clubByName(name){ return CLUBS.find(c => c.name === name) || null; }
+function clubStyle(name){
+  const c = clubByName(name);
+  if(!c) return '';
+  return 'background:'+c.bg+';color:'+autoTxt(c.bg);
+}
 
 // Auxiliares de fechas
 function parseDateRange(str) {
@@ -1025,9 +1055,9 @@ function groupCardHTML(gid){
           if(i===j)return`<td class="res-black"></td>`;
           const m=findMatch(viewCycle,gid,p,q);
           if(m&&m.np)return`<td class="cell-locked" style="cursor:pointer;font-size:10px;font-weight:700;color:var(--text2)" onclick="openModal(${m.id})">NJ</td>`;
-          if(m&&m.status==='confirmed'){const sc=m.aName===p?m.sets.map(([a,b])=>`${a}-${b}`).join(' '):m.sets.map(([a,b])=>`${b}-${a}`).join(' ');return`<td class="${m.club==='Haza'?'cell-haza':'cell-sohail'}" onclick="openModal(${m.id})">${sc}</td>`;}
+          if(m&&m.status==='confirmed'){const sc=m.aName===p?m.sets.map(([a,b])=>`${a}-${b}`).join(' '):m.sets.map(([a,b])=>`${b}-${a}`).join(' ');return`<td class="cell-club" style="${clubStyle(m.club)}" onclick="openModal(${m.id})">${sc}</td>`;}
           if(m&&m.status==='pending'){const sc=m.aName===p?m.sets.map(([a,b])=>`${a}-${b}`).join(' '):m.sets.map(([a,b])=>`${b}-${a}`).join(' ');return`<td class="cell-pending" onclick="openModal(${m.id})">${sc}⏳</td>`;}
-          if(m&&m.status==='disputed')return`<td class="cell-disputed" onclick="openModal(${m.id})">disp.</td>`;
+          if(m&&m.status==='disputed')return`<td class="cell-disputed" style="background:${COLOR_DISPUTA};color:${autoTxt(COLOR_DISPUTA)}" onclick="openModal(${m.id})">disp.</td>`;
           if(isActive&&canCreate(gid,p,q))return`<td class="cell-empty" onclick="prefill(${gid},'${jsq(p)}','${jsq(q)}')">+</td>`;
           return`<td class="cell-locked">·</td>`;
         }).join('');
@@ -1129,7 +1159,28 @@ const th_t=document.getElementById('gen-th-total');if(th_t)th_t.textContent=t('t
 const title=document.getElementById('gen-title');if(title)title.textContent=t('general_title');
 document.getElementById('gen-body').innerHTML=all.map((p,i)=>{const me=currentUser&&currentUser.role==='player'&&p.name===currentUser.name;const loc=findLoc(p.name,activeN);return'<tr class="'+(me?'me-row':'')+'"><td><span class="pos '+(pc[i]||'pn')+'">'+(i+1)+'</span></td><td><span class="avatar">'+getInitials(p.name)+'</span><span class="nm-link" onclick="showPlayerHistory(\''+jsq(p.name)+'\')">'+p.name+'</span>'+(me?' <span class="badge badge-ok">'+t('me_label')+'</span>':'')+'</td><td>'+(loc?groupName(loc.g):'—')+'</td><td><strong>'+p.total+'</strong></td></tr>';}).join('');}
 
-function pickClub(c){formClub=c;document.getElementById('club-sohail').className='club-opt'+(c==='Sohail'?' sel-sohail':'');document.getElementById('club-haza').className='club-opt'+(c==='Haza'?' sel-haza':'');document.getElementById('club-pick').classList.remove('req-empty');}
+// Dibuja un botón por club en el formulario de carga, desde CLUBS. Reemplaza a los
+// dos botones fijos Sohail/Haza. Cada botón lleva el color del club como fondo.
+function renderClubButtons(){
+  const box=document.getElementById('club-pick');
+  if(!box)return;
+  box.innerHTML=CLUBS.map(c=>
+    `<div class="club-opt" data-club="${attr(c.name)}" onclick="pickClub('${jsq(c.name)}')" style="--cbg:${c.bg};--ctx:${autoTxt(c.bg)}">${attr(c.name)}</div>`
+  ).join('');
+  // Re-marcar el seleccionado si ya había uno
+  if(formClub) pickClub(formClub);
+}
+function pickClub(c){
+  formClub=c;
+  const box=document.getElementById('club-pick');
+  if(box){
+    box.querySelectorAll('.club-opt').forEach(el=>{
+      const sel = el.getAttribute('data-club')===c;
+      el.classList.toggle('club-sel', sel);
+    });
+    box.classList.remove('req-empty');
+  }
+}
 function getMyPoMatch(){
   if(!playoff.started&&!playoff.preview)return null;
   if(!currentUser||esAdmin(currentUser))return null;
@@ -1159,7 +1210,7 @@ function getMyPoMatch(){
   return null;
 }
 
-function populateForm(gid,na,nb){poContext=null;formClub='';const r=document.getElementById('f-reporter'),o=document.getElementById('f-rival'),note=document.getElementById('cargar-note');r.innerHTML='<option value="">— Jugador —</option>';o.innerHTML='<option value="">— Rival —</option>';const c=getActive();if(!c||!c.groups){note.textContent="Ciclo inactivo.";r.disabled=true;o.disabled=true;return;}
+function populateForm(gid,na,nb){poContext=null;formClub='';renderClubButtons();const r=document.getElementById('f-reporter'),o=document.getElementById('f-rival'),note=document.getElementById('cargar-note');r.innerHTML='<option value="">— Jugador —</option>';o.innerHTML='<option value="">— Rival —</option>';const c=getActive();if(!c||!c.groups){note.textContent="Ciclo inactivo.";r.disabled=true;o.disabled=true;return;}
 // Ocultar/mostrar el filtro de grupo/playoff según el rol
 const _fw=document.getElementById('admin-group-filter');
 if(_fw)_fw.style.display=(esAdmin(currentUser))?'flex':'none';
@@ -1519,7 +1570,7 @@ function renderPend(){
       const sc=m.sets.map(([a,b])=>`${a}-${b}`).join(' / ');
       const ca=involvedPend(m);
       const wait=currentUser&&currentUser.role==='player'&&m.reporter===currentUser.name;
-      return`<div class="pend-item"><span class="badge badge-tag">${tag}</span><span class="pend-nm">${p1}</span><span class="pend-sc">${sc}</span><span class="pend-nm">${p2}</span>${m.club?`<span class="badge ${m.club==='Haza'?'badge-haza':'badge-sohail'}">${m.club}</span>`:''}<span class="badge badge-pend">${t('legend_pending')}</span>${wait?`<span class="lock-note">${t('waiting_admin')}</span>`:''}${ca?`<div class="pend-act"><button class="btn btn-accent btn-sm" onclick="openModal(${m.id})"><i class="ti ti-eye"></i> ${t('review')}</button></div>`:''}</div>`;
+      return`<div class="pend-item"><span class="badge badge-tag">${tag}</span><span class="pend-nm">${p1}</span><span class="pend-sc">${sc}</span><span class="pend-nm">${p2}</span>${m.club?`<span class="badge" style="${clubStyle(m.club)}">${m.club}</span>`:''}<span class="badge badge-pend">${t('legend_pending')}</span>${wait?`<span class="lock-note">${t('waiting_admin')}</span>`:''}${ca?`<div class="pend-act"><button class="btn btn-accent btn-sm" onclick="openModal(${m.id})"><i class="ti ti-eye"></i> ${t('review')}</button></div>`:''}</div>`;
     }).join('');
   } else if (disp.length === 0) {
     html = `<div class="empty">${t('no_pending')}</div>`;
@@ -1533,7 +1584,7 @@ document.getElementById('modal-title').textContent=(m.status==='confirmed'?t('va
 const statusLabel = m.status === 'confirmed' ?
 t('confirmed_label') : m.status === 'disputed' ? t('legend_disputed') : t('legend_pending');
 if(m.np){document.getElementById('modal-body').innerHTML=`<div class="modal-score"><p>${p1} &nbsp;vs&nbsp; ${p2}</p></div><p class="modal-meta" style="text-align:center"><strong>Partido no jugado</strong> · ${t('status_field')}: ${statusLabel}${m.locked?' · 🔒 '+t('locked_label'):''}</p>`;}
-else{document.getElementById('modal-body').innerHTML=`<p class="modal-rep">${t('reported_by')} <strong>${rep}</strong>${m.vBy?` · ${t('validated_by')} <strong>${attr(m.vBy)}</strong>`:''}${m.club?` · Club <strong>${m.club}</strong>`:''}</p><div class="modal-score ${m.club==='Haza'?'ms-haza':'ms-sohail'}"><p>${p1} ${sc} ${p2}</p></div><p class="modal-meta">${t('date_field')}: ${fmtDate(m.date)} · ${t('status_field')}: ${statusLabel}${m.locked?' · 🔒 '+t('locked_label'):''}</p>`;}
+else{document.getElementById('modal-body').innerHTML=`<p class="modal-rep">${t('reported_by')} <strong>${rep}</strong>${m.vBy?` · ${t('validated_by')} <strong>${attr(m.vBy)}</strong>`:''}${m.club?` · Club <strong>${m.club}</strong>`:''}</p><div class="modal-score" style="${clubStyle(m.club)}"><p>${p1} ${sc} ${p2}</p></div><p class="modal-meta">${t('date_field')}: ${fmtDate(m.date)} · ${t('status_field')}: ${statusLabel}${m.locked?' · 🔒 '+t('locked_label'):''}</p>`;}
 const acts=document.getElementById('modal-actions');let h='';const isAdmin=esAdmin(currentUser);const isPend=m.status==='pending';
 if(isAdmin){
   // El botón no se dibuja si el partido es propio: confirmM() lo rechazaría igual,
@@ -1744,6 +1795,57 @@ function importarJugadoresExcel(input){
 // 3. Limpiar todos los participantes (con doble backup Excel)
 // Sincroniza el selector de color con el campo de texto hex (bidireccional).
 // source==='picker' → el usuario movió la paleta; si no, escribió un código.
+// ===== Gestor de clubes (panel de apariencia) ====================================
+// Dibuja una fila por club: nombre editable + color + botón borrar. Cada cambio se
+// aplica en vivo sobre CLUBS y se persiste al Guardar. El demo muestra el texto
+// auto-oscurecido para que el admin vea el contraste real antes de guardar.
+function clubsEditorHTML(){
+  // Snapshot de id→nombre al momento de abrir el editor. Si el admin renombra un
+  // club y guarda, se usa para migrar los partidos viejos (que guardan el nombre)
+  // del nombre anterior al nuevo, así no pierden el color.
+  _clubNamesAtOpen = {};
+  CLUBS.forEach(c => { _clubNamesAtOpen[c.id] = c.name; });
+  let h='';
+  CLUBS.forEach((c,i)=>{
+    h+=`<div class="club-edit-row" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:.5rem;padding:.5rem;border:1px solid var(--border2);border-radius:8px;background:var(--surface)">
+      <input type="text" value="${attr(c.name)}" maxlength="24" oninput="updateClubName(${i},this.value)" style="flex:1;min-width:120px;padding:6px 10px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface);font-size:14px" placeholder="${t('club_name_ph')}">
+      <input type="color" value="${c.bg}" oninput="updateClubColor(${i},this.value)" style="width:44px;height:34px;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px">
+      <span id="club-demo-${i}" style="font-size:12px;font-weight:600;padding:5px 12px;border-radius:6px;background:${c.bg};color:${autoTxt(c.bg)}">${attr(c.name)||t('club_short')}</span>
+      <button class="btn btn-sm" onclick="removeClub(${i})" title="${t('club_delete')}" style="background:#fee2e2;color:#b91c1c"><i class="ti ti-trash"></i></button>
+    </div>`;
+  });
+  h+=`<button class="btn btn-sm" onclick="addClub()" style="margin-top:.25rem"><i class="ti ti-plus"></i> ${t('club_add')}</button>`;
+  return h;
+}
+function redibujarClubs(){
+  const box=document.getElementById('clubs-editor');
+  if(box) box.innerHTML=clubsEditorHTML();
+}
+function updateClubName(i,val){
+  if(!CLUBS[i])return;
+  CLUBS[i].name=val;
+  const demo=document.getElementById('club-demo-'+i);
+  if(demo) demo.textContent=val||t('club_short');
+}
+function updateClubColor(i,val){
+  if(!CLUBS[i])return;
+  CLUBS[i].bg=val;
+  const demo=document.getElementById('club-demo-'+i);
+  if(demo){ demo.style.background=val; demo.style.color=autoTxt(val); }
+}
+function addClub(){
+  // id único y estable: no se deriva del nombre, así renombrar no lo rompe.
+  const id='c'+Date.now().toString(36);
+  CLUBS.push({ id, name:'', bg:'#E5E7EB' });
+  redibujarClubs();
+}
+function removeClub(i){
+  if(!CLUBS[i])return;
+  if(CLUBS.length<=1){ toast(t('club_min_one')); return; }
+  if(!confirm(t('club_delete_confirm').replace('{n}',CLUBS[i].name||t('club_short'))))return;
+  CLUBS.splice(i,1);
+  redibujarClubs();
+}
 function syncHex(which,source){
   const picker=document.getElementById('sa-color-'+which);
   const txt=document.getElementById('sa-'+which+'-hex');
@@ -1751,7 +1853,7 @@ function syncHex(which,source){
   const demo=document.getElementById('sa-'+which+'-demo');
   if(source==='picker'){
     txt.value=picker.value;txt.style.borderColor='';
-    if(demo)demo.style.background=picker.value;
+    if(demo){demo.style.background=picker.value; if(which==='disp')demo.style.color=autoTxt(picker.value);}
     return;
   }
   let v=(txt.value||'').trim();
@@ -1842,6 +1944,22 @@ function saveLeagueName(){
   if(pri)LEAGUE_COLOR_PRI=pri.value;
   if(acc)LEAGUE_COLOR_ACC=acc.value;
   if(hl)LEAGUE_COLOR_HL=hl.value;
+  const disp=document.getElementById('sa-color-disp');
+  if(disp)COLOR_DISPUTA=disp.value;
+  // Clubes: ya se modificaron en vivo sobre CLUBS. Validar antes de persistir:
+  // sin nombre vacío y sin nombres repetidos (romperían clubByName).
+  const nombres=CLUBS.map(c=>(c.name||'').trim());
+  if(nombres.some(n=>!n)){if(al)al.innerHTML='<span style="color:#e55">'+t('club_err_empty')+'</span>';return;}
+  if(new Set(nombres.map(n=>n.toLowerCase())).size!==nombres.length){if(al)al.innerHTML='<span style="color:#e55">'+t('club_err_dup')+'</span>';return;}
+  CLUBS.forEach(c=>{c.name=c.name.trim();});
+  // Migrar los partidos al nuevo nombre: si un club cambió de nombre, los partidos
+  // que guardaban el nombre viejo se actualizan al nuevo, para no perder el color.
+  CLUBS.forEach(c=>{
+    const antes = _clubNamesAtOpen[c.id];
+    if(antes && antes !== c.name){
+      matches.forEach(m=>{ if(m.club === antes) m.club = c.name; });
+    }
+  });
   // Aplicar colores
   applyLeagueColors(LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC,LEAGUE_COLOR_HL);
   // Actualizar textos
@@ -2971,7 +3089,7 @@ function playerHistoryHTML(name){
       let w=0,l=0;mine.forEach(([a,b])=>{if(a>b)w++;else l++;});
       const won=w>l;if(won)g++;else p++;
       const sc=mine.map(([a,b])=>a+'-'+b).join('  ');
-      const club=m.club?`<span class="badge ${m.club==='Haza'?'badge-haza':'badge-sohail'}">${m.club}</span>`:'';
+      const club=m.club?`<span class="badge" style="${clubStyle(m.club)}">${m.club}</span>`:'';
       return _histRow(rival,sc,won,club);
     }).join('');
     const loc=findLoc(name,cy.n);
@@ -2986,7 +3104,7 @@ function playerHistoryHTML(name){
       const sc=m.wo?'W.O.':mine.map(([a,b])=>a+'-'+b).join('  ');
       const won=m.winner===name;if(won)g++;else p++;
       const cuadro=m.tLabel?`<span class="badge badge-tag">${m.tLabel}</span>`:'';
-      const club=m.club?`<span class="badge ${m.club==='Haza'?'badge-haza':'badge-sohail'}">${m.club}</span>`:'';
+      const club=m.club?`<span class="badge" style="${clubStyle(m.club)}">${m.club}</span>`:'';
       return _histRow(rival,sc,won,cuadro+club);
     }).join('');
     out=_histCard('Play Offs',g,p,rows)+out;
@@ -3017,9 +3135,11 @@ function renderPerfil(){
     h += `<div class="form-group"><label>${t('new_pass')}</label><input type="password" id="pw-new" autocomplete="new-password"></div></div>`;
     h += `<div class="form-row"><div class="form-group"><label>${t('repeat_pass')}</label><input type="password" id="pw-new2"></div>`;
     h += `<div class="form-group" style="align-self:end"><button class="btn btn-accent" onclick="changePw()"><i class="ti ti-lock"></i> ${t('save_pass')}</button></div></div></div>`;
-    // SUPERADMIN: secciones exclusivas en su perfil
-    if(u.role==='superadmin'){
-      h += `<div class="card"><div class="section-lbl" style="color:#8b5cf6">Configuración de la liga</div>
+    // APARIENCIA: nombre, subtítulo, colores y clubes. Antes era exclusivo del
+    // superadmin; ahora cualquier admin puede cambiar la parte cosmética. Lo
+    // estructural (puntos, grupos, ciclos) sigue gateado aparte, más abajo.
+    if(esAdmin(currentUser)){
+      h += `<div class="card"><div class="section-lbl" style="color:var(--pri)">${t('appearance_title')}</div>
         <div class="form-row" style="margin-bottom:.75rem">
           <div class="form-group">
             <label style="font-size:13px;color:var(--text2);margin-bottom:4px;display:block">Nombre de la liga</label>
@@ -3056,10 +3176,23 @@ function renderPerfil(){
             </div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:.25rem">
-          <button class="btn btn-primary" onclick="previewLeagueColors()"><i class="ti ti-eye"></i> Vista previa</button>
-          <button class="btn btn-success" onclick="saveLeagueName()"><i class="ti ti-device-floppy"></i> Guardar todo</button>
-          <button class="btn" onclick="resetLeagueColors()"><i class="ti ti-refresh"></i> Restablecer colores</button>
+        <div class="form-row" style="margin-bottom:.75rem">
+          <div class="form-group">
+            <label style="font-size:13px;color:var(--text2);margin-bottom:4px;display:block">${t('dispute_color')} <span style="font-size:11px">(${t('dispute_color_hint')})</span></label>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <input id="sa-color-disp" type="color" value="${COLOR_DISPUTA}" oninput="syncHex('disp','picker')" style="width:48px;height:36px;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;padding:2px">
+              <input id="sa-disp-hex" type="text" value="${COLOR_DISPUTA}" maxlength="7" spellcheck="false" oninput="syncHex('disp')" style="width:92px;font-size:13px;font-family:monospace;padding:6px 8px;border:1.5px solid var(--border2);border-radius:8px;background:var(--surface);color:var(--text)">
+              <span id="sa-disp-demo" style="font-size:12px;font-weight:600;padding:5px 12px;border-radius:6px;background:${COLOR_DISPUTA};color:${autoTxt(COLOR_DISPUTA)}">${t('dispute_short')}</span>
+            </div>
+          </div>
+        </div>
+        <div class="section-lbl" style="color:var(--pri);margin-top:1rem">${t('clubs_title')}</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:.6rem">${t('clubs_hint')}</div>
+        <div id="clubs-editor">${clubsEditorHTML()}</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:.25rem;margin-top:1rem">
+          <button class="btn btn-primary" onclick="previewLeagueColors()"><i class="ti ti-eye"></i> ${t('preview')}</button>
+          <button class="btn btn-success" onclick="saveLeagueName()"><i class="ti ti-device-floppy"></i> ${t('save_all')}</button>
+          <button class="btn" onclick="resetLeagueColors()"><i class="ti ti-refresh"></i> ${t('reset_colors')}</button>
         </div>
         <div id="sa-league-alert" style="margin-top:6px;font-size:12px"></div>
       </div>`;
@@ -3419,12 +3552,13 @@ async function changePw(){
 let poFormClub = '';
 function pickPoClub(c) {
     poFormClub = c;
-    const optSohail = document.getElementById('po-club-sohail');
-    const optHaza = document.getElementById('po-club-haza');
-    const pickCont = document.getElementById('po-club-pick');
-    if(optSohail) optSohail.className = 'club-opt' + (c === 'Sohail' ? ' sel-sohail' : '');
-    if(optHaza) optHaza.className = 'club-opt' + (c === 'Haza' ? ' sel-haza' : '');
-    if(pickCont) pickCont.classList.remove('req-empty');
+    const box = document.getElementById('po-club-pick');
+    if(box){
+      box.querySelectorAll('.club-opt').forEach(el=>{
+        el.classList.toggle('club-sel', el.getAttribute('data-club')===c);
+      });
+      box.classList.remove('req-empty');
+    }
 }
 
 function poReport(ti,which,ri,mi){
@@ -3453,10 +3587,7 @@ function openPoForm(m,ti){
     <div class="form-row" style="margin-bottom:0">
       <div class="form-group">
         <label>Club <span class="reqmark">obligatorio</span></label>
-        <div class="club-pick" id="po-club-pick">
-          <div class="club-opt ${poFormClub === 'Sohail' ? 'sel-sohail' : ''}" id="po-club-sohail" onclick="pickPoClub('Sohail')">Sohail</div>
-          <div class="club-opt ${poFormClub === 'Haza' ? 'sel-haza' : ''}" id="po-club-haza" onclick="pickPoClub('Haza')">Haza</div>
-        </div>
+        <div class="club-pick" id="po-club-pick">${CLUBS.map(c=>`<div class="club-opt${poFormClub===c.name?' club-sel':''}" data-club="${attr(c.name)}" onclick="pickPoClub('${jsq(c.name)}')" style="--cbg:${c.bg};--ctx:${autoTxt(c.bg)}">${attr(c.name)}</div>`).join('')}</div>
       </div>
       <div class="form-group">
         <label>Fecha <span class="reqmark">obligatorio</span></label>
@@ -3620,7 +3751,7 @@ let _lastSaved=null,_saving=false,_pendingForce=false,_loadOK=false,_dbEmpty=fal
 // tienen la app abierta, la segunda en guardar recibe 409 en vez de pisar a la primera.
 let _stateV=0;
 function _serialize(){
-  return JSON.stringify({_v:_stateV,cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,PO_FECHAS,ALLNAMES,users:USERS,PUNTOS,LOG,LEAGUE_NAME,LEAGUE_SUBTITLE,LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC,LEAGUE_COLOR_HL});
+  return JSON.stringify({_v:_stateV,cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,PO_FECHAS,ALLNAMES,users:USERS,PUNTOS,LOG,LEAGUE_NAME,LEAGUE_SUBTITLE,LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC,LEAGUE_COLOR_HL,CLUBS,COLOR_DISPUTA});
 }
 
 function _hydrate(d){try{
@@ -3676,6 +3807,8 @@ function _hydrate(d){try{
   if(d.LEAGUE_COLOR_PRI)LEAGUE_COLOR_PRI=d.LEAGUE_COLOR_PRI;
   if(d.LEAGUE_COLOR_ACC)LEAGUE_COLOR_ACC=d.LEAGUE_COLOR_ACC;
   if(d.LEAGUE_COLOR_HL)LEAGUE_COLOR_HL=d.LEAGUE_COLOR_HL;
+  if(Array.isArray(d.CLUBS)&&d.CLUBS.length)CLUBS=d.CLUBS.filter(c=>c&&c.name&&c.bg);
+  if(typeof d.COLOR_DISPUTA==='string')COLOR_DISPUTA=d.COLOR_DISPUTA;
   // Aplicar colores guardados al cargar
   if(d.LEAGUE_COLOR_PRI||d.LEAGUE_COLOR_ACC||d.LEAGUE_COLOR_HL)applyLeagueColors(d.LEAGUE_COLOR_PRI||LEAGUE_COLOR_PRI,d.LEAGUE_COLOR_ACC||LEAGUE_COLOR_ACC,d.LEAGUE_COLOR_HL||LEAGUE_COLOR_HL);
   return true;
