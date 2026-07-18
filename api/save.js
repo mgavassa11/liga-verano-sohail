@@ -48,13 +48,30 @@ module.exports = async function handler(req, res){
   // hex válido: si no, un club podría inyectar CSS o romper el atributo style.
   if(Array.isArray(incoming.CLUBS)){
     const HEX = /^#[0-9a-fA-F]{6}$/;
+    const vistos = new Set();
     for(const c of incoming.CLUBS){
       if(!c || typeof c.name !== 'string' || PELIGRO.test(c.name)){
         return res.status(400).json({ error: 'Un club tiene un nombre inválido o con caracteres no permitidos.' });
       }
+      if(c.name.length > 40){
+        return res.status(400).json({ error: 'El nombre de un club es demasiado largo (máx. 40 caracteres).' });
+      }
       if(typeof c.bg !== 'string' || !HEX.test(c.bg)){
         return res.status(400).json({ error: 'El color de "' + String(c.name).slice(0, 40) + '" no es un hex válido (#rrggbb).' });
       }
+      // Nombres únicos (case-insensitive): dos clubes con el mismo nombre romperían
+      // clubByName, que resuelve el color por nombre.
+      const clave = c.name.trim().toLowerCase();
+      if(!clave){
+        return res.status(400).json({ error: 'Un club quedó sin nombre.' });
+      }
+      if(vistos.has(clave)){
+        return res.status(400).json({ error: 'Hay dos clubes con el mismo nombre: "' + c.name.slice(0, 40) + '".' });
+      }
+      vistos.add(clave);
+    }
+    if(incoming.CLUBS.length < 1){
+      return res.status(400).json({ error: 'Tiene que haber al menos un club.' });
     }
   }
   if(incoming.COLOR_DISPUTA !== undefined && !/^#[0-9a-fA-F]{6}$/.test(String(incoming.COLOR_DISPUTA))){
