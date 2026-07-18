@@ -43,6 +43,24 @@ module.exports = async function handler(req, res){
     }
   }
 
+  // Los clubes también se dibujan en pantalla (nombre en badges, color en style=).
+  // Mismo filtro que los nombres de jugador, más un chequeo de que el color sea un
+  // hex válido: si no, un club podría inyectar CSS o romper el atributo style.
+  if(Array.isArray(incoming.CLUBS)){
+    const HEX = /^#[0-9a-fA-F]{6}$/;
+    for(const c of incoming.CLUBS){
+      if(!c || typeof c.name !== 'string' || PELIGRO.test(c.name)){
+        return res.status(400).json({ error: 'Un club tiene un nombre inválido o con caracteres no permitidos.' });
+      }
+      if(typeof c.bg !== 'string' || !HEX.test(c.bg)){
+        return res.status(400).json({ error: 'El color de "' + String(c.name).slice(0, 40) + '" no es un hex válido (#rrggbb).' });
+      }
+    }
+  }
+  if(incoming.COLOR_DISPUTA !== undefined && !/^#[0-9a-fA-F]{6}$/.test(String(incoming.COLOR_DISPUTA))){
+    return res.status(400).json({ error: 'El color de disputa no es un hex válido (#rrggbb).' });
+  }
+
   let current;
   try { current = await readState(); }
   catch(e){ return res.status(503).json({ error: 'No se pudo leer la base de datos; no se guardó nada.' }); }
@@ -171,8 +189,7 @@ module.exports = async function handler(req, res){
   // Lo peor que puede pasar es que la liga quede fea, y se deshace en un click.
   if(!admin){
     const COSMETICO = ['LEAGUE_NAME','LEAGUE_SUBTITLE','LEAGUE_COLOR_PRI',
-                       'LEAGUE_COLOR_ACC','LEAGUE_COLOR_HL','LEAGUE_COLOR_SOHAIL',
-                       'LEAGUE_COLOR_HAZA','LEAGUE_COLOR_DISP'];
+                       'LEAGUE_COLOR_ACC','LEAGUE_COLOR_HL','CLUBS','COLOR_DISPUTA'];
     for(const k of COSMETICO){
       if(JSON.stringify(incoming[k]) !== JSON.stringify(current[k])){
         return res.status(403).json({ error: 'Solo un administrador puede cambiar la apariencia de la liga.' });
