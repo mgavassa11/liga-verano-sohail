@@ -1893,6 +1893,7 @@ function previewLeagueColors(){
 }
 function resetLeagueColors(){
   LEAGUE_COLOR_PRI='#1B4F9C';LEAGUE_COLOR_ACC='#F5C518';LEAGUE_COLOR_HL='#FFEDD5';
+  COLOR_DISPUTA='#FDE68A';
   try{localStorage.removeItem('lsc');}catch(e){}
   applyLeagueColors(LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC,LEAGUE_COLOR_HL);
   const pri=document.getElementById('sa-color-pri');if(pri)pri.value='#1B4F9C';
@@ -1902,6 +1903,10 @@ function resetLeagueColors(){
   const ah=document.getElementById('sa-acc-hex');if(ah){ah.value='#F5C518';ah.style.borderColor='';}
   const hh=document.getElementById('sa-hl-hex');if(hh){hh.value='#FFEDD5';hh.style.borderColor='';}
   const dm=document.getElementById('sa-hl-demo');if(dm)dm.style.background='#FFEDD5';
+  // El color de disputa también vuelve al valor por defecto (su picker y demo).
+  const dc=document.getElementById('sa-color-disp');if(dc)dc.value='#FDE68A';
+  const dh=document.getElementById('sa-disp-hex');if(dh){dh.value='#FDE68A';dh.style.borderColor='';}
+  const dd=document.getElementById('sa-disp-demo');if(dd){dd.style.background='#FDE68A';dd.style.color=autoTxt('#FDE68A');}
   persist(true);toast('Colores restablecidos.');
 }
 
@@ -1966,14 +1971,24 @@ function saveLeagueName(){
   if(nombres.some(n=>!n)){if(al)al.innerHTML='<span style="color:#e55">'+t('club_err_empty')+'</span>';return;}
   if(new Set(nombres.map(n=>n.toLowerCase())).size!==nombres.length){if(al)al.innerHTML='<span style="color:#e55">'+t('club_err_dup')+'</span>';return;}
   CLUBS.forEach(c=>{c.name=c.name.trim();});
-  // Migrar los partidos al nuevo nombre: si un club cambió de nombre, los partidos
-  // que guardaban el nombre viejo se actualizan al nuevo, para no perder el color.
-  CLUBS.forEach(c=>{
-    const antes = _clubNamesAtOpen[c.id];
-    if(antes && antes !== c.name){
-      matches.forEach(m=>{ if(m.club === antes) m.club = c.name; });
-    }
+  // Migrar los partidos al nuevo nombre de club. Se hace en DOS pasos con un id
+  // temporal para evitar pisadas cuando dos clubes intercambian nombre:
+  // si Sohail→Haza y Haza→Sohail se hicieran secuencialmente por nombre, el primer
+  // paso mandaría todo a Haza y el segundo lo traería todo de vuelta a Sohail.
+  // Marcando primero con el id (único) y resolviendo después, cada partido llega
+  // a su destino correcto.
+  // Se calcula el nuevo club de cada partido en un array paralelo y recién al final
+  // se asigna. Así no hay pisadas en intercambios (Sohail↔Haza) ni dependencia de
+  // ningún carácter mágico: el mapeo viejo→id→nuevo se resuelve de una vez.
+  const idToNewName = {};
+  CLUBS.forEach(c=>{ idToNewName[c.id] = c.name; });
+  const nameToId = {};  // nombre viejo → id (del snapshot al abrir el editor)
+  Object.keys(_clubNamesAtOpen).forEach(id=>{ nameToId[_clubNamesAtOpen[id]] = id; });
+  const nuevos = matches.map(m=>{
+    const id = nameToId[m.club];
+    return (id && idToNewName[id] !== undefined) ? idToNewName[id] : m.club;
   });
+  matches.forEach((m,i)=>{ m.club = nuevos[i]; });
   // Aplicar colores
   applyLeagueColors(LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC,LEAGUE_COLOR_HL);
   // Actualizar textos
@@ -3821,7 +3836,13 @@ function _hydrate(d){try{
   if(d.LEAGUE_COLOR_PRI)LEAGUE_COLOR_PRI=d.LEAGUE_COLOR_PRI;
   if(d.LEAGUE_COLOR_ACC)LEAGUE_COLOR_ACC=d.LEAGUE_COLOR_ACC;
   if(d.LEAGUE_COLOR_HL)LEAGUE_COLOR_HL=d.LEAGUE_COLOR_HL;
-  if(Array.isArray(d.CLUBS)&&d.CLUBS.length)CLUBS=d.CLUBS.filter(c=>c&&c.name&&c.bg);
+  if(Array.isArray(d.CLUBS)&&d.CLUBS.length){
+    const validos=d.CLUBS.filter(c=>c&&c.name&&c.bg);
+    // Solo se reemplaza si quedó al menos un club válido: si todos vinieran corruptos,
+    // se mantienen los que ya había en memoria en vez de quedar sin ningún club
+    // (lo que dejaría el formulario de carga sin opciones).
+    if(validos.length) CLUBS=validos;
+  }
   if(typeof d.COLOR_DISPUTA==='string')COLOR_DISPUTA=d.COLOR_DISPUTA;
   // Aplicar colores guardados al cargar
   if(d.LEAGUE_COLOR_PRI||d.LEAGUE_COLOR_ACC||d.LEAGUE_COLOR_HL)applyLeagueColors(d.LEAGUE_COLOR_PRI||LEAGUE_COLOR_PRI,d.LEAGUE_COLOR_ACC||LEAGUE_COLOR_ACC,d.LEAGUE_COLOR_HL||LEAGUE_COLOR_HL);
