@@ -129,7 +129,15 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
 .alert{padding:.6rem .875rem;border-radius:8px;font-size:13px;margin-bottom:.625rem}.alert-ok{background:#E1F5EE;color:#085041}.alert-err{background:#FCEBEB;color:#791F1F}.alert-info{background:var(--soft);color:var(--pri)}
 .empty{text-align:center;padding:1.25rem;color:var(--text2);font-size:13px}
 .overflow-x{overflow-x:auto}.mt-sm{margin-top:.5rem}.gap-sm{display:flex;gap:6px;flex-wrap:wrap}
-.lock-note{font-size:11px;color:var(--text2);font-style:italic}.err-txt{color:#c0392b!important;font-style:normal}
+.lock-note{font-size:11px;color:var(--text2);font-style:italic}
+.pos-badge{display:inline-flex;width:26px;height:26px;align-items:center;justify-content:center;border-radius:50%;font-size:12px;font-weight:800;background:var(--soft);color:var(--pri)}
+.pos-1{background:var(--acc);color:var(--priD)}
+.pos-2{background:#d4d9e0;color:#333}
+.pos-3{background:#e8c9a0;color:#6b4423}
+.rt-table th{white-space:nowrap;cursor:help}
+.rt-table td{white-space:nowrap}
+.rt-name{text-align:left!important}
+.rt-big{font-weight:800;color:var(--priD);font-size:1.05em}.err-txt{color:#c0392b!important;font-style:normal}
 .nm-link{cursor:pointer;border-bottom:1px dotted currentColor}.nm-link:hover{opacity:.6}
 .hist-row .avatar{margin-right:6px}
 .avatar{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;margin-right:5px;background:var(--soft);color:var(--pri)}
@@ -345,6 +353,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
   <div id="view-perfil" style="display:none"></div>
   <div id="view-admin" style="display:none"></div>
       <div id="view-historial" style="display:none"></div>
+    <div id="view-rating" style="display:none"></div>
 </div>
 
 <div id="print-area"></div>
@@ -413,7 +422,7 @@ function updateLangUI(){
 
 const TRANSLATIONS={
 es:{
-appearance_title:'Apariencia de la liga',legend_nj:'No jugado',dispute_color:'Color de disputas',dispute_color_hint:'fondo de partidos en disputa',dispute_short:'En disputa',clubs_title:'Clubes',clubs_hint:'Editá el nombre y color de cada club, agregá o eliminá. El color pinta el sombreado de la tabla de resultados; el texto se oscurece solo para que siempre se lea.',club_add:'Agregar club',club_delete:'Eliminar club',club_name_ph:'Nombre del club',club_short:'Club',club_min_one:'Tiene que quedar al menos un club.',club_delete_confirm:'¿Eliminar el club "{n}"? Los partidos ya cargados con ese club conservan su marcador pero pierden el color.',club_err_empty:'Ningún club puede quedar sin nombre.',club_err_dup:'Hay dos clubes con el mismo nombre.',preview:'Vista previa',save_all:'Guardar todo',reset_colors:'Restablecer colores',confirm_all_skipped:'Pendientes validados. Se saltearon {n} porque los jugaste vos: los tiene que confirmar otro administrador.',own_match_admin:'No podés arbitrar un partido que jugaste vos. Lo tiene que confirmar otro administrador.',wo_not_yours:'No podés marcar W.O. en un partido que jugás vos. Lo tiene que resolver otro administrador.',role_only_owner:'Solo el administrador original y el super admin pueden repartir el rol.',admins_section:'Administradores de la liga',admins_hint:'Además de la cuenta Organización, estas personas pueden administrar la liga. Siguen siendo jugadores: mantienen su grupo y sus partidos.',admins_none:'No hay ningún jugador con permisos de administrador.',role_section:'Rol en la liga',role_is_admin:'Administrador',role_is_player:'Jugador',role_make_admin:'Hacer administrador',role_make_player:'Quitar administrador',role_confirm_up:'¿Dar permisos de administrador a {n}? Va a poder confirmar resultados, editar jugadores y cambiar la configuración de la liga.',role_confirm_down:'¿Quitarle los permisos de administrador a {n}? Vuelve a ser un jugador normal.',role_done:'Rol de {n} actualizado.',role_last_admin:'Tiene que quedar al menos un administrador.',reset_not_here:'No se puede desde aquí.',reset_confirm:'¿Restablecer la contraseña de {n} a la clave por defecto "tenis"? Se le va a pedir que la cambie al entrar.',reset_ok:'Contraseña de {n} restablecida. Al entrar se le va a pedir una nueva.',reset_err:'No se pudo restablecer la contraseña.',pwf_title:'Cambiá tu contraseña',pwf_why:'Estás usando la contraseña por defecto, que es pública. Elegí una nueva para continuar.',pwf_new:'Contraseña nueva',pwf_rep:'Repetila',pwf_save:'Guardar y continuar',pwf_short:'Tiene que tener al menos 6 caracteres.',pwf_same:'No puede ser la misma que ya tenías.',pwf_nomatch:'Las dos contraseñas no coinciden.',pwf_err:'No se pudo cambiar. Probá de nuevo.',err_need_both:'Escribí tu usuario y tu contraseña.',err_no_server:'No se pudo conectar con el servidor. Probá de nuevo.',err_no_users:'No se pudo cargar la lista de usuarios.',err_users_404:'Falta el archivo api/users.js en el repo (404).',err_users_csp:'El navegador bloqueó la llamada a /api/users.',err_server_said:'El servidor devolvió ',err_hydrate:'Los datos se leyeron pero no se pudieron aplicar. Recargá la página.',err_no_data:'No se pudieron cargar los datos. Recargá la página.',err_no_user_league:'No se encontró tu usuario en la liga.',err_inactive:'Tu cuenta está inactiva. Contactá al administrador.',err_session_expired:'Tu sesión expiró. Volvé a entrar.',err_session_expired_save:'Tu sesión expiró. Volvé a entrar para seguir guardando.',err_no_access:'No tenés acceso.',err_conflict:'Otra persona guardó un cambio mientras cargabas el tuyo. Recargá la página y volvé a cargarlo.',login_working:'Entrando…',app_title:'Liga de Tenis Sohail',app_subtitle:'Verano 2026',select_user:'Seleccione su usuario',admin_org:'admin (Organización)',password:'Contraseña',enter:'Entrar',invalid_user:'Seleccioná un usuario válido.',wrong_pass:'Contraseña incorrecta.',
+rating_empty:'Todavía no hay jugadores con partidos suficientes para calcular el rating.',rating_title:'Rating / Nivel',rating_desc:'Rating global (0–10) calculado a partir del grupo, victorias y derrotas de cada jugador en cada ciclo. Ordenado de mayor a menor.',rating_col:'Rating',rating_nivel:'Nivel',rating_nivel_t:'Nivel medio de juego ponderado por ciclo',rating_efic:'Eficiencia',rating_efic_t:'Eficiencia ponderada por dificultad de grupo (1–10)',rating_fiab:'Fiabilidad',rating_fiab_t:'Sube con la cantidad de partidos jugados (satura en 10)',rating_grupo:'Grupo',rating_grupo_t:'Grupo medio ponderado por partidos (1 = grupo más alto)',rating_ppp:'Pts/PJ',rating_ppp_t:'Puntos por partido medio (3 victoria, 1 derrota)',rating_pj:'PJ',rating_gp:'G-P',rating_pct:'%Vict',rating_footer:'El rating pondera 85% nivel de juego, 10% eficiencia por dificultad de grupo y 5% fiabilidad por cantidad de partidos.',rating_feature:'Función de Rating',rating_toggle_label:'Mostrar pestaña de Rating/Nivel',rating_toggle_hint:'Si la activás, todos los usuarios verán una pestaña con el rating de cada jugador. Si no, la pestaña no aparece.',rating_on:'Activado',rating_off:'Desactivado',rating_enabled_toast:'Rating activado. La pestaña ya es visible para todos.',rating_disabled_toast:'Rating desactivado. La pestaña ya no se muestra.',appearance_title:'Apariencia de la liga',legend_nj:'No jugado',dispute_color:'Color de disputas',dispute_color_hint:'fondo de partidos en disputa',dispute_short:'En disputa',clubs_title:'Clubes',clubs_hint:'Editá el nombre y color de cada club, agregá o eliminá. El color pinta el sombreado de la tabla de resultados; el texto se oscurece solo para que siempre se lea.',club_add:'Agregar club',club_delete:'Eliminar club',club_name_ph:'Nombre del club',club_short:'Club',club_min_one:'Tiene que quedar al menos un club.',club_delete_confirm:'¿Eliminar el club "{n}"? Los partidos ya cargados con ese club conservan su marcador pero pierden el color.',club_err_empty:'Ningún club puede quedar sin nombre.',club_err_dup:'Hay dos clubes con el mismo nombre.',preview:'Vista previa',save_all:'Guardar todo',reset_colors:'Restablecer colores',confirm_all_skipped:'Pendientes validados. Se saltearon {n} porque los jugaste vos: los tiene que confirmar otro administrador.',own_match_admin:'No podés arbitrar un partido que jugaste vos. Lo tiene que confirmar otro administrador.',wo_not_yours:'No podés marcar W.O. en un partido que jugás vos. Lo tiene que resolver otro administrador.',role_only_owner:'Solo el administrador original y el super admin pueden repartir el rol.',admins_section:'Administradores de la liga',admins_hint:'Además de la cuenta Organización, estas personas pueden administrar la liga. Siguen siendo jugadores: mantienen su grupo y sus partidos.',admins_none:'No hay ningún jugador con permisos de administrador.',role_section:'Rol en la liga',role_is_admin:'Administrador',role_is_player:'Jugador',role_make_admin:'Hacer administrador',role_make_player:'Quitar administrador',role_confirm_up:'¿Dar permisos de administrador a {n}? Va a poder confirmar resultados, editar jugadores y cambiar la configuración de la liga.',role_confirm_down:'¿Quitarle los permisos de administrador a {n}? Vuelve a ser un jugador normal.',role_done:'Rol de {n} actualizado.',role_last_admin:'Tiene que quedar al menos un administrador.',reset_not_here:'No se puede desde aquí.',reset_confirm:'¿Restablecer la contraseña de {n} a la clave por defecto "tenis"? Se le va a pedir que la cambie al entrar.',reset_ok:'Contraseña de {n} restablecida. Al entrar se le va a pedir una nueva.',reset_err:'No se pudo restablecer la contraseña.',pwf_title:'Cambiá tu contraseña',pwf_why:'Estás usando la contraseña por defecto, que es pública. Elegí una nueva para continuar.',pwf_new:'Contraseña nueva',pwf_rep:'Repetila',pwf_save:'Guardar y continuar',pwf_short:'Tiene que tener al menos 6 caracteres.',pwf_same:'No puede ser la misma que ya tenías.',pwf_nomatch:'Las dos contraseñas no coinciden.',pwf_err:'No se pudo cambiar. Probá de nuevo.',err_need_both:'Escribí tu usuario y tu contraseña.',err_no_server:'No se pudo conectar con el servidor. Probá de nuevo.',err_no_users:'No se pudo cargar la lista de usuarios.',err_users_404:'Falta el archivo api/users.js en el repo (404).',err_users_csp:'El navegador bloqueó la llamada a /api/users.',err_server_said:'El servidor devolvió ',err_hydrate:'Los datos se leyeron pero no se pudieron aplicar. Recargá la página.',err_no_data:'No se pudieron cargar los datos. Recargá la página.',err_no_user_league:'No se encontró tu usuario en la liga.',err_inactive:'Tu cuenta está inactiva. Contactá al administrador.',err_session_expired:'Tu sesión expiró. Volvé a entrar.',err_session_expired_save:'Tu sesión expiró. Volvé a entrar para seguir guardando.',err_no_access:'No tenés acceso.',err_conflict:'Otra persona guardó un cambio mientras cargabas el tuyo. Recargá la página y volvé a cargarlo.',login_working:'Entrando…',app_title:'Liga de Tenis Sohail',app_subtitle:'Verano 2026',select_user:'Seleccione su usuario',admin_org:'admin (Organización)',password:'Contraseña',enter:'Entrar',invalid_user:'Seleccioná un usuario válido.',wrong_pass:'Contraseña incorrecta.',
 exit:'Salir',cycle:'Ciclo',playoffs:'Play Offs',playoffs_prev:'Play Offs (previa)',
 tab_grupos:'Grupos',tab_general:'Clasificación',tab_cargar:'Cargar',tab_cargar_admin:'Cargar',tab_pendientes:'Pendientes',tab_pendientes_admin:'Pendientes / Disputas',tab_perfil:'Perfil & Jugadores',tab_admin:'Admin',
 choose_group:'Elegí el grupo',group:'Grupo',destination:'Destino',player:'Jugador',won:'G',lost:'P',not_played:'NJ',sets_won:'SG',sets_lost:'SP',balance:'Bal',pts_pos:'P.puesto',extra:'Extra',total:'Total',pts_classif:'Puntos para la Clasificación General',players_col:'Jugadores',edit:'Editar',
@@ -474,7 +483,7 @@ undo_demo:'Deshacer simulación',
 toast_demo_undone:'Simulaciones borradas.',
 },
 en:{
-appearance_title:'League appearance',legend_nj:'Not played',dispute_color:'Dispute color',dispute_color_hint:'background of disputed matches',dispute_short:'Disputed',clubs_title:'Clubs',clubs_hint:'Edit each club name and color, add or remove. The color shades the results table; text auto-darkens so it stays readable.',club_add:'Add club',club_delete:'Delete club',club_name_ph:'Club name',club_short:'Club',club_min_one:'At least one club must remain.',club_delete_confirm:'Delete club "{n}"? Matches already saved with this club keep their score but lose the color.',club_err_empty:'No club can be left unnamed.',club_err_dup:'Two clubs have the same name.',preview:'Preview',save_all:'Save all',reset_colors:'Reset colors',confirm_all_skipped:'Pending matches validated. {n} were skipped because you played in them: another administrator must confirm them.',own_match_admin:'You cannot referee a match you played in. Another administrator must confirm it.',wo_not_yours:'You cannot mark W.O. on a match you are playing in. Ask another administrator.',role_only_owner:'Only the original administrator and the super admin can grant this role.',admins_section:'League administrators',admins_hint:'Besides the Organización account, these people can administer the league. They are still players: they keep their group and their matches.',admins_none:'No player has administrator rights.',role_section:'League role',role_is_admin:'Administrator',role_is_player:'Player',role_make_admin:'Make administrator',role_make_player:'Remove administrator',role_confirm_up:'Give {n} administrator rights? They will be able to confirm results, edit players and change the league settings.',role_confirm_down:'Remove {n}\'s administrator rights? They go back to being a regular player.',role_done:'{n}\'s role updated.',role_last_admin:'At least one administrator must remain.',reset_not_here:'Not available from here.',reset_confirm:'Reset {n}\'s password to the default "tenis"? They will be asked to change it on their next login.',reset_ok:'{n}\'s password was reset. They will be asked for a new one on login.',reset_err:'Could not reset the password.',pwf_title:'Change your password',pwf_why:'You are using the default password, which is public. Choose a new one to continue.',pwf_new:'New password',pwf_rep:'Repeat it',pwf_save:'Save and continue',pwf_short:'It must be at least 6 characters.',pwf_same:'It cannot be the same one you had.',pwf_nomatch:'The two passwords do not match.',pwf_err:'Could not change it. Please try again.',err_need_both:'Enter your username and password.',err_no_server:'Could not reach the server. Please try again.',err_no_users:'Could not load the user list.',err_users_404:'The file api/users.js is missing from the repo (404).',err_users_csp:'The browser blocked the call to /api/users.',err_server_said:'The server returned ',err_hydrate:'Data was read but could not be applied. Please reload the page.',err_no_data:'Could not load the data. Please reload the page.',err_no_user_league:'Your user was not found in the league.',err_inactive:'Your account is inactive. Please contact the administrator.',err_session_expired:'Your session expired. Please log in again.',err_session_expired_save:'Your session expired. Log in again to keep saving.',err_no_access:'You do not have access.',err_conflict:'Someone else saved a change while you were entering yours. Please reload and enter it again.',login_working:'Signing in…',app_title:'Sohail Tennis League',app_subtitle:'Summer 2026',select_user:'Select User',admin_org:'admin (Organisation)',password:'Password',enter:'Log in',invalid_user:'Please select a valid user.',wrong_pass:'Incorrect password.',
+rating_empty:'No players have enough matches yet to compute a rating.',rating_title:'Rating / Level',rating_desc:'Global rating (0–10) computed from each player\'s group, wins and losses per cycle. Sorted high to low.',rating_col:'Rating',rating_nivel:'Level',rating_nivel_t:'Average level of play weighted by cycle',rating_efic:'Efficiency',rating_efic_t:'Efficiency weighted by group difficulty (1–10)',rating_fiab:'Reliability',rating_fiab_t:'Rises with matches played (saturates at 10)',rating_grupo:'Group',rating_grupo_t:'Average group weighted by matches (1 = highest group)',rating_ppp:'Pts/M',rating_ppp_t:'Average points per match (3 win, 1 loss)',rating_pj:'M',rating_gp:'W-L',rating_pct:'%Win',rating_footer:'Rating weighs 85% level of play, 10% efficiency by group difficulty and 5% reliability by number of matches.',rating_feature:'Rating feature',rating_toggle_label:'Show Rating/Level tab',rating_toggle_hint:'If enabled, all users will see a tab with each player\'s rating. If not, the tab does not appear.',rating_on:'On',rating_off:'Off',rating_enabled_toast:'Rating enabled. The tab is now visible to everyone.',rating_disabled_toast:'Rating disabled. The tab is no longer shown.',appearance_title:'League appearance',legend_nj:'Not played',dispute_color:'Dispute color',dispute_color_hint:'background of disputed matches',dispute_short:'Disputed',clubs_title:'Clubs',clubs_hint:'Edit each club name and color, add or remove. The color shades the results table; text auto-darkens so it stays readable.',club_add:'Add club',club_delete:'Delete club',club_name_ph:'Club name',club_short:'Club',club_min_one:'At least one club must remain.',club_delete_confirm:'Delete club "{n}"? Matches already saved with this club keep their score but lose the color.',club_err_empty:'No club can be left unnamed.',club_err_dup:'Two clubs have the same name.',preview:'Preview',save_all:'Save all',reset_colors:'Reset colors',confirm_all_skipped:'Pending matches validated. {n} were skipped because you played in them: another administrator must confirm them.',own_match_admin:'You cannot referee a match you played in. Another administrator must confirm it.',wo_not_yours:'You cannot mark W.O. on a match you are playing in. Ask another administrator.',role_only_owner:'Only the original administrator and the super admin can grant this role.',admins_section:'League administrators',admins_hint:'Besides the Organización account, these people can administer the league. They are still players: they keep their group and their matches.',admins_none:'No player has administrator rights.',role_section:'League role',role_is_admin:'Administrator',role_is_player:'Player',role_make_admin:'Make administrator',role_make_player:'Remove administrator',role_confirm_up:'Give {n} administrator rights? They will be able to confirm results, edit players and change the league settings.',role_confirm_down:'Remove {n}\'s administrator rights? They go back to being a regular player.',role_done:'{n}\'s role updated.',role_last_admin:'At least one administrator must remain.',reset_not_here:'Not available from here.',reset_confirm:'Reset {n}\'s password to the default "tenis"? They will be asked to change it on their next login.',reset_ok:'{n}\'s password was reset. They will be asked for a new one on login.',reset_err:'Could not reset the password.',pwf_title:'Change your password',pwf_why:'You are using the default password, which is public. Choose a new one to continue.',pwf_new:'New password',pwf_rep:'Repeat it',pwf_save:'Save and continue',pwf_short:'It must be at least 6 characters.',pwf_same:'It cannot be the same one you had.',pwf_nomatch:'The two passwords do not match.',pwf_err:'Could not change it. Please try again.',err_need_both:'Enter your username and password.',err_no_server:'Could not reach the server. Please try again.',err_no_users:'Could not load the user list.',err_users_404:'The file api/users.js is missing from the repo (404).',err_users_csp:'The browser blocked the call to /api/users.',err_server_said:'The server returned ',err_hydrate:'Data was read but could not be applied. Please reload the page.',err_no_data:'Could not load the data. Please reload the page.',err_no_user_league:'Your user was not found in the league.',err_inactive:'Your account is inactive. Please contact the administrator.',err_session_expired:'Your session expired. Please log in again.',err_session_expired_save:'Your session expired. Log in again to keep saving.',err_no_access:'You do not have access.',err_conflict:'Someone else saved a change while you were entering yours. Please reload and enter it again.',login_working:'Signing in…',app_title:'Sohail Tennis League',app_subtitle:'Summer 2026',select_user:'Select User',admin_org:'admin (Organisation)',password:'Password',enter:'Log in',invalid_user:'Please select a valid user.',wrong_pass:'Incorrect password.',
 exit:'Log out',cycle:'Cycle',playoffs:'Play Offs',playoffs_prev:'Play Offs (preview)',
 tab_grupos:'Groups',tab_general:'Standings',tab_cargar:'Upload',tab_cargar_admin:'Upload',tab_pendientes:'Pending',tab_pendientes_admin:'Pending / Disputes',tab_perfil:'Profile & Players',tab_admin:'Admin',
 choose_group:'Choose group',group:'Group',destination:'Dest.',player:'Player',won:'W',lost:'L',not_played:'NP',sets_won:'SW',sets_lost:'SL',balance:'Bal',pts_pos:'Pos.pts',extra:'Extra',total:'Total',pts_classif:'Points for the General Standings',players_col:'Players',edit:'Edit',
@@ -563,6 +572,81 @@ let CLUBS = [
 ];
 let COLOR_DISPUTA = '#FDE68A';
 let _clubNamesAtOpen = {};  // snapshot id→nombre para migrar partidos al renombrar
+
+// ===== RATING / NIVEL (opcional, el admin lo habilita) ============================
+// Motor verificado contra la tabla oficial de la Liga Tenis Málaga (4 decimales,
+// 29 jugadores G1–G24). Solo usa, por jugador y ciclo: grupo, victorias, derrotas.
+// Está OFF por defecto: la pestaña Rating no aparece hasta que un admin lo active.
+let RATING_ON = false;
+
+const _FACTOR_MUESTRA = { 1: 0.5, 2: 0.75, 3: 0.92 };  // 4+ => 1.0
+const _factorMuestra = (n) => _FACTOR_MUESTRA[n] ?? 1.0;
+const _valorBase = (g) => 9.6 - 0.35 * (g - 1);
+const _eficienciaCiclo = (v, d) => (3 * v + d) / (3 * (v + d));
+const _ajusteCiclo = (v, d) => 0.8 * (v / (v + d) - 0.5) * _factorMuestra(v + d);
+const _notaCiclo = (g, v, d) => _valorBase(g) + _ajusteCiclo(v, d);
+
+// Recibe [{grupo, v, d}] con SOLO los ciclos jugados (v+d >= 1). Devuelve el rating
+// y todas las columnas intermedias. Idéntico a la implementación de referencia.
+function ratingCompleto(ciclos){
+  const N = ciclos.map((c) => c.v + c.d);
+  const fm = N.map(_factorMuestra);
+  const ef = ciclos.map((c) => _eficienciaCiclo(c.v, c.d));
+  const aj = ciclos.map((c) => _ajusteCiclo(c.v, c.d));
+  const no = ciclos.map((c) => _notaCiclo(c.grupo, c.v, c.d));
+  const sum = (a) => a.reduce((x, y) => x + y, 0);
+  const partidos = sum(N);
+  const ganados = sum(ciclos.map((c) => c.v));
+  const perdidos = sum(ciclos.map((c) => c.d));
+  const sumFm = sum(fm);
+  const nivelMedio = sum(no.map((x, i) => x * fm[i])) / sumFm;
+  const eficMedia = sum(ef.map((x, i) => x * fm[i])) / sumFm;
+  const grupoMedio = sum(ciclos.map((c, i) => c.grupo * N[i])) / partidos;
+  const valorBaseMedio = 9.6 - 0.35 * (grupoMedio - 1);
+  const ajusteEficMedio = sum(aj) / aj.length;
+  const w = ciclos.map((c, i) => N[i] * _valorBase(c.grupo));
+  const eficPonderada = 1 + 9 * sum(ef.map((e, i) => e * w[i])) / sum(w);
+  const fiabilidad = 10 * (1 - Math.exp(-partidos / 11.2));
+  const rating = 0.85 * nivelMedio + 0.10 * eficPonderada + 0.05 * fiabilidad;
+  return { rating, nivelMedioCiclo: nivelMedio, fiabilidad, grupoMedio,
+    valorBaseMedio, ajusteEficMedio, eficienciaMedia: eficMedia,
+    eficienciaPonderada: eficPonderada,
+    puntosPorPartido: (3 * ganados + perdidos) / partidos,
+    partidos, ganados, perdidos, porcentajeVictorias: 100 * ganados / partidos };
+}
+
+// Deriva, para un jugador, la lista [{grupo, v, d}] de los ciclos que jugó, usando
+// computeStats (que ya cuenta victorias 'g' y derrotas 'p' por ciclo/grupo).
+function ciclosDeJugador(name){
+  const out = [];
+  for(let cy = 1; cy <= cycles.length; cy++){
+    const c = cycles[cy-1];
+    if(!c || !c.groups) continue;
+    const loc = findLoc(name, cy);
+    if(!loc) continue;  // no jugó ese ciclo / no está en ningún grupo
+    const st = computeStats(cy, loc.g).find(s => s.name === name);
+    if(!st) continue;
+    const v = st.g, d = st.p;  // g = ganados, p = perdidos
+    if(v + d < 1) continue;    // ciclo sin partidos jugados: se excluye
+    out.push({ grupo: loc.g, v, d });
+  }
+  return out;
+}
+
+// Tabla de rating de todos los jugadores con al menos 1 partido, ordenada desc.
+function tablaRating(){
+  const filas = [];
+  Object.keys(USERS).forEach(name => {
+    if(esCuentaSistema(name)) return;         // 'admin'/'superadmin' no son jugadores
+    if(USERS[name] && USERS[name].inactive) return;
+    const ciclos = ciclosDeJugador(name);
+    if(!ciclos.length) return;                // sin partidos: no aparece
+    const r = ratingCompleto(ciclos);
+    filas.push({ name, ...r, nCiclos: ciclos.length });
+  });
+  filas.sort((a, b) => b.rating - a.rating);
+  return filas;
+}
 
 function autoTxt(hex){
   const h = String(hex||'').replace('#','');
@@ -999,7 +1083,7 @@ async function doLogin(){
 function doLogout(){closeM();clearForm();currentUser=null;_token=null;_loadOK=false;_lastActivity=0;_sessionExpiring=false;document.getElementById('main-app').style.display='none';document.getElementById('login-screen').style.display='block';document.getElementById('login-pass').value='';initLogin();}
 function renderShell(){renderCycleBar();renderSubTabs();updateBadge();}
 function renderCycleBar(){const bar=document.getElementById('cycle-bar');let html='';cycles.forEach(c=>{const playable=!!c.groups;const isView=viewCycle===c.n;const icon=c.status==='finished'?'<i class="ti ti-circle-check st"></i>':c.status==='active'?'<i class="ti ti-player-play st"></i>':'<i class="ti ti-lock st"></i>';html+=`<button class="cycle-tab ${playable?'':'locked'} ${isView?'active':''}" onclick="${playable?`viewCyc(${c.n})`:''}">${icon} ${t('cycle')} ${c.n}</button>`;});const showPO=playoff.started||(playoff.preview&&esAdmin(currentUser));const poLabel=showPO?(playoff.preview&&!playoff.started?`<i class="ti ti-eye st"></i> ${t('playoffs_prev')}`:`<i class="ti ti-tournament st"></i> ${t('playoffs')}`):`<i class="ti ti-lock st"></i> ${t('playoffs')}`;html+=`<button class="cycle-tab ${showPO?'':'locked'} ${viewCycle==='po'?'active':''}" onclick="${showPO?`viewCyc('po')`:''}">${poLabel}</button>`;bar.innerHTML=html;}
-function renderSubTabs(){const tabs=document.getElementById('tabs');tabs.style.display='flex';const showPO=playoff.started||(playoff.preview&&esAdmin(currentUser));const inPO=viewCycle==='po';let tabs_def=[];if(showPO){tabs_def.push({id:'po',i:'ti-tournament',l:t('playoffs'),po:true});}else{tabs_def.push({id:'grupos',i:'ti-layout-grid',l:t('tab_grupos')});}tabs_def.push({id:'general',i:'ti-chart-bar',l:t('tab_general')});tabs_def.push({id:'cargar',i:'ti-upload',l:esAdmin(currentUser)?t('tab_cargar_admin'):t('tab_cargar')});tabs_def.push({id:'pendientes',i:'ti-bell',l:esAdmin(currentUser)?t('tab_pendientes_admin'):t('tab_pendientes'),b:true});tabs_def.push({id:'perfil',i:'ti-user',l:t('tab_perfil')});if(esAdmin(currentUser)){tabs_def.push({id:'admin',i:'ti-settings',l:t('tab_admin')});tabs_def.push({id:'historial',i:'ti-history',l:'Historial'});}tabs.innerHTML=tabs_def.map(x=>{if(x.po){const active=inPO;return '<button class="tab'+(active?' active':'')+'" id="tab-po" onclick="viewCyc(\'po\')"><i class="ti ti-tournament" aria-hidden="true"></i> '+x.l+'</button>';}const active=!inPO&&subView===x.id;const extraCls=(x.id==='historial'||x.id==='admin')?' tab-sm':'';return '<button class="tab'+extraCls+(active?' active':'')+'" id="tab-'+x.id+'" onclick="showSub(\''+x.id+'\')" ><i class="ti '+x.i+'" aria-hidden="true"></i> '+x.l+(x.b?' <span class="tab-n" id="pend-n" style="display:none">0</span>':'')+'</button>';}).join('');}
+function renderSubTabs(){const tabs=document.getElementById('tabs');tabs.style.display='flex';const showPO=playoff.started||(playoff.preview&&esAdmin(currentUser));const inPO=viewCycle==='po';let tabs_def=[];if(showPO){tabs_def.push({id:'po',i:'ti-tournament',l:t('playoffs'),po:true});}else{tabs_def.push({id:'grupos',i:'ti-layout-grid',l:t('tab_grupos')});}tabs_def.push({id:'general',i:'ti-chart-bar',l:t('tab_general')});tabs_def.push({id:'cargar',i:'ti-upload',l:esAdmin(currentUser)?t('tab_cargar_admin'):t('tab_cargar')});tabs_def.push({id:'pendientes',i:'ti-bell',l:esAdmin(currentUser)?t('tab_pendientes_admin'):t('tab_pendientes'),b:true});tabs_def.push({id:'perfil',i:'ti-user',l:t('tab_perfil')});if(esAdmin(currentUser)){tabs_def.push({id:'admin',i:'ti-settings',l:t('tab_admin')});tabs_def.push({id:'historial',i:'ti-history',l:'Historial'});if(RATING_ON)tabs_def.push({id:'rating',i:'ti-star',l:'Rating'});}tabs.innerHTML=tabs_def.map(x=>{if(x.po){const active=inPO;return '<button class="tab'+(active?' active':'')+'" id="tab-po" onclick="viewCyc(\'po\')"><i class="ti ti-tournament" aria-hidden="true"></i> '+x.l+'</button>';}const active=!inPO&&subView===x.id;const extraCls=(x.id==='historial'||x.id==='admin')?' tab-sm':'';return '<button class="tab'+extraCls+(active?' active':'')+'" id="tab-'+x.id+'" onclick="showSub(\''+x.id+'\')" ><i class="ti '+x.i+'" aria-hidden="true"></i> '+x.l+(x.b?' <span class="tab-n" id="pend-n" style="display:none">0</span>':'')+'</button>';}).join('');}
 function viewCyc(n){
   viewCycle=n;
   if(n==='po'){
@@ -1018,7 +1102,7 @@ function viewCyc(n){
     showSub('grupos');
   }
 }
-function showSub(name){if(viewCycle==='po')viewCycle=activeN;subView=name;['grupos','general','cargar','pendientes','admin','playoff','perfil','historial'].forEach(v=>{const el=document.getElementById('view-'+v);if(el)el.style.display='none';});const pv=document.getElementById('view-playoff');if(pv)pv.style.display='none';renderSubTabs();document.getElementById('view-'+name).style.display='block';if(name==='grupos')renderGrupos();if(name==='general')renderGeneral();if(name==='cargar'){populateForm();}if(name==='pendientes')renderPend();if(name==='admin')renderAdmin();if(name==='perfil')renderPerfil();if(name==='historial')renderHistorial();updateHdr();if(name!=='pendientes')renderPend();updateBadge();}
+function showSub(name){if(viewCycle==='po')viewCycle=activeN;subView=name;['grupos','general','cargar','pendientes','admin','playoff','perfil','historial','rating'].forEach(v=>{const el=document.getElementById('view-'+v);if(el)el.style.display='none';});const pv=document.getElementById('view-playoff');if(pv)pv.style.display='none';renderSubTabs();document.getElementById('view-'+name).style.display='block';if(name==='grupos')renderGrupos();if(name==='general')renderGeneral();if(name==='cargar'){populateForm();}if(name==='pendientes')renderPend();if(name==='admin')renderAdmin();if(name==='perfil')renderPerfil();if(name==='historial')renderHistorial();if(name==='rating')renderRating();updateHdr();if(name!=='pendientes')renderPend();updateBadge();}
 function updateHdr(){const hs=viewCycle==='po'?t('playoffs'):t('cycle')+' '+viewCycle+' · '+fmtRange(FECHAS[viewCycle-1]||'')+' · '+(cycles[viewCycle-1]?cycles[viewCycle-1].status:'');const sub=document.getElementById('hdr-sub');if(sub)sub.textContent=hs;
 const lsub=document.getElementById('login-sub');if(lsub)lsub.textContent=LEAGUE_SUBTITLE||'';const tit=document.getElementById('hdr-title');if(tit)tit.textContent=LEAGUE_NAME||t('app_title');
 const lt=document.getElementById('login-title');if(lt)lt.textContent=LEAGUE_NAME||t('app_title');const eb=document.getElementById('exit-btn');if(eb)eb.textContent=t('exit');}
@@ -1835,6 +1919,19 @@ function redibujarClubs(){
   const box=document.getElementById('clubs-editor');
   if(box) box.innerHTML=clubsEditorHTML();
 }
+// Habilita o deshabilita la pestaña Rating para toda la liga. Solo el admin lo ve.
+// Al cambiar, se guarda y se redibujan las pestañas (aparece/desaparece Rating).
+function toggleRating(){
+  RATING_ON = !RATING_ON;
+  const btn = document.getElementById('rating-toggle-btn');
+  if(btn){
+    btn.className = 'btn' + (RATING_ON ? ' btn-success' : '');
+    btn.innerHTML = `<i class="ti ${RATING_ON?'ti-eye':'ti-eye-off'}"></i> ${RATING_ON?t('rating_on'):t('rating_off')}`;
+  }
+  renderSubTabs();
+  persist(true);
+  toast(RATING_ON ? t('rating_enabled_toast') : t('rating_disabled_toast'));
+}
 function updateClubName(i,val){
   if(!CLUBS[i])return;
   CLUBS[i].name=val;
@@ -2149,6 +2246,52 @@ function addLog(action, detail){
   if(LOG.length>500)LOG.splice(500);
 }
 function fmtSets(sets){if(!sets||!sets.length)return '—';return sets.map(([a,b])=>a+'-'+b).join(' ');}
+function renderRating(){
+  const box = document.getElementById('view-rating');
+  if(!box) return;
+  const filas = tablaRating();
+  if(!filas.length){
+    box.innerHTML = `<div class="card"><div class="lock-note" style="padding:1rem 0;text-align:center">${t('rating_empty')}</div></div>`;
+    return;
+  }
+  const r4 = x => (Math.round(x*10000)/10000).toFixed(4);
+  const r2 = x => (Math.round(x*100)/100).toFixed(2);
+  const r1 = x => (Math.round(x*10)/10).toFixed(1);
+  const rows = filas.map((f,i)=>{
+    const pos = i+1;
+    const medal = pos===1?'pos-1':pos===2?'pos-2':pos===3?'pos-3':'';
+    return `<tr>
+      <td><span class="pos-badge ${medal}">${pos}</span></td>
+      <td class="rt-name"><span class="nm-link" onclick="showPlayerHistory('${jsq(f.name)}')">${attr(f.name)}</span></td>
+      <td class="rt-big">${r4(f.rating)}</td>
+      <td>${r2(f.nivelMedioCiclo)}</td>
+      <td>${r2(f.eficienciaPonderada)}</td>
+      <td>${r1(f.fiabilidad)}</td>
+      <td>${r2(f.grupoMedio)}</td>
+      <td>${r2(f.puntosPorPartido)}</td>
+      <td>${f.partidos}</td>
+      <td>${f.ganados}/${f.perdidos}</td>
+      <td>${r1(f.porcentajeVictorias)}%</td>
+    </tr>`;
+  }).join('');
+  box.innerHTML = `<div class="card">
+    <div class="grp-title"><i class="ti ti-star"></i> ${t('rating_title')}</div>
+    <p class="legend-txt" style="margin-top:0;margin-bottom:1rem">${t('rating_desc')}</p>
+    <div class="overflow-x"><table class="cls-table rt-table">
+      <thead><tr>
+        <th>#</th><th>${t('player')}</th><th>${t('rating_col')}</th>
+        <th title="${t('rating_nivel_t')}">${t('rating_nivel')}</th>
+        <th title="${t('rating_efic_t')}">${t('rating_efic')}</th>
+        <th title="${t('rating_fiab_t')}">${t('rating_fiab')}</th>
+        <th title="${t('rating_grupo_t')}">${t('rating_grupo')}</th>
+        <th title="${t('rating_ppp_t')}">${t('rating_ppp')}</th>
+        <th>${t('rating_pj')}</th><th>${t('rating_gp')}</th><th>${t('rating_pct')}</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <p class="legend-txt">${t('rating_footer')}</p>
+  </div>`;
+}
 function renderHistorial(){
   const el=document.getElementById('view-historial');if(!el)return;
   const filter=document.getElementById('hist-filter')?document.getElementById('hist-filter').value:'all';
@@ -3218,6 +3361,16 @@ function renderPerfil(){
         <div class="section-lbl" style="color:var(--pri);margin-top:1rem">${t('clubs_title')}</div>
         <div style="font-size:12px;color:var(--text2);margin-bottom:.6rem">${t('clubs_hint')}</div>
         <div id="clubs-editor">${clubsEditorHTML()}</div>
+        <div class="section-lbl" style="color:var(--pri);margin-top:1.5rem">${t('rating_feature')}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:.85rem 1rem;border:1px solid var(--border2);border-radius:10px;background:var(--surface)">
+          <div style="flex:1;min-width:200px">
+            <div style="font-weight:600;font-size:.9rem">${t('rating_toggle_label')}</div>
+            <div style="font-size:.8rem;color:var(--text2);margin-top:2px">${t('rating_toggle_hint')}</div>
+          </div>
+          <button id="rating-toggle-btn" class="btn ${RATING_ON?'btn-success':''}" onclick="toggleRating()">
+            <i class="ti ${RATING_ON?'ti-eye':'ti-eye-off'}"></i> ${RATING_ON?t('rating_on'):t('rating_off')}
+          </button>
+        </div>
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:.25rem;margin-top:1rem">
           <button class="btn btn-primary" onclick="previewLeagueColors()"><i class="ti ti-eye"></i> ${t('preview')}</button>
           <button class="btn btn-success" onclick="saveLeagueName()"><i class="ti ti-device-floppy"></i> ${t('save_all')}</button>
@@ -3781,7 +3934,7 @@ let _lastSaved=null,_saving=false,_pendingForce=false,_loadOK=false,_dbEmpty=fal
 // tienen la app abierta, la segunda en guardar recibe 409 en vez de pisar a la primera.
 let _stateV=0;
 function _serialize(){
-  return JSON.stringify({_v:_stateV,cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,PO_FECHAS,ALLNAMES,users:USERS,PUNTOS,LOG,LEAGUE_NAME,LEAGUE_SUBTITLE,LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC,LEAGUE_COLOR_HL,CLUBS,COLOR_DISPUTA});
+  return JSON.stringify({_v:_stateV,cycles,matches,matchId,activeN,playoff,DESTINO,FECHAS,PO_FECHAS,ALLNAMES,users:USERS,PUNTOS,LOG,LEAGUE_NAME,LEAGUE_SUBTITLE,LEAGUE_COLOR_PRI,LEAGUE_COLOR_ACC,LEAGUE_COLOR_HL,CLUBS,COLOR_DISPUTA,RATING_ON});
 }
 
 function _hydrate(d){try{
@@ -3845,6 +3998,7 @@ function _hydrate(d){try{
     if(validos.length) CLUBS=validos;
   }
   if(typeof d.COLOR_DISPUTA==='string')COLOR_DISPUTA=d.COLOR_DISPUTA;
+  if(typeof d.RATING_ON==='boolean')RATING_ON=d.RATING_ON;
   // Aplicar colores guardados al cargar
   if(d.LEAGUE_COLOR_PRI||d.LEAGUE_COLOR_ACC||d.LEAGUE_COLOR_HL)applyLeagueColors(d.LEAGUE_COLOR_PRI||LEAGUE_COLOR_PRI,d.LEAGUE_COLOR_ACC||LEAGUE_COLOR_ACC,d.LEAGUE_COLOR_HL||LEAGUE_COLOR_HL);
   return true;
