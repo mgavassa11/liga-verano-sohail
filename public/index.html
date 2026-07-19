@@ -86,7 +86,7 @@ color: #fff; border: 1px solid transparent; border-radius: 6px; padding: 4px 8px
 .res-table th{background:var(--pri);color:#fff;font-weight:600;border:1px solid var(--border2)}.res-table th:first-child{text-align:left;width:150px;background:var(--priD);color:#fff}
 .res-black{background:#16243d}
 .cell-club{font-weight:600;cursor:pointer}
-.cell-pending{background:#FAEEDA;color:#6b5800;cursor:pointer}.cell-disputed{background:#FCEBEB;color:#791F1F;cursor:pointer}
+.cell-pending{background:#FAEEDA;color:#6b5800;cursor:pointer}.cell-disputed{cursor:pointer}
 .cell-empty{background:var(--surface);cursor:pointer;color:var(--text2)}.cell-empty:hover{background:var(--soft);color:var(--pri)}
 .cell-locked{background:var(--surface2);color:var(--border2)}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:var(--text2);align-items:center}
@@ -3364,6 +3364,7 @@ function renamePlayerEverywhere(oldName,newName){
     if(m.aName===oldName)m.aName=newName;
     if(m.bName===oldName)m.bName=newName;
     if(m.reporter===oldName)m.reporter=newName;
+    if(m.vBy===oldName)m.vBy=newName;  // el validador también se renombra
     if(m.winner===oldName)m.winner=newName;
     if(m.poNames){if(m.poNames[0]===oldName)m.poNames[0]=newName;if(m.poNames[1]===oldName)m.poNames[1]=newName;}
   });
