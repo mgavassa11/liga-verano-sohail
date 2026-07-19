@@ -47,6 +47,12 @@ module.exports = async function handler(req, res){
   // Mismo filtro que los nombres de jugador, más un chequeo de que el color sea un
   // hex válido: si no, un club podría inyectar CSS o romper el atributo style.
   if(Array.isArray(incoming.CLUBS)){
+    // Tope razonable: una liga real tiene un puñado de clubes. Más de 50 es señal
+    // de error o abuso, y aunque el tope de 8MB del estado lo contendría, un límite
+    // explícito da un error claro en vez de dejar crecer el estado sin sentido.
+    if(incoming.CLUBS.length > 50){
+      return res.status(400).json({ error: 'Demasiados clubes (máximo 50).' });
+    }
     const HEX = /^#[0-9a-fA-F]{6}$/;
     const vistos = new Set();
     for(const c of incoming.CLUBS){
