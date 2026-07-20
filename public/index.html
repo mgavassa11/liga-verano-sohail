@@ -3772,7 +3772,46 @@ async function setPlayerPwd(name){
   if(inp)inp.value='';
   toast(name+': contraseña actualizada.');
 }
-function toggleInactive(name){const u=USERS[name];if(!u)return;u.inactive=!u.inactive;persist(true);renderPerfil();toast(name+(u.inactive?' marcado como inactivo.':' activado.'));}
+function toggleInactive(name){
+  const u=USERS[name];if(!u)return;
+  u.inactive=!u.inactive;
+  let sacado=false;
+  if(u.inactive){
+    // Al marcarlo inactivo, se intenta liberar su lugar en el grupo del ciclo activo.
+    // Solo se lo saca si aún no jugó partidos ese ciclo (si jugó, se queda para no
+    // romper los puntos de sus rivales). Sus partidos nunca se borran.
+    sacado=quitarDeGrupoActivo(name);
+  }
+  persist(true);
+  renderPerfil();
+  if(subView==='grupos')renderGrupos();
+  if(subView==='general')renderGeneral();
+  if(u.inactive){
+    toast(name+(sacado?' marcado como inactivo y quitado del ciclo actual.':' marcado como inactivo. (Ya jugó este ciclo, así que sigue en su grupo para no alterar los puntos; queda oculto en las vistas.)'));
+  }else{
+    toast(name+' activado. Si querés que vuelva a competir, agregalo a un grupo del ciclo.');
+  }
+}
+// Quita a un jugador del grupo que ocupe en el ciclo activo, PERO solo si todavía no
+// jugó ningún partido en ese ciclo. Si ya jugó, se lo deja en el array (el filtro de
+// inactivos lo oculta igual en las vistas), porque sacarlo haría que sus rivales
+// perdieran los puntos que le ganaron: computeStats cuenta los partidos recorriendo
+// los jugadores del grupo, y un partido contra alguien que ya no está se ignora.
+// Devuelve true si se lo pudo sacar del grupo.
+function quitarDeGrupoActivo(name){
+  const c=cycles[activeN-1];
+  if(!c||!c.groups)return false;
+  const jugoEnCiclo=matches.some(m=>!m.po && m.cycle===activeN && (m.aName===name||m.bName===name));
+  if(jugoEnCiclo)return false;  // ya jugó: se queda en el array para no romper la tabla
+  for(let gi=0;gi<c.groups.length;gi++){
+    const g=c.groups[gi];
+    if(g&&Array.isArray(g.players)){
+      const idx=g.players.indexOf(name);
+      if(idx>=0){ g.players.splice(idx,1); return true; }
+    }
+  }
+  return false;
+}
 // Cambio de contraseña obligatorio. Aparece cuando el servidor avisa que se
 // entró con una clave por defecto. No se puede cerrar ni saltear desde la UI.
 function forcePwChange(oldPass){
