@@ -1116,28 +1116,50 @@ function groupCardHTML(gid){
       const isActive=c.status==='active';
       const grp=c.groups[gid-1];
       const players=(grp.players||[]).filter(Boolean); // Filtro contra nulls
-      const st=computeStats(viewCycle,gid);
+      let st=computeStats(viewCycle,gid);
       if(!DESTINO) DESTINO = {};
       const dest=DESTINO[gid] || ensureDestino(gid, Math.max(1, players.length));
       
       const fc={};
       players.forEach(p=>{const f=p.split(' ')[0];fc[f]=(fc[f]||0)+1;});
       const lbl=p=>{if(!p)return'';const f=p.split(' ')[0];return fc[f]>1?p:f;};
-      
+
+      // Reordenar para la clasificación: los activos primero (respetando el orden por
+      // desempate que ya trae computeStats), y los inactivos al final, ordenados entre
+      // ellos por nivel (rating). Así un jugador que se dio de baja no ocupa un puesto
+      // por encima de los que siguen compitiendo.
+      const _esInact = nm => USERS[nm] && USERS[nm].inactive;
+      const _ratingDe = nm => {
+        try { const cc = ciclosDeJugador(nm); return cc.length ? ratingCompleto(cc).rating : -1; }
+        catch(e){ return -1; }
+      };
+      // Se guarda la posición ORIGINAL (_pos0) ANTES de reordenar, para que los puntos
+      // por posición y el destino de ascenso sigan siendo correctos: un inactivo movido
+      // al fondo no debe robar los puntos del puesto donde cae visualmente.
+      st.forEach((s,idx) => { s._pos0 = idx; });
+      const stActivos = st.filter(s => !_esInact(s.name));
+      const stInactivos = st.filter(s => _esInact(s.name))
+                            .sort((a,b) => _ratingDe(b.name) - _ratingDe(a.name));
+      st = stActivos.concat(stInactivos);
+
       let cls=st.map((s,i)=>{
-        const d=dest[i]||'',dn=parseInt((d||'G99').replace('G',''));
+        const pos0 = (s._pos0 !== undefined) ? s._pos0 : i;
+        const d=dest[pos0]||'',dn=parseInt((d||'G99').replace('G',''));
         const ar=dn<gid?'dest-up':dn>gid?'dest-down':'dest-same';
         const ic=dn<gid?'↑':dn>gid?'↓':'=';
-        const ex=i===0?2:0;
-        const base=ptsForPos(gid,i);
+        const ex=pos0===0?2:0;
+        const base=ptsForPos(gid,pos0);
         const pInactive = USERS[s.name]&&USERS[s.name].inactive;
         const inactiveBadge = pInactive?'<span style="font-size:9px;background:#e55;color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px;font-weight:700">INACTIVO</span>':'';
         return `<tr class="${currentUser&&s.name===currentUser.name?'me-row':''}" style="${pInactive?'opacity:.55':''}"><td>${(!pInactive&&d)?`<span class="dest ${ar}">${ic}${groupName(dn)}</span>`:pInactive?'<span style="font-size:9px;color:#aaa">—</span>':''}</td><td><span class="avatar">${getInitials(s.name)}</span><span class="nm-link" onclick="showPlayerHistory('${jsq(s.name)}')">${s.name}</span>${inactiveBadge}</td><td><strong>${s.pts}</strong></td><td>${s.g}</td><td>${s.p}</td><td>${s.nj||''}</td><td>${s.sg}</td><td>${s.sp}</td><td>${s.sg-s.sp}</td><td>${pInactive?'<span style="font-size:10px;color:#e55;font-weight:700">—</span>':base}</td><td>${ex>0?ex:''}</td><td><strong>${pInactive?'<span style="font-size:10px;color:#e55">inactivo</span>':base+ex}</strong></td></tr>`;
       }).join('');
       
-      const head=players.map(p=>`<th class="${currentUser&&p===currentUser.name?'me-mtx':''}">${lbl(p)}</th>`).join('');
-      let mrows=players.map((p,i)=>{
-        const cols=players.map((q,j)=>{
+      // Para la MATRIZ de resultados: solo jugadores activos. Un inactivo no aparece
+      // ni como fila ni como columna (la clasificación de abajo sí los muestra, al final).
+      const playersMtx = players.filter(p => !(USERS[p] && USERS[p].inactive));
+      const head=playersMtx.map(p=>`<th class="${currentUser&&p===currentUser.name?'me-mtx':''}">${lbl(p)}</th>`).join('');
+      let mrows=playersMtx.map((p,i)=>{
+        const cols=playersMtx.map((q,j)=>{
           if(i===j)return`<td class="res-black"></td>`;
           const m=findMatch(viewCycle,gid,p,q);
           if(m&&m.np)return`<td class="cell-club" style="background:${LEAGUE_COLOR_HL};color:${autoTxt(LEAGUE_COLOR_HL)};font-size:10px;font-weight:700" onclick="openModal(${m.id})">NJ</td>`;
