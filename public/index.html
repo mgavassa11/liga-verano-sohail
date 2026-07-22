@@ -469,7 +469,7 @@ toast_confirmed:'¡Resultado confirmado y validado!',toast_disputed:'Resultado d
 reset_playoffs:'Reiniciar Play Offs',
 reset_cycle:'Reiniciar Ciclo {n}',
 reset_confirm_po:'¿Seguro que querés borrar todos los Play Offs? Esta acción no se puede deshacer.',
-reset_confirm_cycle:'¿Seguro que querés borrar el Ciclo {n}? Se perderán todos los resultados de ese ciclo.',
+reset_confirm_cycle:'¿Borrar todos los PARTIDOS del Ciclo {n}? Los grupos y jugadores se conservan; solo se eliminan los resultados cargados en ese ciclo.',
 reset_done:'Reinicio completado.',
 reset_cancel:'Cancelar',
 tbd:'A definir',
@@ -530,7 +530,7 @@ toast_confirmed:'Result confirmed and validated!',toast_disputed:'Result dispute
 reset_playoffs:'Reset Play Offs',
 reset_cycle:'Reset Cycle {n}',
 reset_confirm_po:'Are you sure you want to reset all Play Offs? This cannot be undone.',
-reset_confirm_cycle:'Are you sure you want to reset Cycle {n}? All results for that cycle will be lost.',
+reset_confirm_cycle:'Delete all MATCHES in Cycle {n}? Groups and players are preserved; only the results loaded in that cycle will be removed.',
 reset_done:'Reset completed.',
 reset_cancel:'Cancel',
 tbd:'TBD',
@@ -2599,11 +2599,34 @@ function renderAdmin(){
     }).join('')+`</div></div>`;
     h+=destinoCard();
 
-    h+='<div class="card"><div class="section-lbl">Reiniciar datos</div>';
-    h+='<p class="legend-txt" style="margin-top:0">Estas acciones borran datos permanentemente y no se pueden deshacer.</p>';
-    h+='<div class="gap-sm" style="flex-wrap:wrap">';
-    h+=cycles.map(cyc=>`<button class="btn btn-danger" onclick="resetCycleUI(${cyc.n})"><i class="ti ti-trash"></i> Reiniciar Ciclo ${cyc.n}</button>`).join('');
-    h+='<button class="btn btn-danger" onclick="resetPlayoffUI()"><i class="ti ti-trash"></i> Reiniciar Play Offs</button></div></div>';
+    h+='<div class="card"><div class="section-lbl">Reiniciar y retroceder</div>';
+    h+='<p class="legend-txt" style="margin-top:0;margin-bottom:.75rem">Tres opciones según lo que necesitás:</p>';
+
+    // Acción 1: solo borrar partidos del ciclo activo (conserva grupos y jugadores)
+    h+=`<div style="border:1px solid var(--border2);border-radius:10px;padding:.75rem 1rem;margin-bottom:.6rem">
+      <div style="font-weight:700;font-size:.85rem;margin-bottom:.2rem"><i class="ti ti-eraser" style="color:#f59e0b"></i> Reiniciar partidos del ciclo activo</div>
+      <p class="legend-txt" style="margin-top:.2rem;margin-bottom:.5rem">Borra solo los partidos del ciclo activo (Ciclo ${activeN}). Los grupos, jugadores, inactivos y movimientos entre grupos se conservan. Útil para empezar a jugar desde cero con los mismos grupos.</p>
+      <button class="btn btn-warn btn-sm" onclick="resetCycleUI(${activeN})"><i class="ti ti-eraser"></i> Borrar partidos del Ciclo ${activeN}</button>
+    </div>`;
+
+    // Acción 2: retroceder al ciclo anterior (solo si hay ciclo anterior)
+    if(activeN>1){
+      h+=`<div style="border:1px solid var(--border2);border-radius:10px;padding:.75rem 1rem;margin-bottom:.6rem">
+        <div style="font-weight:700;font-size:.85rem;margin-bottom:.2rem"><i class="ti ti-arrow-back-up" style="color:#3b82f6"></i> Volver al ciclo anterior (Ciclo ${activeN-1})</div>
+        <p class="legend-txt" style="margin-top:.2rem;margin-bottom:.5rem">Reabre el Ciclo ${activeN-1} para seguir cargando partidos. Descarta la estructura del Ciclo ${activeN} (los partidos de ese ciclo también se borran). Los partidos del Ciclo ${activeN-1} se conservan.</p>
+        <button class="btn btn-sm" style="border-color:#3b82f6;color:#3b82f6" onclick="retrocederCicloUI()"><i class="ti ti-arrow-back-up"></i> Volver al Ciclo ${activeN-1}</button>
+      </div>`;
+    }
+
+    // Acción 3: reiniciar playoffs
+    if(playoff.started||playoff.preview){
+      h+=`<div style="border:1px solid var(--border2);border-radius:10px;padding:.75rem 1rem;margin-bottom:.6rem">
+        <div style="font-weight:700;font-size:.85rem;margin-bottom:.2rem"><i class="ti ti-trash" style="color:#e55"></i> Reiniciar Play Offs</div>
+        <p class="legend-txt" style="margin-top:.2rem;margin-bottom:.5rem">Borra todos los cuadros y resultados de Play Offs. Los partidos de liga no se tocan.</p>
+        <button class="btn btn-danger btn-sm" onclick="resetPlayoffUI()"><i class="ti ti-trash"></i> Reiniciar Play Offs</button>
+      </div>`;
+    }
+    h+='</div>';
 
     if(currentUser.role==='superadmin'){
     h+='<div class="card" style="border:1.5px solid var(--danger,#e55);border-radius:12px">';
@@ -3114,23 +3137,50 @@ function removePlayerUI(name,fromG){removePlayerCycle(name,fromG);renderAdmin();
 
 function resetCycleUI(n){
   if(!confirm(tf('reset_confirm_cycle',{n})))return;
+  // Solo se borran los PARTIDOS del ciclo. Los grupos, sus jugadores, los movimientos
+  // entre grupos y los inactivos se conservan exactamente como están. Antes se
+  // reseteaba la estructura entera al estado inicial (C1 hardcodeado), lo que perdía
+  // todos los movimientos de jugadores que el admin había hecho durante el ciclo.
   matches=matches.filter(m=>m.cycle!==n);
-  if(n===1){
-    cycles[0].groups=C1.map(p=>({players:[...p]}));
-    cycles[0].status='active';
-    activeN=1;
-  }else{
-    cycles[n-1].groups=null;
-    cycles[n-1].status='locked';
-    if(activeN>=n){
-      activeN=n-1;
-      cycles[activeN-1].status='active';
-    }
-  }
-  viewCycle=activeN;
+  // El ciclo se reabre (status='active') y todos los ciclos posteriores se bloquean.
+  cycles[n-1].status='active';
+  for(let i=n;i<cycles.length;i++){
+    cycles[i].status='locked';
+    cycles[i].groups=null;  // los ciclos posteriores se limpian igual: su estructura
+  }                          // se armaría al cerrar el ciclo N de nuevo.
+  activeN=n;
+  viewCycle=n;
   persist(true);renderShell();showSub('admin');toast(t('reset_done'));
 }
 
+// Retrocede al ciclo anterior: reabre el ciclo N como activo y descarta el N+1.
+// Los partidos del ciclo N se CONSERVAN, solo se reabre para seguir cargando.
+// Es distinto de resetCycleUI (que borra partidos): esto simplemente "deshace" el
+// cierre del ciclo anterior para poder seguir cargando resultados en él.
+// Útil cuando se cerró un ciclo por error o hay partidos pendientes de cargar.
+function retrocederCicloUI(){
+  // Solo tiene sentido si hay al menos 2 ciclos y el activo no es el primero
+  if(activeN<=1){toast('Ya estás en el primer ciclo, no hay ciclo anterior al que volver.');return;}
+  const cycAnterior=activeN-1;
+  const cAnterior=cycles[cycAnterior-1];
+  if(!cAnterior){toast('No existe el ciclo anterior.');return;}
+  if(!confirm('RETROCEDER AL CICLO '+cycAnterior+'\n\n'
+    +'Esto reabre el Ciclo '+cycAnterior+' como activo y descarta la estructura del Ciclo '+activeN+'.\n\n'
+    +'Los PARTIDOS del Ciclo '+cycAnterior+' se conservan. Los del Ciclo '+activeN+' también se borran '
+    +'(si querés conservarlos, primero exportá un backup).\n\n'
+    +'¿Continuar?'))return;
+  // Borrar partidos del ciclo actual (el que se está "deshaciendo")
+  matches=matches.filter(m=>m.cycle!==activeN);
+  // Desbloquear el ciclo anterior
+  cycles[cycAnterior-1].status='active';
+  // Borrar la estructura del ciclo actual (que se armó al cerrar el anterior)
+  cycles[activeN-1].status='locked';
+  cycles[activeN-1].groups=null;
+  activeN=cycAnterior;
+  viewCycle=cycAnterior;
+  persist(true);renderShell();showSub('admin');
+  toast('Ciclo '+cycAnterior+' reabierto. Podés seguir cargando resultados.');
+}
 function resetPlayoffUI(){if(!confirm(t('reset_confirm_po')))return;playoff={started:false,numTramos:4,tramos:[],results:{},viewT:0,qualified:[],preview:false,forcedSize:0};matches=matches.filter(m=>!m.po);Object.keys(PO_FECHAS).forEach(k=>{PO_FECHAS[k]={type:'single',date:'',from:'',to:''};});if(viewCycle==='po')viewCycle=activeN;persist(true);renderShell();showSub('admin');toast(t('reset_done'));}
 function setPoNum(v){
   const newV=+v;
@@ -3202,7 +3252,23 @@ function destinoCard(){
 }
 function setFecha(i,v){FECHAS[i]=v;updateHdr();renderCycleBar();toast('Fecha del Ciclo '+(i+1)+' actualizada.');persist(true);}
 function previewPlayoffUI(){if(!previewPlayoff()){toast(t('po_need_3cycles'));return;}const gen=computeGeneral();if(!gen||gen.length<2){toast('No hay suficientes jugadores activos para armar los Play Offs. Verificá que haya al menos 2 jugadores activos.');return;}viewCycle='po';renderCycleBar();showPlayoffView();renderSubTabs();toast(t('po_preview_toast'));persist(true);}
-function confirmPlayoffUI(){if(!confirmPlayoff())return;renderCycleBar();showPlayoffView();renderSubTabs();toast(t('po_confirmed_toast'));persist(true);}
+function confirmPlayoffUI(){
+  // Si hay un conflicto de versión pendiente (otra persona guardó antes), el estado
+  // no está sincronizado y confirmar acá se perdería al recargar. Avisamos primero.
+  if(!_loadOK){
+    if(!confirm('⚠️ Hay un conflicto de versión: otra persona guardó cambios mientras tenías la página abierta.\n\nPodés confirmar los Play Offs igualmente, pero NECESITÁS recargar la página justo después para que no se pierda.\n\n¿Confirmar y luego recargar?'))return;
+    if(!confirmPlayoff())return;
+    persist(true).finally(()=>{
+      toast('Play Offs confirmados. Recargando para sincronizar…');
+      setTimeout(()=>location.reload(),800);
+    });
+    return;
+  }
+  if(!confirmPlayoff())return;
+  renderCycleBar();showPlayoffView();renderSubTabs();
+  toast(t('po_confirmed_toast'));
+  persist(true);
+}
 function renderCargarDisputas(){ }
 
 function resolveD(mid){
@@ -4271,6 +4337,16 @@ function importBackup(input){
       const ok=_hydrate(obj);
       if(!ok){toast('No se pudo aplicar el backup (formato inválido).');input.value='';return;}
       _loadOK=true;_dbEmpty=false;_hideLoadError();
+      // CRÍTICO: el servidor rechaza con 409 si el _v del backup no coincide con el
+      // _v actual de la base. Al restaurar, tenemos que alinear la versión con la que
+      // está en el servidor AHORA, no con la que tenía cuando se hizo el backup.
+      // Leemos el _v actual y lo ponemos en _stateV para que _doPersist pase el check.
+      try{
+        const rv=await fetch('/api/state',{headers:{Authorization:'Bearer '+_token},cache:'no-store'});
+        const rd=await rv.json().catch(()=>({}));
+        if(rv.ok && rd.state && typeof rd.state._v==='number') _stateV=rd.state._v;
+        else _stateV=0; // si no podemos leer, forzar desde 0 (el servidor aceptará igualmente si no hay _v)
+      }catch(e){ _stateV=0; }
       if(typeof addLog==='function')addLog('Backup completo RESTAURADO',{jugadores:nJug,partidos:nPart});
       await _doPersist();
       toast('Backup restaurado. Recargando…');
