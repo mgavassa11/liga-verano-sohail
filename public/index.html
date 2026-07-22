@@ -1208,9 +1208,14 @@ function groupCardHTML(gid){
         return `<tr class="${currentUser&&s.name===currentUser.name?'me-row':''}" style="${pInactive?'opacity:.55':''}"><td>${(!pInactive&&d)?`<span class="dest ${ar}">${ic}${groupName(dn)}</span>`:pInactive?'<span style="font-size:9px;color:#aaa">—</span>':''}</td><td><span class="avatar">${getInitials(s.name)}</span><span class="nm-link" onclick="showPlayerHistory('${jsq(s.name)}')">${s.name}</span>${inactiveBadge}</td><td><strong>${s.pts}</strong></td><td>${s.g}</td><td>${s.p}</td><td>${s.nj||''}</td><td>${s.sg}</td><td>${s.sp}</td><td>${s.sg-s.sp}</td><td>${pInactive?'<span style="font-size:10px;color:#e55;font-weight:700">—</span>':base}</td><td>${ex>0?ex:''}</td><td><strong>${pInactive?'<span style="font-size:10px;color:#e55">inactivo</span>':base+ex}</strong></td></tr>`;
       }).join('');
       
-      // Para la MATRIZ de resultados: solo jugadores activos. Un inactivo no aparece
-      // ni como fila ni como columna (la clasificación de abajo sí los muestra, al final).
-      const playersMtx = players.filter(p => !(USERS[p] && USERS[p].inactive));
+      // Para la MATRIZ de resultados: los activos siempre aparecen. Los inactivos
+      // aparecen SOLO si tienen al menos un partido en este grupo/ciclo (confirmado,
+      // pendiente o disputado). Si un inactivo no jugó nada, no ocupa columna ni fila.
+      const playersMtx = players.filter(p => {
+        if(!(USERS[p] && USERS[p].inactive)) return true; // activo → siempre
+        return matches.some(m => !m.po && m.cycle===viewCycle && m.g===gid
+          && (m.aName===p || m.bName===p));
+      });
       const head=playersMtx.map(p=>`<th class="${currentUser&&p===currentUser.name?'me-mtx':''}">${lbl(p)}</th>`).join('');
       let mrows=playersMtx.map((p,i)=>{
         const cols=playersMtx.map((q,j)=>{
@@ -3251,23 +3256,41 @@ function destinoCard(){
   return html+'</div></div>';
 }
 function setFecha(i,v){FECHAS[i]=v;updateHdr();renderCycleBar();toast('Fecha del Ciclo '+(i+1)+' actualizada.');persist(true);}
-function previewPlayoffUI(){if(!previewPlayoff()){toast(t('po_need_3cycles'));return;}const gen=computeGeneral();if(!gen||gen.length<2){toast('No hay suficientes jugadores activos para armar los Play Offs. Verificá que haya al menos 2 jugadores activos.');return;}viewCycle='po';renderCycleBar();showPlayoffView();renderSubTabs();toast(t('po_preview_toast'));persist(true);}
+function previewPlayoffUI(){
+  if(!previewPlayoff()){toast(t('po_need_3cycles'));return;}
+  const gen=computeGeneral();
+  if(!gen||gen.length<2){toast('No hay suficientes jugadores activos para armar los Play Offs. Verificá que haya al menos 2 jugadores activos.');return;}
+  viewCycle='po';renderCycleBar();showPlayoffView();renderSubTabs();
+  toast(t('po_preview_toast'));
+  // Igual que confirmPlayoffUI: sincronizar _stateV antes de guardar para que
+  // no se pierda la previsualización por un conflicto de versión previo.
+  (async()=>{
+    try{
+      const rv=await fetch('/api/state',{headers:{Authorization:'Bearer '+_token},cache:'no-store'});
+      const rd=await rv.json().catch(()=>({}));
+      if(rv.ok && rd.state && typeof rd.state._v==='number') _stateV=rd.state._v;
+    }catch(e){}
+    _loadOK=true;
+    await persist(true);
+  })();
+}
 function confirmPlayoffUI(){
-  // Si hay un conflicto de versión pendiente (otra persona guardó antes), el estado
-  // no está sincronizado y confirmar acá se perdería al recargar. Avisamos primero.
-  if(!_loadOK){
-    if(!confirm('⚠️ Hay un conflicto de versión: otra persona guardó cambios mientras tenías la página abierta.\n\nPodés confirmar los Play Offs igualmente, pero NECESITÁS recargar la página justo después para que no se pierda.\n\n¿Confirmar y luego recargar?'))return;
-    if(!confirmPlayoff())return;
-    persist(true).finally(()=>{
-      toast('Play Offs confirmados. Recargando para sincronizar…');
-      setTimeout(()=>location.reload(),800);
-    });
-    return;
-  }
   if(!confirmPlayoff())return;
-  renderCycleBar();showPlayoffView();renderSubTabs();
-  toast(t('po_confirmed_toast'));
-  persist(true);
+  // Los playoffs son un dato crítico: no podemos arriesgarnos a perderlos por un
+  // conflicto de versión silencioso. Siempre sincronizamos _stateV con el servidor
+  // antes de guardar, igual que hace importBackup. Así el servidor acepta la escritura
+  // aunque la pestaña tenga un _v desactualizado.
+  (async()=>{
+    try{
+      const rv=await fetch('/api/state',{headers:{Authorization:'Bearer '+_token},cache:'no-store'});
+      const rd=await rv.json().catch(()=>({}));
+      if(rv.ok && rd.state && typeof rd.state._v==='number') _stateV=rd.state._v;
+    }catch(e){}
+    _loadOK=true;  // forzamos el guardado aunque hubiera habido un conflicto previo
+    await persist(true);
+    renderCycleBar();showPlayoffView();renderSubTabs();
+    toast(t('po_confirmed_toast'));
+  })();
 }
 function renderCargarDisputas(){ }
 
