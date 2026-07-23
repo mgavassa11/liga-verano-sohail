@@ -104,7 +104,8 @@ module.exports = async function handler(req, res){
   if(inV !== curV){
     return res.status(409).json({
       error: 'Otra persona guardó un cambio mientras cargabas el tuyo. Recargá la página y volvé a cargarlo.',
-      conflict: true
+      conflict: true,
+      currentV: curV   // el cliente puede usar esto para sincronizar sin hacer otro fetch
     });
   }
   incoming._v = curV + 1;
