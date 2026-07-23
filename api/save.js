@@ -221,7 +221,10 @@ module.exports = async function handler(req, res){
   }
 
   if(!puedeGestionarAdmins(session)){
-    const CONFIG = ['cycles','activeN','playoff','DESTINO','FECHAS','PO_FECHAS',
+    // 'playoff' NO está en CONFIG: cualquier admin puede confirmar/cancelar playoffs.
+    // No hay riesgo de escalada de privilegios: un jugador no gana nada manipulando
+    // el cuadro de playoffs vía curl (eso requiere admin para confirmar en pantalla).
+    const CONFIG = ['cycles','activeN','DESTINO','FECHAS','PO_FECHAS',
                     'ALLNAMES','PUNTOS'];
     for(const k of CONFIG){
       if(JSON.stringify(incoming[k]) !== JSON.stringify(current[k])){
@@ -250,13 +253,23 @@ module.exports = async function handler(req, res){
     // La configuración de la liga se reinyecta desde la base. Un jugador no tiene
     // ningún motivo legítimo para tocarla, y sin esto podía reescribir la tabla
     // de puntos, los grupos o el cuadro de playoffs con un solo curl.
-    const CONGELADO = ['cycles','activeN','playoff','DESTINO','FECHAS','PO_FECHAS',
+    // 'playoff' NO se reinyecta para jugadores: si el admin lo confirmó y un
+    // jugador guarda un resultado justo después, el playoff quedaría bloqueado
+    // porque el bloque CONGELADO pisaría el playoff.started=true recién guardado.
+    const CONGELADO = ['cycles','activeN','DESTINO','FECHAS','PO_FECHAS',
                        'ALLNAMES','PUNTOS','LEAGUE_NAME','LEAGUE_SUBTITLE',
                        'LEAGUE_COLOR_PRI','LEAGUE_COLOR_ACC','LEAGUE_COLOR_HL'];
     for(const k of CONGELADO){
       if(k in current) incoming[k] = current[k]; else delete incoming[k];
     }
 
+    // El campo playoff: solo admins lo pueden tocar. Un jugador no puede
+    // manipular el cuadro de playoffs (ni registrarse en un cuadro que no le toca).
+    if(!admin){
+      const poOld = JSON.stringify(current.playoff || {});
+      const poNew = JSON.stringify(incoming.playoff || {});
+      if(poOld !== poNew) incoming.playoff = current.playoff; // revertir si cambió
+    }
     // Los partidos: solo los propios. Antes un jugador podía borrar el que perdió,
     // invertir un resultado, inventarse victorias o vaciar la liga entera.
     const soyYo = m => !!m && (m.aName === session.u || m.bName === session.u);
