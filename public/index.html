@@ -1189,12 +1189,15 @@ function groupCardHTML(gid){
       // por encima de los que siguen compitiendo.
       const _esInact = nm => USERS[nm] && USERS[nm].inactive;
       // Se guarda la posición ORIGINAL (_pos0) ANTES de reordenar, para que los puntos
-      // En la mini-clasificación del grupo (y por lo tanto en la vista de Grupos) los
-      // inactivos NO aparecen. La clasificación GENERAL sí los muestra, al final.
-      // Se conserva la posición original solo por prolijidad; al filtrar, los activos
-      // mantienen su orden por desempate.
+      // En la mini-clasificación del grupo: los activos siempre aparecen. Los inactivos
+      // aparecen si y solo si jugaron al menos un partido en este ciclo/grupo. Si un
+      // inactivo no jugó nada en este ciclo, no tiene sentido que ocupe un puesto.
       st.forEach((s,idx) => { s._pos0 = idx; });
-      st = st.filter(s => !_esInact(s.name));
+      st = st.filter(s => {
+        if(!_esInact(s.name)) return true;  // activos siempre
+        return matches.some(m => !m.po && m.cycle===viewCycle && m.g===gid
+          && (m.aName===s.name || m.bName===s.name));
+      });
 
       let cls=st.map((s,i)=>{
         const pos0 = (s._pos0 !== undefined) ? s._pos0 : i;
@@ -3256,41 +3259,37 @@ function destinoCard(){
   return html+'</div></div>';
 }
 function setFecha(i,v){FECHAS[i]=v;updateHdr();renderCycleBar();toast('Fecha del Ciclo '+(i+1)+' actualizada.');persist(true);}
-function previewPlayoffUI(){
+async function previewPlayoffUI(){
   if(!previewPlayoff()){toast(t('po_need_3cycles'));return;}
   const gen=computeGeneral();
   if(!gen||gen.length<2){toast('No hay suficientes jugadores activos para armar los Play Offs. Verificá que haya al menos 2 jugadores activos.');return;}
   viewCycle='po';renderCycleBar();showPlayoffView();renderSubTabs();
   toast(t('po_preview_toast'));
-  // Igual que confirmPlayoffUI: sincronizar _stateV antes de guardar para que
-  // no se pierda la previsualización por un conflicto de versión previo.
-  (async()=>{
-    try{
-      const rv=await fetch('/api/state',{headers:{Authorization:'Bearer '+_token},cache:'no-store'});
-      const rd=await rv.json().catch(()=>({}));
-      if(rv.ok && rd.state && typeof rd.state._v==='number') _stateV=rd.state._v;
-    }catch(e){}
-    _loadOK=true;
-    await persist(true);
-  })();
+  // Mismo patrón que confirmPlayoffUI: guardar directo via _doPersist
+  // sincronizando _stateV primero para evitar el 409.
+  try{
+    const rv=await fetch('/api/state',{headers:{Authorization:'Bearer '+_token},cache:'no-store'});
+    const rd=await rv.json().catch(()=>({}));
+    if(rv.ok&&rd.state&&typeof rd.state._v==='number') _stateV=rd.state._v;
+  }catch(e){}
+  _loadOK=true;
+  await _doPersist();
 }
-function confirmPlayoffUI(){
+async function confirmPlayoffUI(){
   if(!confirmPlayoff())return;
-  // Los playoffs son un dato crítico: no podemos arriesgarnos a perderlos por un
-  // conflicto de versión silencioso. Siempre sincronizamos _stateV con el servidor
-  // antes de guardar, igual que hace importBackup. Así el servidor acepta la escritura
-  // aunque la pestaña tenga un _v desactualizado.
-  (async()=>{
-    try{
-      const rv=await fetch('/api/state',{headers:{Authorization:'Bearer '+_token},cache:'no-store'});
-      const rd=await rv.json().catch(()=>({}));
-      if(rv.ok && rd.state && typeof rd.state._v==='number') _stateV=rd.state._v;
-    }catch(e){}
-    _loadOK=true;  // forzamos el guardado aunque hubiera habido un conflicto previo
-    await persist(true);
-    renderCycleBar();showPlayoffView();renderSubTabs();
-    toast(t('po_confirmed_toast'));
-  })();
+  // Guardamos via _doPersist directo para evitar los bloqueos de persist():
+  // - no chequea _loadOK (que puede ser false por un conflicto previo)
+  // - no chequea _saving (que puede estar en true por el autosave)
+  // Primero sincronizamos _stateV con el servidor para que el 409 no rechace.
+  try{
+    const rv=await fetch('/api/state',{headers:{Authorization:'Bearer '+_token},cache:'no-store'});
+    const rd=await rv.json().catch(()=>({}));
+    if(rv.ok&&rd.state&&typeof rd.state._v==='number') _stateV=rd.state._v;
+  }catch(e){}
+  _loadOK=true;
+  await _doPersist();
+  renderCycleBar();showPlayoffView();renderSubTabs();
+  toast(t('po_confirmed_toast'));
 }
 function renderCargarDisputas(){ }
 
