@@ -4515,9 +4515,10 @@ async function _doPersist(){
       method:'POST',
       headers:{'Content-Type':'application/json',Authorization:'Bearer '+_token},
       body:JSON.stringify({state:JSON.parse(json)}),
-      // keepalive: sin esto el navegador cancela la petición al cerrar la
-      // pestaña y el último guardado se pierde.
-      keepalive:true
+      // NOTA: keepalive:true se quitó porque tiene un límite de 64KB en el body.
+      // Con 65 jugadores + playoffs completos, el estado supera ese límite y el
+      // navegador rechaza el fetch con "Failed to fetch" sin siquiera enviarlo.
+      // El autosave cada 12s minimiza el riesgo de perder datos al cerrar la pestaña.
     });
     const d=await r.json().catch(()=>({}));
     if(r.ok){
