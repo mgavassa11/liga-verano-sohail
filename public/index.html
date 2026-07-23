@@ -1172,7 +1172,7 @@ function groupCardHTML(gid){
   try {
       const c=cycles[viewCycle-1];
       if(!c || !c.groups || !c.groups[gid-1]) return '';
-      const isActive=c.status==='active';
+      const isActive=c.status==='active'||!!c.editMode;
       const grp=c.groups[gid-1];
       const players=(grp.players||[]).filter(Boolean); // Filtro contra nulls
       let st=computeStats(viewCycle,gid);
@@ -3200,14 +3200,16 @@ function toggleEditMode(n){
   }else{
     cycles.forEach(cx=>delete cx.editMode);
     c2.editMode=true;
-    toast('Carga habilitada en Ciclo '+n+'. Jugadores y admins pueden agregar resultados.');
+    toast('Carga habilitada en Ciclo '+n+'. Podés cargar resultados desde Grupos o Cargar.');
   }
   persist(true);
-  renderAdmin();
-  // Si se habilitó editMode, ir automáticamente a Cargar para que el admin
-  // vea que el formulario ya está activo con los grupos del ciclo habilitado.
+  // Navegar al ciclo habilitado para que se vean los "+" en la matriz
   if(c2.editMode){
-    setTimeout(()=>{showSub('cargar');populateForm();},80);
+    viewCycle=n;
+    renderShell();
+    showSub('grupos');
+  }else{
+    renderAdmin();
   }
 }
 // Los partidos del ciclo N se CONSERVAN, solo se reabre para seguir cargando.
@@ -3320,7 +3322,7 @@ async function previewPlayoffUI(){
     // Revertir si no se pudo guardar
     playoff.preview=false;
     renderCycleBar();
-    alert('⚠️ No se pudo guardar la previsualización de Play Offs.\n\nRecargá la página y volvé a intentarlo.');
+    alert('⚠️ No se pudo guardar la previsualización de Play Offs.\n\n'+(_lastSaveError||'Error desconocido')+'\n\nRecargá la página y volvé a intentarlo.');
   }
 }
 async function confirmPlayoffUI(){
@@ -3336,7 +3338,7 @@ async function confirmPlayoffUI(){
     playoff.started=false;playoff.preview=true;
     renderCycleBar();showPlayoffView();renderSubTabs();
     // Usar alert para que el usuario no lo pierda (no desaparece solo)
-    alert('⚠️ No se pudo guardar el inicio de los Play Offs.\n\nRecargá la página y volvé a intentarlo.\n\nSi el problema persiste, contactá al desarrollador.');
+    alert('⚠️ No se pudo guardar el inicio de los Play Offs.\n\n'+(_lastSaveError||'Error desconocido')+'\n\nRecargá la página y volvé a intentarlo.\nSi el problema persiste, contactá al desarrollador.');
   }
 }
 function renderCargarDisputas(){ }
@@ -4262,7 +4264,7 @@ function applyPoPending(rec){storePo(rec.ti,rec.which,rec.poNames[0],rec.poNames
 let _toastTimer=null;function toast(m){let t=document.getElementById('_toast');if(!t){t=document.createElement('div');t.id='_toast';t.className='toast';document.body.appendChild(t);}t.textContent=m;t.style.opacity='1';if(_toastTimer)clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>{t.style.opacity='0';_toastTimer=null;},3800);}
 
 // ===== CONEXIÓN A SUPABASE — guardado instantáneo =====
-let _lastSaved=null,_saving=false,_pendingForce=false,_loadOK=false,_dbEmpty=false,_prioritySave=false;
+let _lastSaved=null,_saving=false,_pendingForce=false,_loadOK=false,_dbEmpty=false,_prioritySave=false,_lastSaveError='';
 // Versión del estado. La incrementa el servidor en cada guardado: si dos personas
 // tienen la app abierta, la segunda en guardar recibe 409 en vez de pisar a la primera.
 let _stateV=0;
@@ -4519,6 +4521,7 @@ async function _doPersist(){
       _stateV++;                   // el servidor acaba de incrementarla
       _lastSaved=_serialize();
       if(d.token)_token=d.token;   // sesión deslizante: el servidor la renovó
+      _lastSaveError='';
       console.log('✅ Guardado OK ('+ new Date().toLocaleTimeString()+')');
       return true;
     }else if(r.status===409){
@@ -4530,9 +4533,12 @@ async function _doPersist(){
       console.warn('⚠️ Conflicto 409: curV del servidor='+d.currentV+', nuestro _stateV actualizado.');
       return false;
     }else{
-      if(r.status===401){_token=null;_showLoadError(t('err_session_expired_save'));}
-      if(r.status===403){_token=null;_showLoadError(d.error||t('err_no_access'));}
-      console.error('❌ Error al guardar:',d.error||r.status);
+      _lastSaveError='HTTP '+r.status+': '+(d.error||'Error desconocido');
+      if(r.status===401&&!_prioritySave){_token=null;_showLoadError(t('err_session_expired_save'));}
+      if(r.status===403&&!_prioritySave){_token=null;_showLoadError(d.error||t('err_no_access'));}
+      // En modo _prioritySave (criticalSave), NO destruimos _token ni mostramos
+      // el banner — dejamos que _criticalSave reintente y muestre su propio error.
+      console.error('❌ Error al guardar:',r.status,d.error||'');
       return false;
     }
   }catch(e){console.error('❌ Excepción al guardar:',e);return false;}
