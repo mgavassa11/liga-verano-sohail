@@ -4484,20 +4484,23 @@ async function loadState(){
 // así el segundo intento ya tiene el _v correcto sin necesitar un fetch extra.
 async function _criticalSave(){
   _prioritySave=true;
+  _lastSaveError='';
+  console.log('🔒 _criticalSave: iniciando. _token='+!!_token+', _saving='+_saving+', _stateV='+_stateV+', _loadOK='+_loadOK);
   try{
     // Esperar a que termine cualquier guardado en curso (máx 3 segundos)
-    for(let i=0;i<30&&_saving;i++) await new Promise(r=>setTimeout(r,100));
-    _loadOK=true; // habilitar el guardado aunque haya habido un conflicto previo
+    let waited=0;
+    for(let i=0;i<30&&_saving;i++){await new Promise(r=>setTimeout(r,100));waited++;}
+    if(waited)console.log('🔒 _criticalSave: esperó '+waited+'00ms por _saving');
+    _loadOK=true;
     for(let attempt=0;attempt<3;attempt++){
       if(attempt>0) await new Promise(r=>setTimeout(r,400));
+      console.log('🔒 _criticalSave: intento '+(attempt+1)+' con _stateV='+_stateV+', _token='+!!_token);
       const ok=await _doPersist();
       if(ok){console.log('✅ _criticalSave OK en intento '+(attempt+1));return true;}
-      // Si falló con 409, _doPersist ya sincronizó _stateV con currentV del servidor.
-      // Si falló con 403/401, _token=null y el próximo check de _doPersist retorna false.
-      // En ambos casos, el reintento tiene mejor información que el intento anterior.
-      _loadOK=true; // resetear para el próximo intento
-      console.warn('⚠️ _criticalSave: intento '+(attempt+1)+' fallido');
+      console.warn('⚠️ _criticalSave: intento '+(attempt+1)+' fallido: '+_lastSaveError);
+      _loadOK=true;
     }
+    console.error('❌ _criticalSave: los 3 intentos fallaron. Último error: '+_lastSaveError);
     return false;
   }finally{
     _prioritySave=false;
@@ -4505,7 +4508,7 @@ async function _criticalSave(){
   }
 }
 async function _doPersist(){
-  if(!_token)return false;
+  if(!_token){_lastSaveError='Sin token de sesión (sesión expirada o cerrada)';console.error('❌ _doPersist: sin _token');return false;}
   const json=_serialize();
   try{
     const r=await fetch('/api/save',{
@@ -4541,7 +4544,7 @@ async function _doPersist(){
       console.error('❌ Error al guardar:',r.status,d.error||'');
       return false;
     }
-  }catch(e){console.error('❌ Excepción al guardar:',e);return false;}
+  }catch(e){_lastSaveError='Excepción de red: '+e.message;console.error('❌ Excepción al guardar:',e);return false;}
 }
 
 async function persist(force){
