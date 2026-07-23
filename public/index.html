@@ -558,7 +558,7 @@ let PO_FECHAS = { r64:{type:'single',date:'',from:'',to:''}, r32:{type:'single',
 const C1=[['Neil Young','Marcos Gavassa','Jeremy Pérez','Leo Ramos','Adrián Mariscal'],['Manuel de la Coba','Javier Lopez','Miguel Ángel Vargas','Jaime Govantes','Luis Gil-Delgado'],['Javier Ariño','Germán Pacheco','Oscar Pacheco','Dumitru Bucse','Gustavo Rodriguez'],['Juan Antonio Tabernero','Carlos Marin','Jose Maria Cantero','Javier Urbieta','Marco Musso'],['Miguel Ángel Acevedo','Esteban Benítez','Cesar Henry','Borja Muñoz','Julio Pajares'],['Borja Rosales','Rustam Abduraufov','Alfredo Perez Playa','Alberto Álvarez','Jose Manuel Maese'],['Jaime Crespi','Ildefonso Delgado','Viktor Kachalin','Álvaro Jaime','Ángel Poyato'],['Jesús Bermúdez','David González','Istvan Simon','Nicolás Feller','Enrique Urdiales'],['Juan Ignacio Insausti','Rafael Alves','Miguel Ángel Mérida','David Ruiz','Alejandro Gil'],['Emanuele Procopio','Andrés Slako','Anita Rachwalska','Maria Fernanda Quinto','Raúl Rubio'],['Carolina Graciano','Lucca Maciel','José Alejandro López','Tim Dobbin','Pedro Gómez'],['Paola Mateo','Maurizio Rainieri','Borja Martín','Julio Corzo','Manuel Soriano']];
 let cycles=[{n:1,status:'active',groups:C1.map(p=>({players:[...p]}))},{n:2,status:'locked',groups:null},{n:3,status:'locked',groups:null}];
 let playoff={started:false,numTramos:4,tramos:[],results:{},viewT:0,qualified:[],forcedSize:0};
-let matches=[],matchId=1,activeN=1,viewCycle=1,subView='grupos',currentModal=null,formClub='',poContext=null,selGroup=1,adminMode='';
+let matches=[],matchId=1,activeN=1,viewCycle=1,subView='grupos',currentModal=null,formClub='',poContext=null,selGroup=1,adminMode='',_formCycleN=null;
 let LOG=[]; // historial de acciones sobre resultados (max 500 entradas)
 let LEAGUE_NAME='Liga de Tenis Sohail'; // nombre editable de la liga
 let LEAGUE_SUBTITLE='Verano 2026'; // subtítulo editable
@@ -1398,7 +1398,14 @@ function getMyPoMatch(){
   return null;
 }
 
-function populateForm(gid,na,nb){poContext=null;formClub='';renderClubButtons();const r=document.getElementById('f-reporter'),o=document.getElementById('f-rival'),note=document.getElementById('cargar-note');r.innerHTML='<option value="">— Jugador —</option>';o.innerHTML='<option value="">— Rival —</option>';const c=getActive();if(!c||!c.groups){note.textContent="Ciclo inactivo.";r.disabled=true;o.disabled=true;return;}
+function populateForm(gid,na,nb){poContext=null;formClub='';renderClubButtons();const r=document.getElementById('f-reporter'),o=document.getElementById('f-rival'),note=document.getElementById('cargar-note');r.innerHTML='<option value="">— Jugador —</option>';o.innerHTML='<option value="">— Rival —</option>';
+  // Ciclo para cargar: el activo, O un ciclo cerrado con editMode habilitado por el admin.
+  // Si hay editMode, se usa ese ciclo (tanto para admins como para jugadores).
+  const editCycle = cycles.find(cx=>cx.editMode);
+  const c = editCycle || getActive();
+  const cycleN = editCycle ? editCycle.n : activeN;
+  _formCycleN = cycleN;  // submitResult lo lee para saber en qué ciclo guardar
+  if(!c||!c.groups){note.textContent="Ciclo inactivo.";r.disabled=true;o.disabled=true;return;}
 // Ocultar/mostrar el filtro de grupo/playoff según el rol
 const _fw=document.getElementById('admin-group-filter');
 if(_fw)_fw.style.display=(esAdmin(currentUser))?'flex':'none';
@@ -1428,9 +1435,9 @@ if(c.status==='finished'&&!playoff.started&&!playoff.preview&&!esAdmin(currentUs
     return;
   }
   // Modo liga normal
-  const loc=findLoc(currentUser.name,activeN);if(!loc){note.textContent=t('not_in_cycle');return;}
+  const loc=findLoc(currentUser.name,cycleN);if(!loc){note.textContent=t('not_in_cycle');return;}
   r.add(new Option(currentUser.name,currentUser.name));r.value=currentUser.name;r.disabled=true;r.className='score-sel-locked';
-  (c.groups[loc.g-1].players||[]).slice().sort((a,b)=>a.localeCompare(b,'es')).forEach(j=>{if(j!==currentUser.name && !(USERS[j]&&USERS[j].inactive) && !findMatch(activeN, loc.g, currentUser.name, j))o.add(new Option(j,j));});
+  (c.groups[loc.g-1].players||[]).slice().sort((a,b)=>a.localeCompare(b,'es')).forEach(j=>{if(j!==currentUser.name && !(USERS[j]&&USERS[j].inactive) && !findMatch(cycleN, loc.g, currentUser.name, j))o.add(new Option(j,j));});
   o.disabled=false;o.className='score-sel-pick';
   note.textContent=tf('load_note_player',{g:groupName(loc.g)});
 }else{r.disabled=false;
@@ -1666,9 +1673,11 @@ function submitResult(){
     return;
   }
   let repName,rivName,gid;
+  const _cN = _formCycleN || activeN;  // ciclo donde se guarda el partido (editMode o activo)
   if(currentUser.role==='player' && !esAdmin(currentUser)){
     // Jugador sin permisos de admin: él es el reporter, el rival sale del select.
-    repName=currentUser.name;rivName=iv;const loc=findLoc(repName,activeN);gid=loc.g;
+    repName=currentUser.name;rivName=iv;const loc=findLoc(repName,_cN);gid=loc?loc.g:null;
+    if(!gid){fAlert(t('not_in_cycle'),'err');return;}
   }else{
     // Admin (incluido el jugador-admin): ambos jugadores salen de los dos selects,
     // sin asumir que el que envía es uno de ellos.
@@ -1680,15 +1689,15 @@ function submitResult(){
   if(repName===rivName){fAlert(t('select_two'),'err');return;}
   if(!formClub){fAlert(t('select_club'),'err');document.getElementById('club-pick').classList.add('req-empty');return;}
   if(!fecha){fAlert(t('select_date'),'err');document.getElementById('f-fecha').classList.add('req-empty');return;}
-  const ex=findMatch(activeN,gid,repName,rivName);
+  const ex=findMatch(_cN,gid,repName,rivName);
   if(ex&&ex.locked&&!esAdmin(currentUser)){fAlert(t('validated_admin_only'),'err');return;}
   if(ex&&ex.status==='disputed'&&!esAdmin(currentUser)){fAlert('Este resultado está en disputa. El administrador debe resolverlo primero.','err');return;}
   const s=readSets();const v=validMatch(s);
   if(!v.ok){fAlert('✕ '+v.msg,'err');return;}
   
-  matches=matches.filter(m=>!(m.cycle===activeN&&m.g===gid&&!m.po&&((m.aName===repName&&m.bName===rivName)||(m.aName===rivName&&m.bName===repName))));
+  matches=matches.filter(m=>!(m.cycle===_cN&&m.g===gid&&!m.po&&((m.aName===repName&&m.bName===rivName)||(m.aName===rivName&&m.bName===repName))));
   const isAdmin=validaAlCargar(repName,rivName);
-  matches.push({id:matchId++,cycle:activeN,g:gid,aName:repName,bName:rivName,sets:s,date:fecha,status:isAdmin?'confirmed':'pending',vBy:isAdmin?currentUser.name:undefined,reporter:repName,club:formClub,locked:isAdmin});
+  matches.push({id:matchId++,cycle:_cN,g:gid,aName:repName,bName:rivName,sets:s,date:fecha,status:isAdmin?'confirmed':'pending',vBy:isAdmin?currentUser.name:undefined,reporter:repName,club:formClub,locked:isAdmin});
   addLog(isAdmin?'Liga: validado (admin)':'Liga: cargado',{a:repName,b:rivName,sets:s,grupo:gid,po:false});
   clearForm();
   fAlert(isAdmin?t('result_sent_admin'):t('result_sent_player'),'ok');
@@ -2494,10 +2503,24 @@ function renderAdmin(){
     const puedeCerrar = notC===0;
     const faltanJugar = need-done-notC;
     const cyclesDone = allCyclesDone();
+
+    // ¿Hay algún ciclo con editMode activo? (carga habilitada manualmente por admin)
+    const cicloEditMode = cycles.find(c2=>c2.editMode);
     
     let h=`<div class="card"><div class="section-lbl">${t('admin_cycle_status')}</div><div class="alert ${ready?'alert-ok':(puedeCerrar?'alert-warn':'alert-info')}">${t('cycle')} ${activeN}: ${tf('validated_count',{done,need})}${notC>0?` · ${notC} ${t('unvalidated_short')}`:''}. ${ready?t('ready_close'):(notC>0?t('missing_results'):tf('close_can_incomplete',{n:faltanJugar}))}</div>`+
     (ready&&activeN===cycles.length&&c.status!=='finished'?`<div class="alert alert-ok" style="margin-top:.4rem;font-weight:600"><i class="ti ti-info-circle"></i> ¡Todos los partidos validados! Presioná "Finalizar último ciclo" para habilitar los Play Offs.</div>`:'')+
-    `<div class="gap-sm mt-sm">${activeN<cycles.length?`<button class="btn ${faltanJugar>0&&puedeCerrar?'btn-warn':'btn-accent'}" ${(!puedeCerrar)?'disabled':''} onclick="startNextCycle()"><i class="ti ti-arrow-right-circle"></i> ${t('close_cycle')}${faltanJugar>0&&puedeCerrar?' ('+t('close_incomplete')+')':''}</button>`:`<button class="btn ${faltanJugar>0&&puedeCerrar?'btn-warn':'btn-accent'}" ${(!puedeCerrar||(c&&c.status==='finished'))?'disabled':''} onclick="finishLastCycle()"><i class="ti ti-flag-check"></i> ${t('finish_last_cycle')}${faltanJugar>0&&puedeCerrar?' ('+t('close_incomplete')+')':''}</button>`}<button class="btn" onclick="demoFillUI()"><i class="ti ti-wand"></i> ${t('simulate')}</button><button class="btn btn-danger" onclick="undoDemoUI()"><i class="ti ti-eraser"></i> ${t('undo_demo')}</button></div></div>`;
+    // Banner de ciclo con editMode activo
+    (cicloEditMode?`<div class="alert alert-warn" style="margin-top:.4rem"><i class="ti ti-pencil"></i> <strong>Carga habilitada en Ciclo ${cicloEditMode.n}</strong> — jugadores y admins pueden cargar resultados en ese ciclo aunque esté cerrado. Deshabilitalo cuando termines.</div>`:'')+
+    `<div class="gap-sm mt-sm">${activeN<cycles.length?`<button class="btn ${faltanJugar>0&&puedeCerrar?'btn-warn':'btn-accent'}" ${(!puedeCerrar)?'disabled':''} onclick="startNextCycle()"><i class="ti ti-arrow-right-circle"></i> ${t('close_cycle')}${faltanJugar>0&&puedeCerrar?' ('+t('close_incomplete')+')':''}</button>`:`<button class="btn ${faltanJugar>0&&puedeCerrar?'btn-warn':'btn-accent'}" ${(!puedeCerrar||(c&&c.status==='finished'))?'disabled':''} onclick="finishLastCycle()"><i class="ti ti-flag-check"></i> ${t('finish_last_cycle')}${faltanJugar>0&&puedeCerrar?' ('+t('close_incomplete')+')':''}</button>`}<button class="btn" onclick="demoFillUI()"><i class="ti ti-wand"></i> ${t('simulate')}</button><button class="btn btn-danger" onclick="undoDemoUI()"><i class="ti ti-eraser"></i> ${t('undo_demo')}</button></div>` +
+    // Sección de rehabilitar carga (solo si hay ciclos cerrados)
+    (cycles.some(c2=>c2.status==='finished')?`<div style="border-top:1px solid var(--border2);margin-top:.75rem;padding-top:.75rem">
+      <div style="font-weight:700;font-size:.85rem;margin-bottom:.25rem"><i class="ti ti-pencil"></i> Habilitar carga de partidos en un ciclo cerrado</div>
+      <p class="legend-txt" style="margin-top:.15rem;margin-bottom:.5rem">Si necesitás agregar resultados en un ciclo ya cerrado (sin borrar los existentes), habilitá ese ciclo temporalmente. Jugadores y admins van a poder cargar partidos en él desde la pestaña Cargar. Deshabilitalo cuando termines.</p>
+      <div class="gap-sm" style="flex-wrap:wrap">
+        ${cycles.filter(c2=>c2.status==='finished').map(c2=>`<button class="btn btn-sm ${c2.editMode?'btn-warn':''}" onclick="toggleEditMode(${c2.n})"><i class="ti ti-${c2.editMode?'lock-open':'lock'}"></i> Ciclo ${c2.n} ${c2.editMode?'(carga activa — click para cerrar)':'(cerrado)'}</button>`).join('')}
+      </div>
+    </div>`:'') +
+    `</div>`;
     
     const numGrupos = grps.length || 12;
     const ppg = (grps[0]&&grps[0].players)?grps[0].players.length:5;
@@ -3161,7 +3184,21 @@ function resetCycleUI(n){
   persist(true);renderShell();showSub('admin');toast(t('reset_done'));
 }
 
-// Retrocede al ciclo anterior: reabre el ciclo N como activo y descarta el N+1.
+// Habilita/deshabilita la carga de partidos en un ciclo cerrado.
+// Con editMode=true, jugadores y admins pueden cargar en ese ciclo desde "Cargar".
+// Solo un ciclo puede tener editMode activo a la vez (se desactiva el anterior).
+function toggleEditMode(n){
+  const c2=cycles[n-1]; if(!c2)return;
+  if(c2.editMode){
+    delete c2.editMode;
+    toast('Carga deshabilitada en Ciclo '+n+'. El ciclo volvió a estar cerrado.');
+  }else{
+    cycles.forEach(cx=>delete cx.editMode); // solo uno activo a la vez
+    c2.editMode=true;
+    toast('Carga habilitada en Ciclo '+n+'. Jugadores y admins pueden agregar resultados.');
+  }
+  persist(true); renderAdmin();
+}
 // Los partidos del ciclo N se CONSERVAN, solo se reabre para seguir cargando.
 // Es distinto de resetCycleUI (que borra partidos): esto simplemente "deshace" el
 // cierre del ciclo anterior para poder seguir cargando resultados en él.
