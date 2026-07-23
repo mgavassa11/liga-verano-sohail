@@ -1409,12 +1409,17 @@ function populateForm(gid,na,nb){poContext=null;formClub='';renderClubButtons();
 // Ocultar/mostrar el filtro de grupo/playoff según el rol
 const _fw=document.getElementById('admin-group-filter');
 if(_fw)_fw.style.display=(esAdmin(currentUser))?'flex':'none';
-// Bloquear carga si el ciclo activo está finalizado y no hay playoffs activos
-if(c.status==='finished'&&!playoff.started&&!playoff.preview&&!esAdmin(currentUser)){
+// Bloquear carga si el ciclo está finalizado y sin editMode ni playoffs activos.
+// Con editMode activo el admin habilitó explícitamente la carga: cualquiera puede cargar.
+if(c.status==='finished'&&!c.editMode&&!playoff.started&&!playoff.preview&&!esAdmin(currentUser)){
   note.innerHTML='<span style="color:var(--text2)">La temporada regular ha finalizado. Esperá que el administrador habilite los Play Offs.</span>';
   r.disabled=true;o.disabled=true;r.className='score-sel-locked';o.className='score-sel-locked';return;
-}if(currentUser.role==='player' && !esAdmin(currentUser)){
-  // Jugador SIN permisos de admin: solo puede cargar sus propios partidos.
+}
+// Si hay editMode activo, mostrar banner informativo del ciclo habilitado
+if(editCycle){
+  note.innerHTML=`<strong style="color:#f59e0b"><i class="ti ti-pencil"></i> Carga habilitada en Ciclo ${cycleN} — los resultados se guardan en ese ciclo.</strong>`;
+}
+if(currentUser.role==='player' && !esAdmin(currentUser)){
   // Un jugador que además es admin NO entra acá: cae en la rama else de abajo,
   // que le deja elegir a cualquiera de los dos jugadores (poder de admin).
   // Si no, este bloque le bloqueaba el reporter en su propio nombre y no podía
@@ -3301,32 +3306,32 @@ async function previewPlayoffUI(){
   const gen=computeGeneral();
   if(!gen||gen.length<2){toast('No hay suficientes jugadores activos para armar los Play Offs. Verificá que haya al menos 2 jugadores activos.');return;}
   viewCycle='po';renderCycleBar();showPlayoffView();renderSubTabs();
-  toast(t('po_preview_toast'));
-  // Mismo patrón que confirmPlayoffUI: guardar directo via _doPersist
-  // sincronizando _stateV primero para evitar el 409.
-  try{
-    const rv=await fetch('/api/state',{headers:{Authorization:'Bearer '+_token},cache:'no-store'});
-    const rd=await rv.json().catch(()=>({}));
-    if(rv.ok&&rd.state&&typeof rd.state._v==='number') _stateV=rd.state._v;
-  }catch(e){}
-  _loadOK=true;
-  await _doPersist();
+  toast('⏳ Guardando previsualización…');
+  const ok=await _criticalSave();
+  if(ok){
+    toast(t('po_preview_toast'));
+  }else{
+    // Revertir si no se pudo guardar
+    previewPlayoff.preview=false;
+    renderCycleBar();
+    alert('⚠️ No se pudo guardar la previsualización de Play Offs.\n\nRecargá la página y volvé a intentarlo.');
+  }
 }
 async function confirmPlayoffUI(){
   if(!confirmPlayoff())return;
-  // Guardamos via _doPersist directo para evitar los bloqueos de persist():
-  // - no chequea _loadOK (que puede ser false por un conflicto previo)
-  // - no chequea _saving (que puede estar en true por el autosave)
-  // Primero sincronizamos _stateV con el servidor para que el 409 no rechace.
-  try{
-    const rv=await fetch('/api/state',{headers:{Authorization:'Bearer '+_token},cache:'no-store'});
-    const rd=await rv.json().catch(()=>({}));
-    if(rv.ok&&rd.state&&typeof rd.state._v==='number') _stateV=rd.state._v;
-  }catch(e){}
-  _loadOK=true;
-  await _doPersist();
-  renderCycleBar();showPlayoffView();renderSubTabs();
-  toast(t('po_confirmed_toast'));
+  // Mostrar al usuario que el proceso está en curso antes de hacer el fetch
+  toast('⏳ Iniciando Play Offs…');
+  const ok=await _criticalSave();
+  if(ok){
+    renderCycleBar();showPlayoffView();renderSubTabs();
+    toast(t('po_confirmed_toast'));
+  }else{
+    // Revertir el estado en memoria ya que no se pudo guardar
+    playoff.started=false;playoff.preview=true;
+    renderCycleBar();showPlayoffView();renderSubTabs();
+    // Usar alert para que el usuario no lo pierda (no desaparece solo)
+    alert('⚠️ No se pudo guardar el inicio de los Play Offs.\n\nRecargá la página y volvé a intentarlo.\n\nSi el problema persiste, contactá al desarrollador.');
+  }
 }
 function renderCargarDisputas(){ }
 
@@ -4251,7 +4256,7 @@ function applyPoPending(rec){storePo(rec.ti,rec.which,rec.poNames[0],rec.poNames
 let _toastTimer=null;function toast(m){let t=document.getElementById('_toast');if(!t){t=document.createElement('div');t.id='_toast';t.className='toast';document.body.appendChild(t);}t.textContent=m;t.style.opacity='1';if(_toastTimer)clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>{t.style.opacity='0';_toastTimer=null;},3800);}
 
 // ===== CONEXIÓN A SUPABASE — guardado instantáneo =====
-let _lastSaved=null,_saving=false,_pendingForce=false,_loadOK=false,_dbEmpty=false;
+let _lastSaved=null,_saving=false,_pendingForce=false,_loadOK=false,_dbEmpty=false,_prioritySave=false;
 // Versión del estado. La incrementa el servidor en cada guardado: si dos personas
 // tienen la app abierta, la segunda en guardar recibe 409 en vez de pisar a la primera.
 let _stateV=0;
@@ -4465,8 +4470,41 @@ async function loadState(){
   }
 }
 
+// Guardado crítico: bloquea el autosave, espera el save en curso, sincroniza _stateV
+// con el servidor y reintenta hasta 3 veces. Retorna true si guardó, false si falló.
+// Usar para operaciones de alta importancia (playoffs, etc.) donde un fallo silencioso
+// es inaceptable. La race condition con el autosave queda eliminada por _prioritySave.
+async function _criticalSave(){
+  _prioritySave=true;  // bloquea el autosave durante toda la operación
+  try{
+    // Esperar a que termine cualquier guardado en curso (máx 3 segundos)
+    for(let i=0;i<30&&_saving;i++) await new Promise(r=>setTimeout(r,100));
+    // Intentar hasta 3 veces con sincronización de versión antes de cada intento
+    for(let attempt=0;attempt<3;attempt++){
+      if(attempt>0) await new Promise(r=>setTimeout(r,400)); // pausa entre reintentos
+      // Sincronizar _stateV con el servidor para evitar el 409
+      try{
+        const rv=await fetch('/api/state',{headers:{Authorization:'Bearer '+_token},cache:'no-store'});
+        const rd=await rv.json().catch(()=>({}));
+        if(rv.ok&&rd.state&&typeof rd.state._v==='number') _stateV=rd.state._v;
+      }catch(e){} // si falla el fetch, intentamos con el _stateV que tenemos
+      _loadOK=true;
+      const ok=await _doPersist();
+      if(ok){
+        console.log('✅ _criticalSave: guardado en intento '+(attempt+1));
+        return true;
+      }
+      console.warn('⚠️ _criticalSave: intento '+(attempt+1)+' fallido, reintentando…');
+    }
+    return false; // todos los intentos fallaron
+  }finally{
+    _prioritySave=false;
+    // Una vez liberado el mutex, forzar un guardado para que nada quede pendiente
+    setTimeout(()=>persist(true),500);
+  }
+}
 async function _doPersist(){
-  if(!_token)return;
+  if(!_token)return false;
   const json=_serialize();
   try{
     const r=await fetch('/api/save',{
@@ -4483,22 +4521,28 @@ async function _doPersist(){
       _lastSaved=_serialize();
       if(d.token)_token=d.token;   // sesión deslizante: el servidor la renovó
       console.log('✅ Guardado OK ('+ new Date().toLocaleTimeString()+')');
+      return true;
     }else if(r.status===409){
       // Otra persona guardó mientras tanto. NO reintentamos: pisaríamos su cambio.
       _loadOK=false;               // corta el autosave hasta recargar
       _showLoadError(d.error||t('err_conflict'));
       console.warn('⚠️ Conflicto de versión: no se guardó para no pisar el cambio de otro.');
+      return false;
     }else{
       if(r.status===401){_token=null;_showLoadError(t('err_session_expired_save'));}
       if(r.status===403){_token=null;_showLoadError(d.error||t('err_no_access'));}
       console.error('❌ Error al guardar:',d.error||r.status);
+      return false;
     }
-  }catch(e){console.error('❌ Excepción al guardar:',e);}
+  }catch(e){console.error('❌ Excepción al guardar:',e);return false;}
 }
 
 async function persist(force){
   if(!_token)return;
   if(!_loadOK){console.warn('⛔ persist bloqueado: el estado no se cargó correctamente. No se guarda para no pisar datos buenos.');return;}
+  // Si hay un guardado crítico en curso (playoff, backup), este autosave espera.
+  // El guardado crítico llama persist(true) cuando termina para no perder nada.
+  if(_prioritySave){_pendingForce=true;return;}
   const json=_serialize();
   if(!force&&json===_lastSaved)return;
   if(_saving){
